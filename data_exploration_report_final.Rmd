@@ -1,0 +1,525 @@
+---
+title: "Data Exploration"
+subtitle: "13.05 - 21.05"
+author: "Elizaveta Shcherbinina"
+date: "2024-05-15"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+```{r packages}
+# data packages
+library(readr)
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(stringr)
+
+# visualisation packages
+library(ggplot2)
+library(RColorBrewer)
+
+# maps 
+library(maps)
+library(sp)
+```
+
+##Data Structure 
+
+```{r data upload}
+
+data <- read_csv("All_yield_coords_decimals_20240417 - Copy.csv",
+                 col_types = cols(
+                   Latitude = col_double(),   # some lat and long include characters or are missing in the csv file, so through setting them to double, we get NAs instead of them. 
+                   Longitude = col_double(),
+                 )) 
+
+# because of the conversion to double, the dot in the column names was not read correctly, so here we fix it and delete the dot so it doesnt confuse R any further 
+data <- data %>%
+  rename(`SiteRegion` = `Site/Region`,
+         `Croptype` = `Crop type`)
+
+data_pr <- #pr for processed. That will be the dataset we will be working with 
+  data %>%
+  mutate(across(c(No., DatasetID, Country, SiteRegion, Croptype, yield_measure, Treatment, QualityOfDataPoint), as.factor),
+         across(c(yield_control, yield_treatm), as.double))
+
+glimpse(data)
+```
+  
+
+Writing a function to depict distributions of variables automatically:
+
+```{r plot occurrences function, echo = TRUE}
+plot_occurrences <- function(data_pr, parameter) {
+  
+  parameter <- rlang::sym(parameter)  # convert parameter to a symbol for use in dplyr
+  
+  data_pr %>%
+    group_by(!!parameter) %>%
+    summarise(occurences = n()) %>% # calculate the occurrences of values of attributes
+    arrange(-desc(occurences)) %>%
+    mutate(!!parameter := factor(!!parameter, levels = unique(!!parameter))) %>% # relevel the dataset by occurrences (the arrange function does not alter the structure of the dataset permanently)
+    ggplot(aes(x = !!parameter, y = occurences)) +
+    geom_bar(stat = "identity") +
+    scale_fill_brewer(palette = "Set2") +
+    geom_text(aes(label = occurences), hjust = -0.25) +
+    labs(x = parameter, y = "Occurrences",
+         title = paste(as_label(parameter), "Distribution")) +
+    theme_bw() +
+    theme(axis.text.x = element_text(hjust = 1)) +
+    coord_flip()
+  
+  }
+ 
+
+
+```
+
+
+```{r occurerences plots,  fig.height = 7, fig.width = 14, fig.align = "center"}
+
+plot_occurrences(data_pr, "DatasetID")
+plot_occurrences(data_pr, "Country")
+# plot_occurrences(data_pr, "SiteRegion") # not informative
+plot_occurrences(data_pr, "Croptype")
+plot_occurrences(data_pr, "Treatment")
+plot_occurrences(data_pr, "QualityOfDataPoint")
+```
+
+
+Results:  
+1. DatasetID:  
+* 5 data sets have the largest influence on the data composition with more than 1000 enteties:  
++ D309
++ D652
++ D1120  
++ D331
++ D973  
+2. Country:
+*  2097 entities come from unknown sources 
+* 4409 entities from China
+* the rest of the countries scoring under 1000 entities 
+
+
+## Tuning the data set 
+
+### Unify the measurement metrics 
+
+```{r yield measure }
+data_pr %>% 
+  group_by(yield_measure) %>% 
+  summarise(occurences = n()) 
+```
+
+Results:  
+1.  1281 NA values   
+2.  Mg dry matter/ha and Mg/ha implies that some studies were accounting for dry and some for fresh biomass. Therefore those values will not be comparable. -> lets introduce a column if the study worked with dry or fresh matter.  
+* There might be a change that Mg/ha were also working with the dry biomass, since the metric is too small for the fresh biomass.
+
+
+
+```{r yield measure dry and fresh}
+data_pr <- 
+data_pr %>% 
+  mutate(dry_fresh_biomass = case_when(
+    yield_measure == "Mg dry matter/ha" ~ "dry",
+  # yield_measure == "Mg/ha" ~ "dry", # include if you agree with the astride 
+    TRUE ~ "fresh")) 
+```
+
+Unification code: 
+
+```{r yield_measure unification to kg_ha, echo = TRUE}
+data_pr <- 
+data_pr %>% 
+  mutate(yield_control = case_when(
+    yield_measure == "Mg dry matter/ha" ~ yield_control*10^(-6),
+    yield_measure == "Mg/ha" ~ yield_control*10^(-6),
+    yield_measure == NA_character_ ~ 0, # since we do not know this metric we cannot utilize this data; set temporary to zero because of the possible error: Can't combine `..1 (right)` <double> and `..3 (right)` <character>.
+    yield_measure == NA_character_ ~ yield_control*1000, 
+    TRUE ~ yield_control # the rest can stay the same (kg/hm2 is the same as kg/ha)
+  )) %>% 
+  mutate(yield_control = ifelse(yield_control == 0, NA, yield_control)) %>% 
+  mutate(yield_treatm = case_when(
+    yield_measure == "Mg dry matter/ha" ~ yield_treatm*10^(-6),
+    yield_measure == "Mg/ha" ~ yield_treatm*10^(-6),
+    yield_measure == NA_character_ ~ 0, # since we do not know this metric we cannot utilize this data; set temporary to zero because of the possible error: Can't combine `..1 (right)` <double> and `..3 (right)` <character>.
+    yield_measure == NA_character_ ~ yield_treatm*1000, 
+    TRUE ~ yield_treatm # the rest can stay the same (kg/hm2 is the same as kg/ha)
+  )) %>% 
+  mutate(yield_treatm = ifelse(yield_treatm == 0, NA, yield_treatm)) %>% 
+  mutate(yield_measure_unified = case_when(
+    yield_measure == NA_character_ ~ NA_character_,
+    TRUE ~ "kg/ha"
+  )) %>% 
+  rename(yield_measure_original = yield_measure) %>% 
+  select(No., DatasetID, Source, Country, SiteRegion, Latitude, Longitude, Croptype, yield_control, yield_treatm, yield_measure_unified, Treatment, QualityOfDataPoint, Coordinate_format, yield_measure_original) #  reorder the columns
+```
+
+
+### How many NAs does the processed dataset have  
+```{r NAs processed}
+data_pr %>% 
+summarise(across(everything(), ~ sum(is.na(.)), .names = "NA_{col}"))
+```
+
+
+### compared to the original data:  
+
+```{r NAs original}
+data %>% 
+summarise(across(everything(), ~ sum(is.na(.)), .names = "NA_{col}"))
+```
+
+
+
+Results:  
+1. The difference only in the NA_yield_treatment variable. So all the mg/ha were in that column. Most likely it was dry biomass. 
+* In some cases the Latitude is missing where the Longitude is present
+
+
+
+### Investigate the Croptype variable 
+```{r croptype investigation}
+
+data_pr %>% 
+  select(Croptype) %>% 
+  unique()
+```
+
+
+Results:  
+1. "wheat", "Wheat" AND "maize", "Maize" (maybe also "Corn") AND "rice", "Rice", "Rice paddy", "single rice", "early rice", "late rice"  
+2. "Vegetables" and "open vegetable"  
+3. "Greenhouse" what is greenhouse as a crop type  
+4. What is "Grassland" as a crop type  
+5. Exclude the 1 NA?  
+
+
+Suggested modification: 
+1. everything written with the first Capital  
+
+
+
+```{r cleaning the Corptype}
+data_pr <- 
+data_pr %>%
+  mutate(Croptype = str_to_title(Croptype))
+```
+
+
+```{r summarise wide format}
+
+ data_pr_sum <- 
+  data_pr %>% 
+  group_by(DatasetID, Source, Country, SiteRegion, Latitude, Longitude, Croptype, Treatment, QualityOfDataPoint, Coordinate_format) %>% 
+  summarise(yield_control_mean = mean(yield_control),
+            yield_control_median = median(yield_control),
+            yield_control_se = sd(yield_control)/sqrt(length(yield_control)),
+            yield_treatm_mean = mean(yield_treatm),
+            yield_treatm_median = median(yield_treatm),
+            yield_treatm_se = sd(yield_treatm)/sqrt(length(yield_treatm))
+            ) %>% 
+  ungroup()%>%
+  mutate(ObjectID = row_number())
+
+data_pr_sum %>% 
+  head(5)
+
+```
+
+
+Results:  
+1. the number of observations goes down to 2146 (wide format) or 4292 (long format)
+
+## Data structure of the sumarised data set 
+
+### Variables' frequencies 
+
+```{r occurerences plots with the summarized dataset,  fig.height = 7, fig.width = 14, fig.align = "center"}
+plot_occurrences(data_pr_sum, "DatasetID")
+plot_occurrences(data_pr_sum, "Country")
+#plot_occurrences(data_pr_sum, "SiteRegion") # not informative
+plot_occurrences(data_pr_sum, "Croptype")
+plot_occurrences(data_pr_sum, "Treatment")
+plot_occurrences(data_pr_sum, "QualityOfDataPoint")
+```
+
+### What countries were investigated in which data sets? 
+
+Some countries might be not well represented, because the data on them will come from a single source. 
+Also this graph helps us to see in which data sets the NAs occure
+
+
+```{r Countries in DatasetID,  fig.height = 5, fig.width = 10, fig.align = "center" }
+
+  data_pr_sum %>%
+    group_by(DatasetID, Country, Treatment, Croptype) %>%
+    summarise(occurences = n()) %>% # calculate the occurrences of values of attributes
+    ggplot(aes(x = DatasetID, y = occurences, fill = Country)) +
+    geom_bar(stat = "identity") +
+    labs(x = "DatasetID", y = "Occurrences") +
+    theme_bw() +
+    coord_flip()
+
+```
+
+### What croptypes were investigated by which data sets? 
+
+```{r Croptypes in DatasetID,  fig.height = 6, fig.width = 10, fig.align = "center" }
+
+  data_pr_sum %>%
+    group_by(DatasetID, Country, Treatment, Croptype) %>%
+    summarise(occurences = n()) %>% # calculate the occurrences of values of attributes
+    ggplot(aes(x = DatasetID, y = occurences, fill = Croptype)) +
+    geom_bar(stat = "identity") +
+    labs(x = "DatasetID", y = "Occurrences") +
+    theme_bw() +
+    coord_flip()
+
+```
+
+### What treatments were included in which data sets? 
+
+```{r Treatments in DatasetID}
+
+  data_pr_sum %>%
+    group_by(DatasetID, Country, Treatment, Croptype) %>%
+    summarise(occurences = n()) %>% # calculate the occurrences of values of attributes
+    ggplot(aes(x = DatasetID, y = occurences, fill = Treatment)) +
+    geom_bar(stat = "identity") +
+    labs(x = "DatasetID", y = "Occurrences") +
+    #scale_fill_brewer(palette = "Paired") +
+    theme_bw() +
+    coord_flip()
+
+```
+
+
+## Looking on the Yield values across datasets 
+
+
+### Tuning the data into the long format
+
+```{r wide to long yield format}
+data_pr_long <- 
+data_pr %>% 
+  pivot_longer(cols = c(yield_control, yield_treatm), names_to = "ControlTreatm", values_to = "Yield") %>% 
+  mutate(ControlTreatm = case_when(
+    ControlTreatm == "yield_control" ~ "Control",
+    ControlTreatm == "yield_treatm" ~ "Treatment"
+  )) %>% 
+  mutate(across(ControlTreatm, as.factor))
+
+data_pr_long %>% 
+  head(5)
+```
+
+### and summarizing it
+
+```{r writing the data_pr_long summarized dataset}
+data_pr_long_sum <- 
+data_pr_long %>% 
+  group_by(DatasetID, Source, Country, SiteRegion, Latitude, Longitude, Croptype, Treatment, QualityOfDataPoint, Coordinate_format, ControlTreatm) %>% 
+  summarise(Yield_mean = mean(Yield),
+            Yield_median = median(Yield),
+            Yield_se = sd(Yield)/sqrt(length(Yield))) %>% 
+  ungroup()%>%
+  mutate(ObjectID = row_number())
+
+data_pr_long_sum %>% 
+  head(5)
+
+
+```
+
+## What treatments were appied to which crops and how did the treatment affect the crop yield?  
+
+
+```{r Yield in treatments and crop types ,  fig.height = 14, fig.width = 10, fig.align = "center"}
+
+  data_pr_long_sum %>%
+    group_by(Treatment, Croptype, ControlTreatm) %>%
+    summarise(occurences = n(),
+              Yield_mean = Yield_mean,
+              Yield_se = Yield_se) %>%
+    ggplot(aes(x = Croptype, y = Yield_mean, fill = ControlTreatm)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(x = "Crop Type", y = "Yield  Mean") +
+    theme_bw() +
+    facet_wrap(~Treatment)+
+    coord_flip()
+
+
+```
+
+
+Some treatments seem to have no observations. However, this is only the scaling problem, where the mg/ha measurements were unified to kg/ha and now they seem to be unproportionally small relative to the other observations. So, here we visualise those studies separately.
+
+## What treatments were appied to which crops and how did the treatment affect the crop yield? 
+### in Cover crops and Drainage N lossess treatments  
+
+```{r Yield in Cover crops Drainage N losses}
+
+  data_pr_long_sum %>%
+  filter(Treatment %in% c("Cover crops", "Drainage N losses")) %>% 
+    group_by(DatasetID, Country, Treatment, Croptype, ControlTreatm) %>%
+    ggplot(aes(x = Croptype, y = Yield_mean, fill = ControlTreatm)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(x = "Crop Type", y = "Yield  Mean") +
+    theme_bw() +
+    facet_wrap(~Treatment)+
+    coord_flip()
+
+```
+
+
+## What treatments were appied to which crops and how did the treatment affect the crop yield? 
+### in Substituting Mineral Fertilizers with Manure Nitrogen treatment
+
+```{r Yield in DatasetID Substituting Mineral Fertilizers with Manure Nitrogen}
+
+  data_pr_long_sum %>%
+  filter(Treatment %in% c("Substituting Mineral Fertilizers with Manure Nitrogen")) %>% 
+    group_by(DatasetID, Country, Treatment, Croptype, ControlTreatm) %>%
+    ggplot(aes(x = Croptype, y = Yield_mean, fill = ControlTreatm)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    labs(x = "Crop Type", y = "Yield  Mean") +
+    theme_bw() +
+    facet_wrap(~Treatment)+
+    coord_flip()
+
+```
+
+
+### *Moving on to the visualisaton on the map.* 
+
+
+```{r creating the spatial dataset}
+surrounding_landscapes_spatial <- 
+data_pr_long_sum %>% 
+  drop_na(Longitude, Latitude)
+
+#write.csv(surrounding_landscapes_spatial, "surrounding_landscapes_spatial_data.csv")
+```
+
+First, investigate the data set by its summary to check the latitudes and longitudes, whether they lie in appropriate ranges. 
+*Longitude (-180; +180) and Latitude(-90;+90)*
+
+
+```{r summary of the spatial dataset}
+summary(surrounding_landscapes_spatial$Latitude)
+summary(surrounding_landscapes_spatial$Longitude)
+```
+
+
+The Latitude goes from -139 to 13653.68 and Longitude from -122 to 150.
+Clearly there are some issues with the Latitude.
+
+After reading the file into coordinates in ArcGIS two points were taken out: 
+
+
+```{r latitude more than thousands}
+surrounding_landscapes_spatial %>% 
+  filter(Latitude > 10000)%>% 
+  head(5)
+
+
+```
+
+
+Also, some points again land in the sea, but most likely because their latitude and longitude are confused or converted wrongly. There is also mostly no information on the Quality of data points and no Country/SiteRegion information. 
+
+
+```{r lat more than hundred}
+surrounding_landscapes_spatial %>% 
+  filter(Latitude > 100) %>% 
+  head(5)
+
+```
+
+
+
+```{r correcting the Long Lat opposite coordinatates}
+condition <- surrounding_landscapes_spatial$Latitude > 90
+
+# Swap Longitude and Latitude for the selected section
+surrounding_landscapes_spatial_corrected <- 
+  surrounding_landscapes_spatial %>%
+  mutate(
+    temp = if_else(condition, Longitude, NA_real_),  # Temporarily store Longitude in temp
+    Longitude = if_else(condition, Latitude, Longitude),  # Replace Longitude with Latitude
+    Latitude = if_else(condition, temp, Latitude)  # Replace Latitude with temp
+  ) %>%
+  select(-temp)  # Remove the temporary column
+
+condition2 <- surrounding_landscapes_spatial$Latitude < -90
+
+# Swap Longitude and Latitude for the selected section
+surrounding_landscapes_spatial_corrected <- 
+  surrounding_landscapes_spatial_corrected %>%
+  mutate(
+    temp = if_else(condition2, Longitude, NA_real_),  # Temporarily store Longitude in temp
+    Longitude = if_else(condition2, Latitude, Longitude),  # Replace Longitude with Latitude
+    Latitude = if_else(condition2, temp, Latitude)  # Replace Latitude with temp
+  ) %>%
+  select(-temp)  # Remove the temporary column
+
+
+
+# check:
+
+surrounding_landscapes_spatial_corrected %>% 
+  filter(DatasetID == "D352")
+
+surrounding_landscapes_spatial_corrected <- 
+surrounding_landscapes_spatial_corrected%>% 
+  filter(Longitude < 10000)
+
+```
+
+
+Also, for the studies in Marrabel, Australia the minus is misplaced. In the current dataset the coordinates are (lat: 34.14 long: -138.88) and should be (lat: -34.14 long: 138.88).
+
+
+
+```{r correcting the Marrabel coordinates}
+surrounding_landscapes_spatial_corrected %>% 
+  filter(SiteRegion == "Marrabel")
+
+
+condition3 <- surrounding_landscapes_spatial_corrected$SiteRegion %in% c("Marrabel")
+
+
+surrounding_landscapes_spatial_corrected <- 
+  surrounding_landscapes_spatial_corrected %>%
+  mutate(
+    Longitude = if_else(condition3, -Longitude, Longitude),  # Replace Longitude with Latitude
+    Latitude = if_else(condition3, -Latitude, Latitude)  # Replace Latitude with temp
+  ) 
+
+#check:
+surrounding_landscapes_spatial_corrected %>% 
+  filter(SiteRegion == "Marrabel")
+
+
+#write.csv(surrounding_landscapes_spatial_corrected, "surrounding_landscapes_spatial_corrected.csv")
+
+```
+
+
+After correcting those issues we can import the data table into ArcGIS and visualise the points on the map. The result looks the follwoing way:
+
+## Study Map
+```{r including the map,  fig.height = 4, fig.width = 3, fig.align = "center"}
+
+knitr::include_graphics("C:\\Users\\lisa7\\Documents\\surrounding_landscapes\\dataexploration_points.jpg")
+
+```
+
+
