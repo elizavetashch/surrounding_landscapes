@@ -1,7 +1,12 @@
-var annual = ee.FeatureCollection('projects/sat-io/open-datasets/GLC-FCS30D/annual'); //better to import those directly, without calling
-var five_year = ee.FeatureCollection('projects/sat-io/open-datasets/GLC-FCS30D/five-years-map'); //better to import those directly, without calling
-var points = ee.FeatureCollection('projects/ee-elizaveta/assets/points');
 
+
+// Load the datasets 
+var points = ee.FeatureCollection('projects/ee-elizaveta/assets/points');
+var annual = ee.ImageCollection('projects/sat-io/open-datasets/GLC-FCS30D/annual');
+var five_year = ee.ImageCollection('projects/sat-io/open-datasets/GLC-FCS30D/five-years-map');
+
+
+Map.addLayer(points, {color: 'red'}, 'points');
 
 //Setup basemaps
 var snazzy = require("users/aazuspan/snazzy:styles");
@@ -30,10 +35,22 @@ var addLayer = function(image, name) {
   Map.addLayer(image, {palette: palette}, name,false);
 };
 
+// Filter the points for 1985, 1990, 1995 separately:
+var filteredPoints_1985 = points.filter(ee.Filter.eq('pr_land_cover_Year', "1985")).geometry().buffer(10000);
+var bufferedGeometry_1985 = filteredPoints_1985.dissolve();
+
+var filteredPoints_1990 = points.filter(ee.Filter.eq('pr_land_cover_Year', "1990")).geometry().buffer(10000);
+var bufferedGeometry_1990 = filteredPoints_1990.dissolve();
+
+var filteredPoints_1995 = points.filter(ee.Filter.eq('pr_land_cover_Year', "1995")).geometry().buffer(10000);
+var bufferedGeometry_1995 = filteredPoints_1995.dissolve();
+  
+
+
 // Apply the function to your images and add layers
-addLayer(recodeClasses(five_year.mosaic().select('b1')), 'GLC FCS 1985');
-addLayer(recodeClasses(five_year.mosaic().select('b2')), 'GLC FCS 1990',false);
-addLayer(recodeClasses(five_year.mosaic().select('b3')), 'GLC FCS 1995',false);
+addLayer(recodeClasses(five_year.mosaic().select('b1').clip(bufferedGeometry_1985)), 'GLC FCS 1985');
+addLayer(recodeClasses(five_year.mosaic().select('b2').clip(bufferedGeometry_1990)), 'GLC FCS 1990',false);
+addLayer(recodeClasses(five_year.mosaic().select('b3').clip(bufferedGeometry_1995)), 'GLC FCS 1995',false);
 
 // Load the GLC-FCS30D collection
 var image = annual.mosaic();
@@ -43,13 +60,17 @@ for (var i = 1; i <= 23; i++) {
   var year = 1999 + i; // starts at year 2000 for annual maps
   var layerName = "GLC FCS " + year.toString();
   var band = image.select("b" + i);
+   // Filter the points based on the year
   var filteredPoints = points.filter(ee.Filter.eq('pr_land_cover_Year', year.toString())).geometry().buffer(10000);
   
   var bufferedGeometry = filteredPoints.dissolve();
   
+  // Apply the function to the band and add layer
   var recodedBand = recodeClasses(band);
   var clippedBand = recodedBand.clip(bufferedGeometry);
-  
+
+
+  // Apply the function to the band and add layer
   addLayer(clippedBand, layerName);
 }
 
