@@ -1,0 +1,1079 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Surrounding Landscapes Report},
+  pdfauthor={Elizaveta Shcherbinina},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Surrounding Landscapes Report}
+\author{Elizaveta Shcherbinina}
+\date{2024-05-28}
+
+\begin{document}
+\maketitle
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# data packages}
+\FunctionTok{library}\NormalTok{(readr)}
+\FunctionTok{library}\NormalTok{(readxl)}
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\FunctionTok{library}\NormalTok{(tidyr)}
+\FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(stringr)}
+
+\CommentTok{\# visualisation packages}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(RColorBrewer)}
+
+\CommentTok{\# maps }
+\FunctionTok{library}\NormalTok{(maps)}
+\FunctionTok{library}\NormalTok{(sp)}
+\end{Highlighting}
+\end{Shaded}
+
+\section{0. Data Import}\label{data-import}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# data import {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\StringTok{"All\_yield\_coords\_decimals\_20240417 {-} Copy.csv"}\NormalTok{,}
+                 \AttributeTok{col\_types =} \FunctionTok{cols}\NormalTok{(}
+                   \AttributeTok{Latitude =} \FunctionTok{col\_double}\NormalTok{(),   }\CommentTok{\# some lat and long include characters or are missing in the csv file, so through setting them to double, we get NAs instead of them. }
+                   \AttributeTok{Longitude =} \FunctionTok{col\_double}\NormalTok{(),}
+\NormalTok{                 )) }
+
+\CommentTok{\# because of the conversion to double, the dot in the column names was not read correctly, so here we fix it and delete the dot so it doesnt confuse R any further }
+\NormalTok{data }\OtherTok{\textless{}{-}}\NormalTok{ data }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{rename}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{SiteRegion}\StringTok{\textasciigrave{}} \OtherTok{=} \StringTok{\textasciigrave{}}\AttributeTok{Site/Region}\StringTok{\textasciigrave{}}\NormalTok{,}
+         \StringTok{\textasciigrave{}}\AttributeTok{Croptype}\StringTok{\textasciigrave{}} \OtherTok{=} \StringTok{\textasciigrave{}}\AttributeTok{Crop type}\StringTok{\textasciigrave{}}\NormalTok{)}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} \CommentTok{\#pr for processed. That will be the dataset we will be working with }
+\NormalTok{    data }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{c}\NormalTok{(No., DatasetID, Country, SiteRegion, Croptype, yield\_measure, Treatment, QualityOfDataPoint), as.factor),}
+         \FunctionTok{across}\NormalTok{(}\FunctionTok{c}\NormalTok{(yield\_control, yield\_treatm), as.double))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# we have 12 datasets, therefore 12 supplements/data sets }
+
+\CommentTok{\# 1.}
+\NormalTok{D66\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/66{-}Liang2022\_supp.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 2.}
+\NormalTok{D309\_orig\_slow\_releaze\_fertilizer }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/309{-}Ding2018\_supp\_5datasets.xlsx"}\NormalTok{, }\AttributeTok{sheet =} \DecValTok{1}\NormalTok{)}
+\NormalTok{D309\_orig\_slow\_releaze\_fertilizer}\SpecialCharTok{$}\NormalTok{orig\_Treatment }\OtherTok{\textless{}{-}} \StringTok{"Slow Release Fertilizer"}
+
+\NormalTok{D309\_orig\_organic\_fertilizer }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/309{-}Ding2018\_supp\_5datasets.xlsx"}\NormalTok{, }\AttributeTok{sheet =} \DecValTok{2}\NormalTok{)}
+\NormalTok{D309\_orig\_organic\_fertilizer}\SpecialCharTok{$}\NormalTok{orig\_Treatment }\OtherTok{\textless{}{-}} \StringTok{"Organic Fertilizer"}
+
+\NormalTok{D309\_orig\_straw\_return }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/309{-}Ding2018\_supp\_5datasets.xlsx"}\NormalTok{, }\AttributeTok{sheet =} \DecValTok{3}\NormalTok{)}
+\NormalTok{D309\_orig\_straw\_return}\SpecialCharTok{$}\NormalTok{orig\_Treatment }\OtherTok{\textless{}{-}} \StringTok{"Straw Return"}
+
+\NormalTok{D309\_orig\_green\_manure }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/309{-}Ding2018\_supp\_5datasets.xlsx"}\NormalTok{, }\AttributeTok{sheet =} \DecValTok{4}\NormalTok{)}
+\NormalTok{D309\_orig\_green\_manure}\SpecialCharTok{$}\NormalTok{orig\_Treatment }\OtherTok{\textless{}{-}} \StringTok{"Green Manure"}
+
+\NormalTok{D309\_orig\_secondary\_and\_micronutrients }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/309{-}Ding2018\_supp\_5datasets.xlsx"}\NormalTok{, }\AttributeTok{sheet =} \DecValTok{5}\NormalTok{)}
+\NormalTok{D309\_orig\_secondary\_and\_micronutrients}\SpecialCharTok{$}\NormalTok{orig\_Treatment }\OtherTok{\textless{}{-}} \StringTok{"Secondary and Micronutrient Fertilizer"}
+
+\NormalTok{D309\_orig }\OtherTok{\textless{}{-}} \FunctionTok{bind\_rows}\NormalTok{(D309\_orig\_secondary\_and\_micronutrients, D309\_orig\_green\_manure, D309\_orig\_straw\_return, D309\_orig\_organic\_fertilizer, D309\_orig\_slow\_releaze\_fertilizer ) }\CommentTok{\# i followed the structure of the data\_pr data base so that the observations are in the same order}
+
+
+\CommentTok{\# 3.}
+\NormalTok{D331\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/331{-}Liu2023\_supp.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 4.}
+\NormalTok{D352\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/352{-}Zhang2021\_supp2.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 5.}
+\NormalTok{D473\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/473{-}Joshi2023\_supp.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 6.}
+\NormalTok{D652\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/652{-}Zheng2023\_supp.xls"}\NormalTok{)}
+
+\CommentTok{\# 7.}
+\NormalTok{D669\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/669{-}Wang2023\_suppA.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 8.}
+\NormalTok{D906\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/906{-}Zhao2016\_suppA.xlsx"}\NormalTok{, }\AttributeTok{skip =} \DecValTok{1}\NormalTok{)}
+
+\CommentTok{\# 9A.}
+\NormalTok{D921\_A\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/921{-}Xia2023\_suppA.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 9B.}
+\NormalTok{D921\_B\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/921{-}Xia2023\_suppB.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 10.}
+\NormalTok{D973\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read\_excel}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/973{-}Wang2021\_suppA.xlsx"}\NormalTok{)}
+
+\CommentTok{\# 11.}
+\NormalTok{D1120\_orig }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"primary\_sources/Data\_yield\_coords/1120{-}Steward2018\_supp.csv"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\section{1. Data Processing}\label{data-processing}
+
+\begin{itemize}
+\tightlist
+\item
+  Already in the data import we created the processing dataset
+  (data\_pr, ``pr'' for ``processed''), that is being modified. No
+  changes are being made to the original dataset (data).\\
+  If an attrbute/column is being modified, a copy of this attribute is
+  being\\
+  created ``Croptype'' to ``pr\_Croptype'', meaning that values within
+  the processed\\
+  column were modified.
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(No. }\SpecialCharTok{==} \StringTok{"5197"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1 x 14
+##   No.   DatasetID Source         Country  SiteRegion Latitude Longitude Croptype
+##   <fct> <fct>     <chr>          <fct>    <fct>         <dbl>     <dbl> <fct>   
+## 1 5197  D973      H��ppi et al., Switzer~ Zurich         47.4      8.52 Upland ~
+## # i 6 more variables: yield_control <dbl>, yield_treatm <dbl>,
+## #   yield_measure <fct>, Treatment <fct>, QualityOfDataPoint <fct>,
+## #   Coordinate_format <chr>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Source =} \FunctionTok{ifelse}\NormalTok{(No. }\SpecialCharTok{==} \StringTok{"5197"}\NormalTok{, }\StringTok{"Hueppi et al., 2015"}\NormalTok{, Source) )}
+
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(No. }\SpecialCharTok{==} \StringTok{"5197"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1 x 14
+##   No.   DatasetID Source          Country SiteRegion Latitude Longitude Croptype
+##   <fct> <fct>     <chr>           <fct>   <fct>         <dbl>     <dbl> <fct>   
+## 1 5197  D973      Hueppi et al.,~ Switze~ Zurich         47.4      8.52 Upland ~
+## # i 6 more variables: yield_control <dbl>, yield_treatm <dbl>,
+## #   yield_measure <fct>, Treatment <fct>, QualityOfDataPoint <fct>,
+## #   Coordinate_format <chr>
+\end{verbatim}
+
+1.1 We unify all the yield measure metrics to kg/ha.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 1.1 yield\_measure unification {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_yield\_control\_kgha =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{    yield\_measure }\SpecialCharTok{==} \StringTok{"Mg dry matter/ha"} \SpecialCharTok{\textasciitilde{}}\NormalTok{ yield\_control }\SpecialCharTok{*} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{6}\NormalTok{,}
+\NormalTok{    yield\_measure }\SpecialCharTok{==} \StringTok{"Mg/ha"} \SpecialCharTok{\textasciitilde{}}\NormalTok{ yield\_control }\SpecialCharTok{*} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{6}\NormalTok{,}
+    \FunctionTok{is.na}\NormalTok{(yield\_measure) }\SpecialCharTok{\textasciitilde{}} \DecValTok{0}\NormalTok{, }\CommentTok{\# set to zero temporarily due to metric uncertainty}
+    \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}}\NormalTok{ yield\_control }\CommentTok{\# assume the rest are already in kg/ha}
+\NormalTok{  )) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_yield\_control\_kgha =} \FunctionTok{ifelse}\NormalTok{(pr\_yield\_control\_kgha }\SpecialCharTok{==} \DecValTok{0}\NormalTok{, }\ConstantTok{NA}\NormalTok{, pr\_yield\_control\_kgha)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_yield\_treatm\_kgha =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{    yield\_measure }\SpecialCharTok{==} \StringTok{"Mg dry matter/ha"} \SpecialCharTok{\textasciitilde{}}\NormalTok{ yield\_treatm }\SpecialCharTok{*} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{6}\NormalTok{,}
+\NormalTok{    yield\_measure }\SpecialCharTok{==} \StringTok{"Mg/ha"} \SpecialCharTok{\textasciitilde{}}\NormalTok{ yield\_treatm }\SpecialCharTok{*} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{6}\NormalTok{,}
+    \FunctionTok{is.na}\NormalTok{(yield\_measure) }\SpecialCharTok{\textasciitilde{}} \DecValTok{0}\NormalTok{, }\CommentTok{\# set to zero temporarily due to metric uncertainty}
+    \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}}\NormalTok{ yield\_treatm }\CommentTok{\# assume the rest are already in kg/ha}
+\NormalTok{  )) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_yield\_treatm\_kgha =} \FunctionTok{ifelse}\NormalTok{(pr\_yield\_treatm\_kgha }\SpecialCharTok{==} \DecValTok{0}\NormalTok{, }\ConstantTok{NA}\NormalTok{, pr\_yield\_treatm\_kgha)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_yield\_measure\_unified =} \FunctionTok{case\_when}\NormalTok{(}
+    \FunctionTok{is.na}\NormalTok{(yield\_measure) }\SpecialCharTok{\textasciitilde{}} \ConstantTok{NA\_character\_}\NormalTok{,}
+    \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}} \StringTok{"kg/ha"}
+\NormalTok{  ))}
+\end{Highlighting}
+\end{Shaded}
+
+1.2 We create a ``year'' column for each observation
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 1.2 Year column creation {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{data\_pr}\SpecialCharTok{$}\NormalTok{pr\_pub\_Year }\OtherTok{\textless{}{-}} \FunctionTok{str\_extract}\NormalTok{(data\_pr}\SpecialCharTok{$}\NormalTok{Source, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{d\{4\}"}\NormalTok{)}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(pr\_pub\_Year, as.numeric))}
+
+\FunctionTok{summary}\NormalTok{(data\_pr}\SpecialCharTok{$}\NormalTok{pr\_pub\_Year)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    1973    2010    2013    2012    2016    2023    2499
+\end{verbatim}
+
+There are 2500 NA values in the ``pr\_pub\_Year'', meaning that 2500
+years could not be extracted from the Source column. Look the ``Working
+with the missing data'' section.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 1.3 Croptype unification {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\CommentTok{\# 1.3.1 Croptype unification}
+\FunctionTok{library}\NormalTok{(dplyr)}
+\FunctionTok{library}\NormalTok{(stringr)}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Croptype =} \FunctionTok{str\_to\_title}\NormalTok{(Croptype)) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Croptype =} \FunctionTok{case\_when}\NormalTok{(}
+    \FunctionTok{grepl}\NormalTok{(}\StringTok{"ice"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(pr\_Croptype)) }\SpecialCharTok{\textasciitilde{}} \StringTok{"Rice"}\NormalTok{,}
+    \FunctionTok{grepl}\NormalTok{(}\StringTok{"Vegetable"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(pr\_Croptype)) }\SpecialCharTok{\textasciitilde{}} \StringTok{"Vegetables"}\NormalTok{,}
+    \FunctionTok{grepl}\NormalTok{(}\StringTok{"Corn"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(pr\_Croptype)) }\SpecialCharTok{\textasciitilde{}} \StringTok{"Maize"}\NormalTok{,}
+\NormalTok{    pr\_Croptype }\SpecialCharTok{==} \StringTok{"Greenhouse"} \SpecialCharTok{\textasciitilde{}} \StringTok{"Greenhouse\_vegetable"}\NormalTok{, }\CommentTok{\# 1.3.2 addition of "\_vegetable" to the "greenhouse" observation}
+\NormalTok{    pr\_Croptype }\SpecialCharTok{==} \StringTok{"Tubercrop"} \SpecialCharTok{\textasciitilde{}} \StringTok{"Vegetables"}\NormalTok{,}
+\NormalTok{    pr\_Croptype }\SpecialCharTok{==} \StringTok{"Soybeans"} \SpecialCharTok{\textasciitilde{}} \StringTok{"Vegetables"}\NormalTok{,}
+    \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}} \FunctionTok{as.character}\NormalTok{(pr\_Croptype)}
+\NormalTok{  )) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Croptype =} \FunctionTok{as.factor}\NormalTok{(pr\_Croptype))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#  1.4 Longitude and Latitude repair  {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{pr\_Longitude =}\NormalTok{ Longitude,  }
+    \AttributeTok{pr\_Latitude =}\NormalTok{ Latitude}
+\NormalTok{  ) }
+
+\CommentTok{\# 1.4.1 Swap Longitude and Latitude for the selected section: Latitude \textgreater{} 90}
+\NormalTok{condition }\OtherTok{\textless{}{-}}\NormalTok{ data\_pr}\SpecialCharTok{$}\NormalTok{Latitude }\SpecialCharTok{\textgreater{}} \DecValTok{90}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{temp =} \FunctionTok{ifelse}\NormalTok{(condition, pr\_Longitude, }\ConstantTok{NA\_real\_}\NormalTok{),  }\CommentTok{\# Temporarily store Longitude in temp}
+    \AttributeTok{pr\_Longitude =} \FunctionTok{ifelse}\NormalTok{(condition, pr\_Latitude, pr\_Longitude),  }\CommentTok{\# Replace Longitude with Latitude}
+    \AttributeTok{pr\_Latitude =} \FunctionTok{ifelse}\NormalTok{(condition, temp, pr\_Latitude)  }\CommentTok{\# Replace Latitude with temp}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{temp)  }\CommentTok{\# Remove the temporary column}
+
+\CommentTok{\# 1.4.2 Swap Longitude and Latitude for the selected section: Latitude \textless{} {-}90}
+\NormalTok{condition2 }\OtherTok{\textless{}{-}}\NormalTok{ data\_pr}\SpecialCharTok{$}\NormalTok{Latitude }\SpecialCharTok{\textless{}} \SpecialCharTok{{-}}\DecValTok{90}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{temp =} \FunctionTok{ifelse}\NormalTok{(condition2, pr\_Longitude, }\ConstantTok{NA\_real\_}\NormalTok{),  }\CommentTok{\# Temporarily store Longitude in temp}
+    \AttributeTok{pr\_Longitude =} \FunctionTok{ifelse}\NormalTok{(condition2, pr\_Latitude, pr\_Longitude),  }\CommentTok{\# Replace Longitude with Latitude}
+    \AttributeTok{pr\_Latitude =} \FunctionTok{ifelse}\NormalTok{(condition2, temp, pr\_Latitude)  }\CommentTok{\# Replace Latitude with temp}
+\NormalTok{  ) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{temp)  }\CommentTok{\# Remove the temporary column}
+
+\CommentTok{\# 1.4.3 Correct the Marrabel coordinates, because the minus is in the wrong column}
+
+\NormalTok{condition3 }\OtherTok{\textless{}{-}}\NormalTok{ data\_pr}\SpecialCharTok{$}\NormalTok{SiteRegion }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\StringTok{"Marrabel"}\NormalTok{)}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}
+    \AttributeTok{pr\_Longitude =} \FunctionTok{ifelse}\NormalTok{(condition3, }\SpecialCharTok{{-}}\NormalTok{pr\_Longitude, pr\_Longitude),  }\CommentTok{\# Replace Longitude with Latitude}
+    \AttributeTok{pr\_Latitude =} \FunctionTok{ifelse}\NormalTok{(condition3, }\SpecialCharTok{{-}}\NormalTok{pr\_Latitude, pr\_Latitude)  }\CommentTok{\# Replace Latitude with temp}
+\NormalTok{  ) }
+
+
+\CommentTok{\# 1.4.4 Set wrong coordinates to NA}
+\NormalTok{condition4 }\OtherTok{\textless{}{-}}\NormalTok{ data\_pr}\SpecialCharTok{$}\NormalTok{pr\_Longitude }\SpecialCharTok{\textgreater{}} \DecValTok{10000}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr}\SpecialCharTok{\%\textgreater{}\%} 
+    \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Longitude =} \FunctionTok{ifelse}\NormalTok{(condition4, }\ConstantTok{NA\_character\_}\NormalTok{, pr\_Longitude),}
+           \AttributeTok{pr\_Latitude =} \FunctionTok{ifelse}\NormalTok{(condition4, }\ConstantTok{NA\_character\_}\NormalTok{, pr\_Latitude))}
+\end{Highlighting}
+\end{Shaded}
+
+The dataset D973 got assfigned ``straw addition'' by mistake. The paper
+was investigating the effect of Liming.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 1.5 Treatment correction D973 {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Treatment =} \FunctionTok{ifelse}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D973"}\NormalTok{, }\StringTok{"Liming"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(Treatment)))}
+\end{Highlighting}
+\end{Shaded}
+
+A similar case happened to the D309, where all observations got assigned
+to the ``straw addition'', whereas five different treatments were
+investigated. The code junk for correction can be found later in the 2.
+Working with the missing data section by 2.3
+
+\section{2. Working on the missing
+data}\label{working-on-the-missing-data}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 2.1 Croptpe 1 NA {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(Croptype }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(No. , Source, DatasetID)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1 x 3
+##   No.   Source              DatasetID
+##   <fct> <chr>               <fct>    
+## 1 3744  Zhang et al. (2021) D669
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Croptype =} \FunctionTok{ifelse}\NormalTok{(No. }\SpecialCharTok{==} \StringTok{"3744"}\NormalTok{, }\StringTok{"Greenhouse\_vegetable"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(pr\_Croptype))) }
+\end{Highlighting}
+\end{Shaded}
+
+@Elizaveta: This observation is also missing in the original primary
+supplement.\\
+Might be a typo, because all other observations from the same primary
+publication\\
+(the one used in the primary dataset as an observation), have the
+croptype\\
+``Greenhouse'' assigned. In the meeting in the 28/5/24 we agreed on
+assigning\\
+the ``greenhouse'' value to this observation.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 2.2 working on the unknown YEAR problem {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{table\_missing\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(pr\_pub\_Year }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{group\_by}\NormalTok{(DatasetID) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{summarise}\NormalTok{(}\AttributeTok{Occurrences =} \FunctionTok{n}\NormalTok{())}
+
+\NormalTok{knitr}\SpecialCharTok{::}\FunctionTok{kable}\NormalTok{(table\_missing\_years, }\AttributeTok{caption =} \StringTok{"Datasets with missing years"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{longtable}[]{@{}lr@{}}
+\caption{Datasets with missing years}\tabularnewline
+\toprule\noalign{}
+DatasetID & Occurrences \\
+\midrule\noalign{}
+\endfirsthead
+\toprule\noalign{}
+DatasetID & Occurrences \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+D331 & 475 \\
+D473 & 198 \\
+D652 & 1503 \\
+D66 & 315 \\
+D669 & 3 \\
+D921B & 5 \\
+\end{longtable}
+
+\textbf{D331}: 475 observations only have a title of the paper with no
+further citation. Those titles were looked up on the CNKI (Chineese
+Database Web) and the publication dates were recorded. \textbf{!!
+Important Note:} Some observations are no \emph{real} publications, but
+master thesises. On the CNKI the have a publication type ``Master
+Thesis''. \textbf{D473}: Has a StudyID in the Source column, therefore
+the Year could not be extracted. However, has a ``Year'' column, that
+can be joined. \textbf{652}: Has a StudyID in the Source column,
+therefore the Year could not be extracted. The actual references can be
+found in the word supplement. \textbf{D66}: Has a StudyID in the Source
+column, and no further references in the supplementary information.\\
+\textbf{D669}: The study of Le et al.~could not be foung neither in
+Google Scholar nor in CNKI\\
+\textbf{D921B, D973}: correct the typos
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# D331 filling the missing Year values {-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{D331\_years }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"d331\_years.csv"}\NormalTok{) }
+\NormalTok{D331\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{  D331\_years }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(Source, Publication\_Date) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{unique}\NormalTok{()}
+
+\NormalTok{D331\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{D331\_years }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_pub\_Year =} \FunctionTok{str\_extract}\NormalTok{(D331\_years}\SpecialCharTok{$}\NormalTok{Publication\_Date, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{d\{4\}"}\NormalTok{))}
+
+
+\NormalTok{D331\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{  D331\_years }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(pr\_pub\_Year, as.numeric))}
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}   
+  \FunctionTok{left\_join}\NormalTok{(data\_pr, D331\_years, }\FunctionTok{join\_by}\NormalTok{(}\StringTok{"Source"}\SpecialCharTok{==}\StringTok{"Source"}\NormalTok{), }\AttributeTok{relationship =} \StringTok{"many{-}to{-}one"}\NormalTok{,}
+            \AttributeTok{suffix =} \FunctionTok{c}\NormalTok{(}\StringTok{".data\_pr"}\NormalTok{, }\StringTok{".D331"}\NormalTok{)) }
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_pub\_Year.data\_pr =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{    pr\_pub\_Year.D331 }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{) }\SpecialCharTok{\textasciitilde{}}\NormalTok{ pr\_pub\_Year.data\_pr,}
+    \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}}\NormalTok{ pr\_pub\_Year.D331}
+\NormalTok{  ))}
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{ data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+   \FunctionTok{rename\_at}\NormalTok{(}\StringTok{\textquotesingle{}pr\_pub\_Year.data\_pr\textquotesingle{}}\NormalTok{, }\SpecialCharTok{\textasciitilde{}}\StringTok{\textquotesingle{}pr\_pub\_Year\textquotesingle{}}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+   \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{pr\_pub\_Year.D331, }\SpecialCharTok{{-}}\NormalTok{Publication\_Date)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# D473 filling the missing Year values {-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{D473\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{  D473\_orig }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(Study\_ID, Year) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{unique}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Study\_ID =} \FunctionTok{paste0}\NormalTok{(}\StringTok{"D473"}\NormalTok{, }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(Study\_ID)))}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_StudyID =} \FunctionTok{paste0}\NormalTok{(DatasetID, }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, Source))}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}   
+  \FunctionTok{left\_join}\NormalTok{(data\_pr, D473\_years, }\FunctionTok{join\_by}\NormalTok{(}\StringTok{"pr\_StudyID"}\SpecialCharTok{==}\StringTok{"Study\_ID"}\NormalTok{), }\AttributeTok{relationship =} \StringTok{"many{-}to{-}one"}\NormalTok{) }
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_pub\_Year =} \FunctionTok{ifelse}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D473"}\NormalTok{, Year, pr\_pub\_Year))}
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{ data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+   \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{Year)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# D652 filling the missing Year values {-}{-}{-}{-}{-}{-}{-}{-}}
+
+
+\NormalTok{D652\_years }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\StringTok{"d652\_years.csv"}\NormalTok{, }\AttributeTok{header =} \ConstantTok{FALSE}\NormalTok{) }
+
+\NormalTok{D652\_years }\OtherTok{\textless{}{-}}
+\NormalTok{D652\_years }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{rename}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{DatasetID}\StringTok{\textasciigrave{}} \OtherTok{=} \StringTok{\textasciigrave{}}\AttributeTok{V1}\StringTok{\textasciigrave{}}\NormalTok{,}
+         \StringTok{\textasciigrave{}}\AttributeTok{StudyNr}\StringTok{\textasciigrave{}} \OtherTok{=} \StringTok{\textasciigrave{}}\AttributeTok{V2}\StringTok{\textasciigrave{}}\NormalTok{,}
+         \StringTok{\textasciigrave{}}\AttributeTok{Source}\StringTok{\textasciigrave{}} \OtherTok{=} \StringTok{\textasciigrave{}}\AttributeTok{V3}\StringTok{\textasciigrave{}}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{V4) }
+
+\NormalTok{D652\_years }\OtherTok{\textless{}{-}}
+\NormalTok{D652\_years }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Year =} \FunctionTok{str\_extract}\NormalTok{(D652\_years}\SpecialCharTok{$}\NormalTok{Source, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{b(19[6{-}9][0{-}9]|20[0{-}1][0{-}9]|2020|2021|2022)}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{b"}\NormalTok{) }\CommentTok{\# in this case the Year extraction is kind of awkward because the source utilized different citation styles, and I cannot extract just the 4 digits or define the surroundings.}
+\NormalTok{         ) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{StudyID =} \FunctionTok{paste0}\NormalTok{(}\StringTok{"D652"}\NormalTok{, }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(StudyNr))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(StudyID, Year) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{unique}\NormalTok{()  }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(Year, as.numeric))}
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}   
+  \FunctionTok{left\_join}\NormalTok{(data\_pr, D652\_years, }\FunctionTok{join\_by}\NormalTok{(}\StringTok{"pr\_StudyID"}\SpecialCharTok{==}\StringTok{"StudyID"}\NormalTok{), }\AttributeTok{relationship =} \StringTok{"many{-}to{-}one"}\NormalTok{) }
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_pub\_Year =} \FunctionTok{ifelse}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D652"}\NormalTok{, Year, pr\_pub\_Year)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{Year)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# D921B correcting the typos {-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(pr\_pub\_Year }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{),}
+\NormalTok{         DatasetID }\SpecialCharTok{==} \StringTok{"D921B"}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 5 x 23
+##   No.   DatasetID Source          Country SiteRegion Latitude Longitude Croptype
+##   <fct> <fct>     <chr>           <fct>   <fct>         <dbl>     <dbl> <fct>   
+## 1 5052  D921B     Liu et al., 201 <NA>    <NA>           41.2     121.  Corn    
+## 2 5067  D921B     Bahrani et al.~ <NA>    <NA>           52.8      29.8 Corn    
+## 3 5068  D921B     Bahrani et al.~ <NA>    <NA>           52.8      29.8 Corn    
+## 4 5069  D921B     Bahrani et al.~ <NA>    <NA>           52.8      29.8 Corn    
+## 5 5070  D921B     Bahrani et al.~ <NA>    <NA>           52.8      29.8 Corn    
+## # i 15 more variables: yield_control <dbl>, yield_treatm <dbl>,
+## #   yield_measure <fct>, Treatment <fct>, QualityOfDataPoint <fct>,
+## #   Coordinate_format <chr>, pr_yield_control_kgha <dbl>,
+## #   pr_yield_treatm_kgha <dbl>, pr_yield_measure_unified <chr>,
+## #   pr_pub_Year <dbl>, pr_Croptype <chr>, pr_Longitude <chr>,
+## #   pr_Latitude <chr>, pr_Treatment <chr>, pr_StudyID <chr>
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{condition5 }\OtherTok{\textless{}{-}}\NormalTok{  data\_pr}\SpecialCharTok{$}\NormalTok{pr\_pub\_Year}\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{) }\SpecialCharTok{\&}\NormalTok{  data\_pr}\SpecialCharTok{$}\NormalTok{Source }\SpecialCharTok{==} \StringTok{"Bahrani et al., 207"}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Source =} \FunctionTok{ifelse}\NormalTok{(condition5, }\StringTok{"Bahrani et al., 2007"}\NormalTok{, Source),}
+         \AttributeTok{pr\_pub\_Year =} \FunctionTok{ifelse}\NormalTok{(condition5, }\DecValTok{2007}\NormalTok{, pr\_pub\_Year)) }
+
+\CommentTok{\# check:}
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(pr\_pub\_Year }\SpecialCharTok{\%in\%} \FunctionTok{c}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{),}
+\NormalTok{         DatasetID }\SpecialCharTok{==} \StringTok{"D921B"}\NormalTok{) }
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 1 x 23
+##   No.   DatasetID Source          Country SiteRegion Latitude Longitude Croptype
+##   <fct> <fct>     <chr>           <fct>   <fct>         <dbl>     <dbl> <fct>   
+## 1 5052  D921B     Liu et al., 201 <NA>    <NA>           41.2      121. Corn    
+## # i 15 more variables: yield_control <dbl>, yield_treatm <dbl>,
+## #   yield_measure <fct>, Treatment <fct>, QualityOfDataPoint <fct>,
+## #   Coordinate_format <chr>, pr_yield_control_kgha <dbl>,
+## #   pr_yield_treatm_kgha <dbl>, pr_yield_measure_unified <chr>,
+## #   pr_pub_Year <dbl>, pr_Croptype <chr>, pr_Longitude <chr>,
+## #   pr_Latitude <chr>, pr_Treatment <chr>, pr_StudyID <chr>
+\end{verbatim}
+
+Bahrani et al: Bahrani M., Raufat M., Ghadiri H., 2007. Influence of
+wheat residue management on irrigated corn grain production in a reduced
+tillage system. Soil \& Tillage Research, 94, 305-309.\\
+So, the year can be changed to 2007.\\
+However, there are too many different papers from ``Liu'' , so the year
+could not be identified.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(data\_pr}\SpecialCharTok{$}\NormalTok{pr\_pub\_Year)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    1973    2010    2014    2013    2017    2023     378
+\end{verbatim}
+
+\textbf{Important Remark}:\\
+Sometimes a dataset has a ``Year'' column. Those years can be
+publication years or harvest years. I will import those in the
+harvest\_Year column, because the difference between the harvest and the
+publication is sometimes longer than 10 years. Datasets that have a
+harvest year column: D973, D1120, D906
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#  D973 add harvest year {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{D973\_orig }\OtherTok{\textless{}{-}} 
+\NormalTok{D973\_orig }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Citation =} \FunctionTok{ifelse}\NormalTok{(NO. }\SpecialCharTok{==} \StringTok{"2"}\NormalTok{, }\StringTok{"Hueppi et al., 2015"}\NormalTok{, Citation) )}
+
+\NormalTok{D973\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{D973\_orig }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(Citation, Year, }\StringTok{\textasciigrave{}}\AttributeTok{Crop yield}\StringTok{\textasciigrave{}}\NormalTok{, ...}\DecValTok{35}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{drop\_na}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{unique}\NormalTok{()  }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{Year =} \FunctionTok{str\_extract}\NormalTok{(Year, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{d\{4\}"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{c}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Crop yield}\StringTok{\textasciigrave{}}\NormalTok{, ...}\DecValTok{35}\NormalTok{), as.numeric))}
+ 
+\NormalTok{D973\_years}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{Crop yield}\StringTok{\textasciigrave{}} \OtherTok{\textless{}{-}}  \FunctionTok{round}\NormalTok{(D973\_years}\SpecialCharTok{$}\StringTok{\textasciigrave{}}\AttributeTok{Crop yield}\StringTok{\textasciigrave{}}\NormalTok{, }\AttributeTok{digits =} \DecValTok{2}\NormalTok{)}
+\NormalTok{D973\_years}\SpecialCharTok{$}\NormalTok{...}\DecValTok{35} \OtherTok{\textless{}{-}}  \FunctionTok{round}\NormalTok{(D973\_years}\SpecialCharTok{$}\NormalTok{...}\DecValTok{35}\NormalTok{, }\AttributeTok{digits =} \DecValTok{2}\NormalTok{)}
+
+\NormalTok{D973\_years }\OtherTok{\textless{}{-}}
+\NormalTok{  D973\_years }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Source\_yield =} \FunctionTok{paste0}\NormalTok{(Citation, }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Crop yield}\StringTok{\textasciigrave{}}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(...}\DecValTok{35}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(pr\_Source\_yield, Year) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{distinct}\NormalTok{(pr\_Source\_yield, }\AttributeTok{.keep\_all =} \ConstantTok{TRUE}\NormalTok{)}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Source\_yield =} \FunctionTok{paste0}\NormalTok{(Source, }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(yield\_control), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(yield\_treatm)))}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}   
+  \FunctionTok{left\_join}\NormalTok{(data\_pr, D973\_years, }\FunctionTok{join\_by}\NormalTok{(}\StringTok{"pr\_Source\_yield"}\SpecialCharTok{==}\StringTok{"pr\_Source\_yield"}\NormalTok{), }\AttributeTok{relationship =} \StringTok{"many{-}to{-}one"}\NormalTok{) }
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{  data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_harvest\_Year =}\NormalTok{ Year) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{Year)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# D1120 add the harvest year {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\NormalTok{D1120\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{  D1120\_orig }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{harvest\_Year =} \FunctionTok{str\_extract}\NormalTok{(HarvestE, }\StringTok{"}\SpecialCharTok{\textbackslash{}\textbackslash{}}\StringTok{d\{4\}"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{author\_yield =} \FunctionTok{paste0}\NormalTok{(Author, }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(YieldCT), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(YieldNT))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(author\_yield, harvest\_Year) }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{drop\_na}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{unique}\NormalTok{()  }
+
+\NormalTok{data\_pr  }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%}   
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_first\_author =} \FunctionTok{str\_extract}\NormalTok{(Source, }\StringTok{"\^{}[\^{} et]+"}\NormalTok{),}
+         \AttributeTok{pr\_author\_yield =} \FunctionTok{paste0}\NormalTok{(pr\_first\_author, }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(yield\_control), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(yield\_treatm)))}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}   
+  \FunctionTok{left\_join}\NormalTok{(data\_pr, D1120\_years, }\FunctionTok{join\_by}\NormalTok{(}\StringTok{"pr\_author\_yield"}\SpecialCharTok{==}\StringTok{"author\_yield"}\NormalTok{), }\AttributeTok{relationship =} \StringTok{"many{-}to{-}one"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_harvest\_Year =} \FunctionTok{ifelse}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D1120"}\NormalTok{, harvest\_Year, pr\_harvest\_Year)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{harvest\_Year, }\SpecialCharTok{{-}}\NormalTok{pr\_first\_author, }\SpecialCharTok{{-}}\NormalTok{pr\_author\_yield)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# D906 add the harvest year {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\CommentTok{\# since both datasets have dublicates, it will be hard to join them based on a relationship. }
+\CommentTok{\# therefore, i check whether the order of the obsns in both data sets is the same. }
+
+\NormalTok{D906\_temp }\OtherTok{\textless{}{-}} 
+\NormalTok{  D906\_orig }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{slice}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\DecValTok{381}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}   
+  \FunctionTok{select}\NormalTok{(Ref., Year, }\StringTok{\textasciigrave{}}\AttributeTok{Maize yield (Mg/ha)}\StringTok{\textasciigrave{}}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Source\_yield =} \FunctionTok{paste0}\NormalTok{(Ref., }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Maize yield (Mg/ha)}\StringTok{\textasciigrave{}}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(pr\_Source\_yield)}
+
+\NormalTok{data\_pr\_temp }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D906"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(pr\_Source\_yield) }
+
+\FunctionTok{map2\_lgl}\NormalTok{(}
+\NormalTok{  D906\_temp, data\_pr\_temp, }
+  \SpecialCharTok{\textasciitilde{}} \FunctionTok{all}\NormalTok{(.x }\SpecialCharTok{==}\NormalTok{ .y)}
+\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## pr_Source_yield 
+##            TRUE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# The result is TRUE, so we can just merge this two datasets based on the rownumber}
+\FunctionTok{rm}\NormalTok{(D906\_temp)}
+\FunctionTok{rm}\NormalTok{(data\_pr\_temp)}
+
+\NormalTok{temp }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D906"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(No.) }
+
+
+\NormalTok{D906\_years }\OtherTok{\textless{}{-}} 
+\NormalTok{  D906\_orig }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{slice}\NormalTok{(}\DecValTok{1}\SpecialCharTok{:}\DecValTok{381}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}   
+  \FunctionTok{select}\NormalTok{(Ref., Year, }\StringTok{\textasciigrave{}}\AttributeTok{Maize yield (Mg/ha)}\StringTok{\textasciigrave{}}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Source\_yield =} \FunctionTok{paste0}\NormalTok{(Ref., }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Maize yield (Mg/ha)}\StringTok{\textasciigrave{}}\NormalTok{), }\AttributeTok{sep =} \StringTok{"\_"}\NormalTok{, }\FunctionTok{as.character}\NormalTok{(}\ConstantTok{NA\_character\_}\NormalTok{))) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(Year) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{No. =}\NormalTok{ temp}\SpecialCharTok{$}\NormalTok{No.)}
+
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}   
+  \FunctionTok{left\_join}\NormalTok{(data\_pr, D906\_years, }\FunctionTok{join\_by}\NormalTok{(}\StringTok{"No."}\SpecialCharTok{==}\StringTok{"No."}\NormalTok{))   }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_harvest\_Year =} \FunctionTok{ifelse}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D906"}\NormalTok{, Year, pr\_harvest\_Year)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{Year)}
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\FunctionTok{across}\NormalTok{(pr\_harvest\_Year, as.numeric))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{summary}\NormalTok{(data\_pr}\SpecialCharTok{$}\NormalTok{pr\_harvest\_Year)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    1962    1990    1997    1996    2006    2017    7771
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# 2.3 Treatment correction D309 {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+\CommentTok{\# D309\_orig follows the same order of observations as the data\_pr}
+
+\NormalTok{temp }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D309"}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(No.)}
+
+\NormalTok{D309\_treatment }\OtherTok{\textless{}{-}} 
+\NormalTok{  D309\_orig }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{select}\NormalTok{(orig\_Treatment) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{No. =}\NormalTok{ temp}\SpecialCharTok{$}\NormalTok{No.)}
+
+
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}   
+  \FunctionTok{left\_join}\NormalTok{(data\_pr, D309\_treatment, }\FunctionTok{join\_by}\NormalTok{(}\StringTok{"No."}\SpecialCharTok{==}\StringTok{"No."}\NormalTok{))   }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Treatment =} \FunctionTok{ifelse}\NormalTok{(DatasetID }\SpecialCharTok{==} \StringTok{"D309"}\NormalTok{, orig\_Treatment, pr\_Treatment)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{orig\_Treatment)}
+\end{Highlighting}
+\end{Shaded}
+
+\section{3. preparing the data set for the land cover
+mapping}\label{preparing-the-data-set-for-the-land-cover-mapping}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Year\_difference =}\NormalTok{ pr\_pub\_Year }\SpecialCharTok{{-}}\NormalTok{ pr\_harvest\_Year)  }
+
+\FunctionTok{summary}\NormalTok{(data\_pr}\SpecialCharTok{$}\NormalTok{pr\_Year\_difference)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    1.00    4.00    7.00   10.57   11.00   57.00    7771
+\end{verbatim}
+
+The median of the difference between the harvest and the publication is
+7 years. The mean, however, is 10.5 yrs. We decided to use the median
+value.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_harvest\_Year\_by\_median =}\NormalTok{ pr\_pub\_Year}\DecValTok{{-}7}\NormalTok{)}
+
+\FunctionTok{summary}\NormalTok{(data\_pr}\SpecialCharTok{$}\NormalTok{pr\_harvest\_Year\_by\_median)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+##    1966    2003    2007    2006    2010    2016     378
+\end{verbatim}
+
+also, we do not need any points with either no coordinates or no year
+indications:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{(pr\_pub\_Year }\SpecialCharTok{\%in\%} \ConstantTok{NA\_character\_}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{(pr\_Longitude }\SpecialCharTok{\%in\%} \ConstantTok{NA\_character\_}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%} 
+   \FunctionTok{filter}\NormalTok{(}\SpecialCharTok{!}\NormalTok{(pr\_Latitude }\SpecialCharTok{\%in\%} \ConstantTok{NA\_character\_}\NormalTok{)) }
+\end{Highlighting}
+\end{Shaded}
+
+The land cover map found in the gee has the year 1985, 1990, 1995,
+2000-2022 (yearly). Let's assign the land coiver map year:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\OtherTok{\textless{}{-}}\NormalTok{ data\_pr }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_land\_cover\_Year =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{    pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textgreater{}=} \DecValTok{2000} \SpecialCharTok{\&}\NormalTok{ pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textless{}=} \DecValTok{2022} \SpecialCharTok{\textasciitilde{}}\NormalTok{ pr\_harvest\_Year\_by\_median,}
+\NormalTok{    pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textless{}} \DecValTok{1975} \SpecialCharTok{\textasciitilde{}} \ConstantTok{NA\_integer\_}\NormalTok{,}
+\NormalTok{    pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textgreater{}=} \DecValTok{1975} \SpecialCharTok{\&}\NormalTok{ pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textless{}=} \DecValTok{1987} \SpecialCharTok{\textasciitilde{}} \DecValTok{1985}\NormalTok{,}
+\NormalTok{    pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textgreater{}=} \DecValTok{1988} \SpecialCharTok{\&}\NormalTok{ pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textless{}=} \DecValTok{1992} \SpecialCharTok{\textasciitilde{}} \DecValTok{1990}\NormalTok{,}
+\NormalTok{    pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textgreater{}=} \DecValTok{1993} \SpecialCharTok{\&}\NormalTok{ pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textless{}=} \DecValTok{1997} \SpecialCharTok{\textasciitilde{}} \DecValTok{1995}\NormalTok{,}
+\NormalTok{    pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textgreater{}} \DecValTok{1997} \SpecialCharTok{\&}\NormalTok{ pr\_harvest\_Year\_by\_median }\SpecialCharTok{\textless{}=} \DecValTok{2000} \SpecialCharTok{\textasciitilde{}} \DecValTok{2000}\NormalTok{,}
+    \ConstantTok{TRUE} \SpecialCharTok{\textasciitilde{}} \ConstantTok{NA\_integer\_}  \CommentTok{\# default case if none of the above conditions match}
+\NormalTok{  ))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr\_final\_wide }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{select}\NormalTok{(No., DatasetID, Country, SiteRegion, QualityOfDataPoint, Coordinate\_format, pr\_yield\_control\_kgha, pr\_yield\_treatm\_kgha, pr\_Croptype, pr\_Treatment, pr\_Longitude, pr\_Latitude, pr\_harvest\_Year\_by\_median, pr\_land\_cover\_Year )}
+
+\FunctionTok{write.csv}\NormalTok{(data\_pr\_final\_wide, }\StringTok{"points\_wide.csv"}\NormalTok{, }\AttributeTok{row.names =} \ConstantTok{FALSE}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr\_final\_long }\OtherTok{\textless{}{-}} 
+\NormalTok{data\_pr\_final\_wide }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{pivot\_longer}\NormalTok{(}\AttributeTok{cols=}\FunctionTok{c}\NormalTok{(}\StringTok{\textquotesingle{}pr\_yield\_control\_kgha\textquotesingle{}}\NormalTok{, }\StringTok{\textquotesingle{}pr\_yield\_treatm\_kgha\textquotesingle{}}\NormalTok{),}
+                    \AttributeTok{names\_to=}\StringTok{\textquotesingle{}pr\_yield\_type\textquotesingle{}}\NormalTok{,}
+                    \AttributeTok{values\_to=}\StringTok{\textquotesingle{}pr\_yield\_kgha\textquotesingle{}}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_yield\_type =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{    pr\_yield\_type }\SpecialCharTok{==} \StringTok{"pr\_yield\_control\_kgha"} \SpecialCharTok{\textasciitilde{}} \StringTok{"control"}\NormalTok{,}
+\NormalTok{    pr\_yield\_type }\SpecialCharTok{==} \StringTok{"pr\_yield\_treatm\_kgha"} \SpecialCharTok{\textasciitilde{}} \StringTok{"treatment"}\NormalTok{,}
+\NormalTok{  )) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{pr\_Treatment =} \FunctionTok{case\_when}\NormalTok{(}
+\NormalTok{    pr\_yield\_type }\SpecialCharTok{==} \StringTok{"control"} \SpecialCharTok{\textasciitilde{}} \StringTok{"Control"}
+\NormalTok{  ))}
+
+\CommentTok{\#write.csv(data\_pr\_final\_long, "data\_pr\_final.csv", row.names = FALSE)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{write.csv}\NormalTok{(data\_pr\_final\_wide, }\StringTok{"points.csv"}\NormalTok{, }\AttributeTok{row.names =} \ConstantTok{FALSE}\NormalTok{)}
+
+
+\CommentTok{\# UNCOMMENT THE FOLLWOING IF YOU NEED SEPARATE DATASETS {-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}{-}}
+
+
+
+\CommentTok{\# dir.create(file.path(dirname("C:\textbackslash{}\textbackslash{}Users\textbackslash{}\textbackslash{}lisa7\textbackslash{}\textbackslash{}Documents\textbackslash{}\textbackslash{}surrounding\_landscapes\textbackslash{}\textbackslash{}points"), "points"))}
+\CommentTok{\# }
+\CommentTok{\# data\_points\_1985 \textless{}{-} }
+\CommentTok{\# data\_pr\_final\_wide \%\textgreater{}\% }
+\CommentTok{\#   filter(pr\_land\_cover\_Year == "1985")}
+\CommentTok{\# write.csv(data\_points\_1985, }
+\CommentTok{\#           file.path("C:\textbackslash{}\textbackslash{}Users\textbackslash{}\textbackslash{}lisa7\textbackslash{}\textbackslash{}Documents\textbackslash{}\textbackslash{}surrounding\_landscapes\textbackslash{}\textbackslash{}points\textbackslash{}\textbackslash{}", "points\_1985.csv"), }
+\CommentTok{\#           row.names = FALSE)}
+\CommentTok{\# }
+\CommentTok{\# data\_points\_1990 \textless{}{-} }
+\CommentTok{\# data\_pr\_final\_wide \%\textgreater{}\% }
+\CommentTok{\#   filter(pr\_land\_cover\_Year == "1990")}
+\CommentTok{\# write.csv(data\_points\_1990, }
+\CommentTok{\#           file.path("C:\textbackslash{}\textbackslash{}Users\textbackslash{}\textbackslash{}lisa7\textbackslash{}\textbackslash{}Documents\textbackslash{}\textbackslash{}surrounding\_landscapes\textbackslash{}\textbackslash{}points", "points\_1990.csv"), }
+\CommentTok{\#           row.names = FALSE)}
+\CommentTok{\# }
+\CommentTok{\# data\_points\_1995 \textless{}{-} }
+\CommentTok{\# data\_pr\_final\_wide \%\textgreater{}\% }
+\CommentTok{\#   filter(pr\_land\_cover\_Year == "1995")}
+\CommentTok{\# write.csv(data\_points\_1995, }
+\CommentTok{\#           file.path("C:\textbackslash{}\textbackslash{}Users\textbackslash{}\textbackslash{}lisa7\textbackslash{}\textbackslash{}Documents\textbackslash{}\textbackslash{}surrounding\_landscapes\textbackslash{}\textbackslash{}points", "points\_1995.csv"), }
+\CommentTok{\#           row.names = FALSE)}
+\CommentTok{\# }
+\CommentTok{\# years \textless{}{-} seq(2000,2022)}
+\CommentTok{\# }
+\CommentTok{\# data\_points\_1995 \textless{}{-} }
+\CommentTok{\# data\_pr\_final\_wide \%\textgreater{}\% }
+\CommentTok{\#   filter(pr\_land\_cover\_Year == "1995")}
+\CommentTok{\# write.csv(data\_points\_1995, }
+\CommentTok{\#           file.path("C:\textbackslash{}\textbackslash{}Users\textbackslash{}\textbackslash{}lisa7\textbackslash{}\textbackslash{}Documents\textbackslash{}\textbackslash{}surrounding\_landscapes\textbackslash{}\textbackslash{}points", "points\_1995.csv"), }
+\CommentTok{\#           row.names = FALSE)}
+\CommentTok{\# }
+\CommentTok{\# }
+\CommentTok{\# }
+\CommentTok{\# for (i in years) \{}
+\CommentTok{\# data \textless{}{-} }
+\CommentTok{\# data\_pr\_final\_wide \%\textgreater{}\% }
+\CommentTok{\#   filter(pr\_land\_cover\_Year == i)}
+\CommentTok{\# }
+\CommentTok{\# write.csv(data, file.path("C:\textbackslash{}\textbackslash{}Users\textbackslash{}\textbackslash{}lisa7\textbackslash{}\textbackslash{}Documents\textbackslash{}\textbackslash{}surrounding\_landscapes\textbackslash{}\textbackslash{}points",}
+\CommentTok{\#                           paste0("points", sep = "\_", as.character(i), ".csv")), }
+\CommentTok{\#                           row.names = FALSE)}
+\CommentTok{\# \}}
+\end{Highlighting}
+\end{Shaded}
+
+Result: we went from 2500 NAs to 378.
+
+\subsubsection{Data Exploration and Further
+remarks:}\label{data-exploration-and-further-remarks}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  The ``greenhouse'' croptype comes and only occurs in the dataset
+  ``D669''.\\
+  The dataset D669 only differentiates between ``greenhouse'' and ``open
+  vegetables'',\\
+  because the authors wanted to compare the results obtained in the
+  ``greenhouse''\\
+  and in the field (``open vegetables''). Therefore, they do not
+  differentiate\\
+  between croptypes in their dataset. For the data selection criteria of
+  the crop\\
+  type they had vegetables (cabbage, small rape, lettuce, etc.), fruits,
+  and pod\\
+  vegetables (potatoes, beans, cucumbers, etc.) The croptype was not
+  differentiated\\
+  in the dataset, all set to ``greenhouse'' or ``open vegetables''.\\
+  Therefore, we added ``\_veggie'' to the ``greenhouse'' value.\\
+\item
+  Chinese meta-studies often make use of the CNKI by collecting their
+  data. This database allows Master Thesises to be included. Therefore,
+  some of the observations coming from the chinese studies are not
+  \emph{critically speaking} peer reviewed.
+\end{enumerate}
+
+\subsubsection{S.1 What is the difference between harvest and
+publication}\label{s.1-what-is-the-difference-between-harvest-and-publication}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{data\_pr }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{year\_difference =}\NormalTok{ pr\_pub\_Year }\SpecialCharTok{{-}}\NormalTok{ pr\_harvest\_Year) }\SpecialCharTok{\%\textgreater{}\%} 
+  \FunctionTok{ggplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x =}\NormalTok{ year\_difference)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_bar}\NormalTok{() }\CommentTok{\#+}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{surrounding_landscapes_report_files/figure-latex/harvest-publication difference-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+  \FunctionTok{scale\_x\_continuous}\NormalTok{(}\AttributeTok{breaks =} \FunctionTok{seq}\NormalTok{(}\FunctionTok{min}\NormalTok{(}\DecValTok{0}\NormalTok{), }
+                                  \FunctionTok{max}\NormalTok{(}\DecValTok{70}\NormalTok{), }
+                                  \AttributeTok{by =} \DecValTok{5}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## <ScaleContinuousPosition>
+##  Range:  
+##  Limits:    0 --    1
+\end{verbatim}
+
+\end{document}
