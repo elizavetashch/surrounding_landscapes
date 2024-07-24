@@ -48,7 +48,7 @@ years.forEach(function(year) {
 });
 
 /////// (3) Function to buffer the points ////////////////////////////////////
-
+// if bounds set to "true" then square bounds if to "false" or not indicated then circle bounds 
 function bufferPoints(radius, bounds) {
   return function(pt) {
     pt = ee.Feature(pt);
@@ -186,7 +186,7 @@ var edges_2009 = ee.Algorithms.CannyEdgeDetector({
 
 // (6.4) Function to process edge lengths for 2009 only
 function processEdges(points, image, edges) {
-  var bufferedPoints = points.map(bufferPoints(5000, true));
+  var bufferedPoints = points.map(bufferPoints(5000));
   var results = bufferedPoints.map(function(point) {
     var edgeLengths = ee.List(classes.map(function(classValue) {
       return calculateEdgeLength(image, edges, point.geometry(), classValue);
