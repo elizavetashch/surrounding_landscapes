@@ -25,9 +25,10 @@
 (6.1) import the datasets
 (6.2) Select images
 (6.3) Apply edge detection to get the boundaries of the classes for 2009
-(6.4) Process edge lengths for points in 2009
-(6.5) Map over the original feature collection and flatten the result
-(6.6) Export to csv
+(6.4) Function to process edge lengths for 2009 only
+(6.5) Apply function to process edge lengths for points in 2009
+(6.6) Map over the original feature collection and flatten the result
+(6.7) Export to csv
 */ 
 
 
@@ -183,15 +184,27 @@ var edges_2009 = ee.Algorithms.CannyEdgeDetector({
   sigma: 1
 }).selfMask();
 
-// (6.4) Process edge lengths for points in 2009
+// (6.4) Function to process edge lengths for 2009 only
+function processEdges(points, image, edges) {
+  var bufferedPoints = points.map(bufferPoints(5000, true));
+  var results = bufferedPoints.map(function(point) {
+    var edgeLengths = ee.List(classes.map(function(classValue) {
+      return calculateEdgeLength(image, edges, point.geometry(), classValue);
+    }));
+    return point.set('edge_lengths', edgeLengths);
+  });
+  return results;
+}
+
+// (6.5) Apply funciton to process edge lengths for points in 2009
 var edgeLengths_2009_p1 = processEdges(points_p1, image_2009, edges_2009);
 var edgeLengths_2009_p2 = processEdges(points_p2, image_2009, edges_2009);
 
-// (6.5) Map over the original feature collection and flatten the result
+// (6.6) Map over the original feature collection and flatten the result
 var unpackedFeatureCollection_2009_p1 = ee.FeatureCollection(edgeLengths_2009_p1.map(unpackEdgeLengths)).flatten();
 var unpackedFeatureCollection_2009_p2 = ee.FeatureCollection(edgeLengths_2009_p2.map(unpackEdgeLengths)).flatten();
 
-// (6.6) Export to csv 
+// (6.7) Export to csv 
 Export.table.toDrive({
    collection: unpackedFeatureCollection_2009_p1,
    description: 'lm_edgelength_5000m_2009_p1',
