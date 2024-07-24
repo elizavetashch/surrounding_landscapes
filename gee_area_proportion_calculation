@@ -162,21 +162,21 @@ var results_1995 = filteredPoints_1985.map(bufferPoints(5000)).map(applyComposit
 
 Export.table.toDrive({
   collection: results_1985,
-  description: 'lm_area_proportion_5000m_1985',
+  description: 'lm_area_proportion_1985',
   folder: "GEE area proportion 5000 m",
   fileFormat: 'CSV'
 });
 
 Export.table.toDrive({
   collection: results_1990,
-  description: 'lm_area_proportion_5000m_1990',
+  description: 'lm_area_proportion_1990',
   folder: "GEE area proportion 5000 m",
   fileFormat: 'CSV'
 });
 
 Export.table.toDrive({
   collection: results_1995,
-  description: 'lm_area_proportion_5000m_1995',
+  description: 'lm_area_proportion_1995',
   folder: "GEE area proportion 5000 m",
   fileFormat: 'CSV'
 });
@@ -190,11 +190,11 @@ for (var i = 1; i <= 17; i++) {
   var year = 1999 + i; // starts at year 2000 for annual maps
   var image = annualmosaic.select("b" + i);
   var filteredPoints = points.filter(ee.Filter.eq('pr_land_cover_Year', year.toString()));
-  var results_annual = filteredPoints.map(bufferPoints(5000,true)).map(applyComposition).flatten();
+  var results_annual = filteredPoints.map(bufferPoints(5000)).map(applyComposition).flatten();
   
   Export.table.toDrive({
   collection: results_annual,
-  description: 'lm_area_proportion_5000m_' + year.toString(),
+  description: 'lm_area_proportion' + year.toString(),
   folder: "GEE area proportion 5000 m",
   fileFormat: 'CSV'
 });
