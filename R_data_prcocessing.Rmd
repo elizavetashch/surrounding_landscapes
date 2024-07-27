@@ -1,0 +1,1274 @@
+---
+title: "Surrounding Landscapes Data Report"
+author: "Elizaveta Shcherbinina"
+output:
+  pdf_document:
+    citation_package: natbib
+    keep_tex: true
+    fig_caption: true
+    latex_engine: xelatex
+abstract: "This document represents the modifications made to the original **All_yield_coords_decimals_20240417 - Copy.csv** data file, and the process of creating the current data csv file with original yield points and landscape metrics computed in Google Earth Engine. "
+date: "25. July 2024"
+geometry: margin=1in
+fontfamily: mathpazo
+fontsize: 11pt
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+
+```{r packages}
+library(rmarkdown)
+# data packages
+library(readr)
+library(readxl)
+library(tidyverse)
+library(tidyr)
+library(dplyr)
+library(stringr)
+
+# visualisation packages
+library(ggplot2)
+library(ggridges)
+library(RColorBrewer)
+
+# maps 
+library(maps)
+library(sp)
+library(sf)
+library(spData) 
+```
+
+# Table of contents: 
+
+*   0. Data Import
+
+    * 0.1 Data import of All_yield_coords_decimals_20240417 - Copy.csv
+
+
+    * 0.2 Data Import of all original datasets
+
+
+*   1. Data Processing
+
+    * 1.0 Correcting one misread source
+
+
+    * 1.1 yield_measure unification
+
+
+    * 1.2 Year column creation
+
+
+    * 1.3 Croptype unification
+
+
+
+    * 1.4 Longitude and Latitude repair
+
+
+
+    * 1.5 Treatment correction for D973
+
+
+
+*   2. Working on the missing data 
+
+
+    * 2.0 Croptype filling the missing values
+
+
+    * 2.1 Years detecting the missing values
+
+
+        * 2.1.1 D331 filling the missing Year values 
+
+
+        * 2.1.2 D473 filling the missing Year values
+
+
+        * 2.1.3 D652 filling the missing Year values
+
+
+        * 2.1.4 D921B correcting the typos
+
+
+        * 2.1.5 Final results of the missing years problem
+
+
+    * 2.3 Harvest years. Inserting the harvest_Year D973 
+
+
+        * 2.3.1 Harvest years. Inserting the harvest_Year D1120
+
+
+        * 2.3.2 Harvest years. Inserting the harvest_Year D906
+
+
+        * 2.3.3. Summary of the harvest years
+
+
+        * 2.3.4 harvest-publication difference graph
+
+
+    * 2.4 Treatment correction for D309
+
+
+*   3. Prepare the data for the land cover mapping in GEE
+
+
+    * 3.1 calculating the median of the difference between publication and harvest
+
+
+    * 3.2 assigning the theoretical harvest year
+
+
+    * 3.3 cleaning the dataset from NA
+
+
+    * 3.4 assigning the land cover map year
+
+
+    * 3.5 checking the points that land in the sea
+
+
+    * 3.6 writing a final clean version of the processed dataset or GEE
+
+
+        * 3.6.1 subset datasets for 2009 p1 and p2
+
+
+*   4. Writing the final data set with GEE calculations
+
+
+    * 4.1.0 areaproportion and edgelength datasets merge 5000 m
+
+
+        * 4.1.1 areaproportion and edgelength datasets merge 2000 m
+
+
+        * 4.1.2 areaproportion and edgelength datasets merge 1000 m
+
+
+    * 4.2 combining he calculations with the original full dataset and calculating shannons diversity index
+
+
+*   5. Further remarks 
+
+
+# 0. Data Import
+
+### 0.1 Data import of All_yield_coords_decimals_20240417 - Copy.csv
+
+```{r 0.1 Data import of All_yield_coords_decimals_20240417 - Copy.csv}
+
+# data import 
+
+data <- read_csv("All_yield_coords_decimals_20240417 - Copy.csv",
+                 col_types = cols(
+                   Latitude = col_double(), # some lat and long include characters 
+                   Longitude = col_double(), # or are missing in the csv file, so
+                 ))                         # through setting them to double, 
+                                            # we get NAs instead of them.
+
+# because of the conversion to double, the dot in the column names 
+# was not read correctly, so here we fix it and delete the dot,
+# so it doesnt confuse R any further 
+
+data <- data %>%
+    rename(`SiteRegion` = `Site/Region`,
+         `Croptype` = `Crop type`)
+
+data_pr <- #pr for processed. That will be the dataset we will be working with 
+    data %>%
+    mutate(across(c(No., DatasetID, Country, SiteRegion, Croptype, 
+                    yield_measure, Treatment, QualityOfDataPoint, 
+                    Coordinate_format), as.factor),
+         across(c(yield_control, yield_treatm), as.double))
+
+
+```
+
+### 0.2 Data Import of all original datasets
+
+```{r 0.2 Data Import of all original datasets}
+# we have 12 datasets, therefore 12 supplements/data sets 
+
+# 1.
+D66_orig <- read_excel("primary_sources/Data_yield_coords/66-Liang2022_supp.xlsx")
+
+# 2.
+D309_orig_slow_releaze_fertilizer <- 
+  read_excel(
+    "primary_sources/Data_yield_coords/309-Ding2018_supp_5datasets.xlsx", 
+    sheet = 1)
+D309_orig_slow_releaze_fertilizer$orig_Treatment <- "Slow Release Fertilizer"
+
+D309_orig_organic_fertilizer <- 
+  read_excel(
+    "primary_sources/Data_yield_coords/309-Ding2018_supp_5datasets.xlsx", 
+    sheet = 2)
+D309_orig_organic_fertilizer$orig_Treatment <- "Organic Fertilizer"
+
+D309_orig_straw_return <- 
+  read_excel(
+    "primary_sources/Data_yield_coords/309-Ding2018_supp_5datasets.xlsx",
+    sheet = 3)
+D309_orig_straw_return$orig_Treatment <- "Straw return"
+
+D309_orig_green_manure <- 
+  read_excel(
+    "primary_sources/Data_yield_coords/309-Ding2018_supp_5datasets.xlsx",
+    sheet = 4)
+D309_orig_green_manure$orig_Treatment <- "Green Manure"
+
+D309_orig_secondary_and_micronutrients <- 
+  read_excel(
+    "primary_sources/Data_yield_coords/309-Ding2018_supp_5datasets.xlsx",
+    sheet = 5)
+D309_orig_secondary_and_micronutrients$orig_Treatment <- 
+  "Secondary and Micronutrient Fertilizer"
+
+D309_orig <- bind_rows(D309_orig_secondary_and_micronutrients, 
+                       D309_orig_green_manure, D309_orig_straw_return, 
+                       D309_orig_organic_fertilizer, 
+                       D309_orig_slow_releaze_fertilizer ) 
+# i followed the structure of the data_pr so that the observations are in the same order
+
+
+# 3.
+D331_orig <- read_excel("primary_sources/Data_yield_coords/331-Liu2023_supp.xlsx")
+
+# 4.
+D352_orig <- read_excel("primary_sources/Data_yield_coords/352-Zhang2021_supp2.xlsx")
+
+# 5.
+D473_orig <- read_excel("primary_sources/Data_yield_coords/473-Joshi2023_supp.xlsx")
+
+# 6.
+D652_orig <- read_excel("primary_sources/Data_yield_coords/652-Zheng2023_supp.xls")
+
+# 7.
+D669_orig <- read_excel("primary_sources/Data_yield_coords/669-Wang2023_suppA.xlsx")
+
+# 8.
+D906_orig <- read_excel("primary_sources/Data_yield_coords/906-Zhao2016_suppA.xlsx", 
+                        skip = 1)
+
+# 9A.
+D921_A_orig <- read_excel("primary_sources/Data_yield_coords/921-Xia2023_suppA.xlsx")
+
+# 9B.
+D921_B_orig <- read_excel("primary_sources/Data_yield_coords/921-Xia2023_suppB.xlsx")
+
+# 10.
+D973_orig <- read_excel("primary_sources/Data_yield_coords/973-Wang2021_suppA.xlsx")
+
+# 11.
+D1120_orig <- read.csv("primary_sources/Data_yield_coords/1120-Steward2018_supp.csv")
+
+```
+
+# 1. Data Processing 
+
+1.0 Already in the data import we created the processing dataset (data_pr, "pr" for "processed"), that is being modified.  No changes are being made to the original dataset (data). If an attrbute/column is being modified, a copy of this attribute is being created "Croptype" to "pr_Croptype", meaning that values within the processed column were modified. 
+
+### 1.0 Correcting one misread source
+
+```{r 1.0 Correcting one misread source}
+data_pr %>% 
+  filter(No. == "5197")
+
+data_pr <- 
+data_pr %>% 
+  mutate(Source = ifelse(No. == "5197", "Hueppi et al., 2015", Source) )
+
+data_pr %>% 
+  filter(No. == "5197")
+```
+
+
+1.1 Here we unify all the yield measure metrics to kg/ha. 
+
+### 1.1 yield_measure unification
+
+```{r 1.1 yield_measure unification}
+# 1.1 yield_measure unification -----------------------------------------------
+
+data_pr <- 
+  data_pr %>% 
+  mutate(pr_yield_control_kgha = case_when(
+    yield_measure == "Mg dry matter/ha" ~ yield_control * 10^(-6),
+    yield_measure == "Mg/ha" ~ yield_control * 10^(-6),
+    yield_measure == "t/ha" ~ yield_control * 1000,
+    is.na(yield_measure) ~ 0, # set to zero temporarily due to metric uncertainty
+    TRUE ~ yield_control # assume the rest are already in kg/ha
+  )) %>% 
+  mutate(pr_yield_control_kgha = ifelse(pr_yield_control_kgha == 0, NA, 
+                                        pr_yield_control_kgha)) %>% 
+  mutate(pr_yield_treatm_kgha = case_when(
+    yield_measure == "Mg dry matter/ha" ~ yield_treatm * 10^(-6),
+    yield_measure == "Mg/ha" ~ yield_treatm * 10^(-6),
+    yield_measure == "t/ha" ~ yield_control * 1000,
+    is.na(yield_measure) ~ 0, # set to zero temporarily due to metric uncertainty
+    TRUE ~ yield_treatm # assume the rest are already in kg/ha
+  )) %>% 
+  mutate(pr_yield_treatm_kgha = ifelse(pr_yield_treatm_kgha == 0, NA, 
+                                       pr_yield_treatm_kgha)) %>% 
+  mutate(pr_yield_measure_unified = case_when(
+    is.na(yield_measure) ~ NA_character_,
+    TRUE ~ "kg/ha"
+  ))
+
+summary(data_pr$yield_measure)
+```
+
+
+1.2 We create a "year" column for each observation 
+
+### 1.2 Year column creation
+
+```{r 1.2 Year column creation}
+# 1.2 Year column creation 
+
+data_pr$pr_pub_Year <- str_extract(data_pr$Source, "\\d{4}")
+
+data_pr <- 
+data_pr %>% 
+  mutate(across(pr_pub_Year, as.numeric))
+
+summary(data_pr$pr_pub_Year)
+```
+
+There are 2500 NA values in the "pr_pub_Year", meaning that 2500 years could not be extracted from the Source column.  Look the "Working with the missing data" section. 
+### 1.3 Croptype unification
+
+```{r 1.3 Croptype unification}
+
+
+
+data_pr <- 
+  data_pr %>%
+  mutate(pr_Croptype = str_to_title(Croptype)) %>%
+  mutate(pr_Croptype = case_when(
+    grepl("ice", as.character(pr_Croptype)) ~ "Rice",
+    grepl("Vegetable", as.character(pr_Croptype)) ~ "Vegetables",
+    grepl("Corn", as.character(pr_Croptype)) ~ "Maize",
+    pr_Croptype == "Greenhouse" ~ "Greenhouse_vegetable",
+    pr_Croptype == "Tubercrop" ~ "Vegetables",  
+    pr_Croptype == "Soybeans" ~ "Vegetables",
+    TRUE ~ as.character(pr_Croptype)
+  )) %>%
+  mutate(pr_Croptype = as.factor(pr_Croptype))
+
+
+
+
+```
+
+### 1.4 Longitude and Latitude repair
+
+```{r 1.4 Longitude and Latitude repair}
+#  1.4 Longitude and Latitude repair  
+
+data_pr <- 
+  data_pr %>%
+  mutate(
+    pr_Longitude = Longitude,  
+    pr_Latitude = Latitude
+  ) 
+
+# 1.4.1 Swap Longitude and Latitude for the selected section: Latitude > 90
+condition <- data_pr$Latitude > 90
+
+data_pr <- 
+  data_pr %>%
+  mutate(
+    temp = ifelse(condition, pr_Longitude, NA_real_),  # Temporarily store Long in temp
+    pr_Longitude = ifelse(condition, pr_Latitude, pr_Longitude),  # Replace Long with Lat
+    pr_Latitude = ifelse(condition, temp, pr_Latitude)  # Replace Lat with temp
+  ) %>%
+  select(-temp)  # Remove the temporary column
+
+# 1.4.2 Swap Longitude and Latitude for the selected section: Latitude < -90
+condition2 <- data_pr$Latitude < -90
+
+data_pr <- 
+  data_pr %>%
+  mutate(
+    temp = ifelse(condition2, pr_Longitude, NA_real_),  # Temporarily store Long in temp
+    pr_Longitude = ifelse(condition2, pr_Latitude, pr_Longitude), # Replace Long with Lat
+    pr_Latitude = ifelse(condition2, temp, pr_Latitude)  # Replace Lat with temp
+  ) %>%
+  select(-temp)  # Remove the temporary column
+
+# 1.4.3 Correct the Marrabel coordinates, because the minus is in the wrong column
+
+condition3 <- data_pr$SiteRegion %in% c("Marrabel")
+
+data_pr <- 
+  data_pr %>%
+  mutate(
+    pr_Longitude = ifelse(condition3, -pr_Longitude, pr_Longitude),  # Replace Long with Lat
+    pr_Latitude = ifelse(condition3, -pr_Latitude, pr_Latitude)  # Replace Lat with temp
+  ) 
+
+
+# 1.4.4 Set wrong coordinates to NA
+condition4 <- data_pr$pr_Longitude > 10000
+
+data_pr <- 
+  data_pr%>% 
+    mutate(pr_Longitude = ifelse(condition4, NA_character_, pr_Longitude),
+           pr_Latitude = ifelse(condition4, NA_character_, pr_Latitude))
+
+```
+
+The dataset D973 got assfigned "straw addition" by mistake. The paper was investigating the effect of Liming.
+
+### 1.5 Treatment correction for D973
+
+```{r 1.5 Treatment correction for D973}
+# 1.5 Treatment correction D973 
+
+data_pr <- 
+data_pr %>% 
+  mutate(pr_Treatment = ifelse(DatasetID == "D973", "Liming", 
+                               as.character(Treatment)))
+
+```
+
+A similar case happened to the D309, where all observations got assigned to the "straw addition", whereas five different treatments were investigated. The code junk for correction can be found later in the 2. Working with the missing data section by 2.3
+
+
+
+# 2. Working on the missing data 
+
+### 2.0 Croptype filling the missing values
+
+```{r 2.0 Croptype filling the missing values}
+# 2.1 Croptpe 1 NA 
+
+data_pr %>% 
+  filter(Croptype %in% c(NA_character_)) %>% 
+  select(No. , Source, DatasetID)
+
+data_pr <- 
+data_pr %>% 
+  mutate(pr_Croptype = ifelse(No. == "3744", "Greenhouse_vegetable", 
+                              as.character(pr_Croptype))) 
+```
+
+@Elizaveta: This observation is also missing in the original primary supplement. Might be a typo, because all other observations from the same primary publication   
+(the one used in the primary dataset as an observation), have the croptype  "Greenhouse"  assigned. In the meeting in the 28/5/24 we agreed on assigning the "Greenhouse_vegetable" value to this observation. 
+
+### 2.1 Years detecting the missing values
+
+```{r 2.1 Years detecting the missing values}
+
+# 2.2 working on the unknown YEAR problem 
+
+table_missing_years <- 
+data_pr %>% 
+  filter(pr_pub_Year %in% c(NA_character_)) %>% 
+  group_by(DatasetID) %>% 
+  summarise(Occurrences = n())
+
+knitr::kable(table_missing_years, caption = "Datasets with missing years")
+
+```
+ 
+    *  **D331**: 475 observations only have a title of the paper with no further 
+    citation. Those titles were looked up on the CNKI (Chineese Database Web) 
+    and the publication dates were recorded. 
+    *  **!! Important Note:** Some observations are no *real* publications, 
+    but master thesises. On the CNKI the have a publication type "Master Thesis". 
+    *  **D473**: Has a StudyID in the Source column, therefore the Year could 
+    not be extracted. However, has a "Year" column, that can be joined. 
+    *  **652**: Has a StudyID in the Source column, therefore the Year could 
+    not be extracted. The actual references can be found in the word supplement.
+    *  **D66**: Has a StudyID in the Source column, and no further references 
+    in the supplementary information.  
+    *  **D669**: The study of Le et al. could not be foung neither 
+    in Google Scholar nor in CNKI    
+    *  **D921B, D973**: correct the typos
+
+
+### 2.1.1 D331 filling the missing Year values
+
+
+```{r 2.1.1 D331 filling the missing Year values }
+
+# D331 filling the missing Year values 
+
+D331_years <- read.csv("d331_years.csv") 
+D331_years <- 
+  D331_years %>% 
+  select(Source, Publication_Date) %>% 
+  unique()
+
+D331_years <- 
+D331_years %>% 
+  mutate(pr_pub_Year = str_extract(D331_years$Publication_Date, "\\d{4}"))
+
+
+D331_years <- 
+  D331_years %>% 
+  mutate(across(pr_pub_Year, as.numeric))
+
+
+data_pr <-   
+  left_join(data_pr, D331_years, join_by("Source"=="Source"), 
+            relationship = "many-to-one",
+            suffix = c(".data_pr", ".D331")) 
+
+data_pr <- 
+  data_pr %>% 
+  mutate(pr_pub_Year.data_pr = case_when(
+    pr_pub_Year.D331 %in% c(NA_character_) ~ pr_pub_Year.data_pr,
+    TRUE ~ pr_pub_Year.D331
+  ))
+
+
+data_pr <- 
+ data_pr %>% 
+   rename_at('pr_pub_Year.data_pr', ~'pr_pub_Year') %>% 
+   select(-pr_pub_Year.D331, -Publication_Date)
+ 
+```
+
+### 2.1.2 D473 filling the missing Year values
+
+```{r 2.1.2 D473 filling the missing Year values}
+# D473 filling the missing Year values 
+
+D473_years <- 
+  D473_orig %>% 
+  select(Study_ID, Year) %>% 
+  unique() %>% 
+  mutate(Study_ID = paste0("D473", sep = "_", as.character(Study_ID)))
+
+data_pr <- 
+data_pr %>% 
+  mutate(pr_StudyID = paste0(DatasetID, sep = "_", Source))
+
+data_pr <-   
+  left_join(data_pr, D473_years, join_by("pr_StudyID"=="Study_ID"), 
+            relationship = "many-to-one") 
+
+
+data_pr <- 
+  data_pr %>% 
+  mutate(pr_pub_Year = ifelse(DatasetID == "D473", Year, pr_pub_Year))
+
+
+data_pr <- 
+ data_pr %>% 
+   select(-Year)
+
+
+```
+
+### 2.1.3 D652 filling the missing Year values
+
+```{r 2.1.3 D652 filling the missing Year values}
+# D652 filling the missing Year values 
+
+
+D652_years <- read.csv("d652_years.csv", header = FALSE) 
+
+D652_years <-
+D652_years %>%
+    rename(`DatasetID` = `V1`,
+         `StudyNr` = `V2`,
+         `Source` = `V3`) %>% 
+  select(-V4) 
+
+D652_years <-
+D652_years %>% 
+  mutate(Year = str_extract(D652_years$Source, 
+                            "\\b(19[6-9][0-9]|20[0-1][0-9]|2020|2021|2022)\\b") 
+         # in this case the Year extraction is kind of awkward because the source 
+         # utilized different citation styles, 
+         # and I cannot extract just the 4 digits or define the surroundings.
+         ) %>% 
+  mutate(StudyID = paste0("D652", sep = "_", as.character(StudyNr))) %>% 
+  select(StudyID, Year) %>% 
+  unique()  %>% 
+  mutate(across(Year, as.numeric))
+
+
+data_pr <-   
+  left_join(data_pr, D652_years, join_by("pr_StudyID"=="StudyID"), 
+            relationship = "many-to-one") 
+
+
+data_pr <- 
+  data_pr %>% 
+  mutate(pr_pub_Year = ifelse(DatasetID == "D652", Year, pr_pub_Year)) %>% 
+  select(-Year)
+
+
+```
+
+### 2.1.4 D921B correcting the typos
+
+```{r 2.1.4 D921B correcting the typos}
+# D921B correcting the typos 
+
+data_pr %>% 
+  filter(pr_pub_Year %in% c(NA_character_),
+         DatasetID == "D921B") 
+   
+
+condition5 <-  data_pr$pr_pub_Year%in% c(NA_character_) &  
+  data_pr$Source == "Bahrani et al., 207"
+
+data_pr <- 
+data_pr %>% 
+  mutate(Source = ifelse(condition5, "Bahrani et al., 2007", Source),
+         pr_pub_Year = ifelse(condition5, 2007, pr_pub_Year)) 
+
+# check:
+data_pr %>% 
+  filter(pr_pub_Year %in% c(NA_character_),
+         DatasetID == "D921B") 
+
+```
+#### Bahrani et al: Bahrani M., Raufat M., Ghadiri H., 2007. 
+Influence of wheat residue management on irrigated corn grain production in a reduced tillage system. Soil & Tillage Research, 94, 305-309. So, the year can be changed to 2007. However, there are too many different papers from "Liu" , so the year could not be identified. 
+
+
+### 2.1.5 Final results of the missing years problem
+
+```{r 2.1.5 Final results of the missing years problem}
+
+summary(data_pr$pr_pub_Year)
+```
+
+#### **Important Remark**:  
+Sometimes a dataset has a "Year" column. Those years can be publication years or harvest years. 
+I will import those in the harvest_Year column, because the difference between the harvest and the publication is sometimes longer than 10 years. 
+Datasets that have a harvest year column: D973, D1120, D906
+
+### 2.3. Harvest years. Inserting the harvest_Year D973
+
+```{r 2.3. Harvest years. Inserting the harvest_Year D973}
+
+#  D973 add harvest year 
+
+D973_orig <- 
+D973_orig %>% 
+  mutate(Citation = ifelse(NO. == "2", "Hueppi et al., 2015", Citation) )
+
+D973_years <- 
+D973_orig %>% 
+  select(Citation, Year, `Crop yield`, ...35) %>% 
+  drop_na() %>% 
+  unique()  %>% 
+  mutate(Year = str_extract(Year, "\\d{4}")) %>% 
+  mutate(across(c(`Crop yield`, ...35), as.numeric))
+ 
+D973_years$`Crop yield` <-  round(D973_years$`Crop yield`, digits = 2)
+D973_years$...35 <-  round(D973_years$...35, digits = 2)
+
+D973_years <-
+  D973_years %>% 
+  mutate(pr_Source_yield = paste0(Citation, sep = "_", 
+                                  as.character(`Crop yield`), 
+                                  sep = "_", as.character(...35))) %>% 
+  select(pr_Source_yield, Year) %>% 
+  distinct(pr_Source_yield, .keep_all = TRUE)
+
+data_pr <- 
+data_pr %>% 
+  mutate(pr_Source_yield = paste0(Source, sep = "_", 
+                                  as.character(yield_control),
+                                  sep = "_", as.character(yield_treatm)))
+
+data_pr <-   
+  left_join(data_pr, D973_years, join_by("pr_Source_yield"=="pr_Source_yield"), 
+            relationship = "many-to-one") 
+
+data_pr <- 
+  data_pr %>% 
+  mutate(pr_harvest_Year = Year) %>% 
+  select(-Year)
+
+
+```
+
+### 2.3.1 Harvest years. Inserting the harvest_Year D1120
+
+```{r 2.3.1 Harvest years. Inserting the harvest_Year D1120}
+# D1120 add the harvest year
+
+D1120_years <- 
+  D1120_orig %>% 
+  mutate(harvest_Year = str_extract(HarvestE, "\\d{4}")) %>% 
+  mutate(author_yield = paste0(Author, sep = "_", as.character(YieldCT), 
+                               sep = "_", as.character(YieldNT))) %>% 
+  select(author_yield, harvest_Year) %>%
+  drop_na() %>% 
+  unique()  
+
+data_pr  <- 
+data_pr %>%   
+  mutate(pr_first_author = str_extract(Source, "^[^ et]+"),
+         pr_author_yield = paste0(pr_first_author, sep = "_", 
+                                  as.character(yield_control), 
+                                  sep = "_", as.character(yield_treatm)))
+
+data_pr <-   
+  left_join(data_pr, D1120_years, join_by("pr_author_yield"=="author_yield"), 
+            relationship = "many-to-one") %>% 
+  mutate(pr_harvest_Year = ifelse(DatasetID == "D1120", harvest_Year, 
+                                  pr_harvest_Year)) %>% 
+  select(-harvest_Year, -pr_first_author, -pr_author_yield)
+
+
+```
+
+### 2.3.2 Harvest years. Inserting the harvest_Year D906
+
+```{r 2.3.2 Harvest years. Inserting the harvest_Year D906}
+# D906 add the harvest year 
+
+# since both datasets have dublicates, it will be hard to join them based on a relationship. 
+# therefore, i check whether the order of the obsns in both data sets is the same. 
+
+D906_temp <- 
+  D906_orig %>%
+  slice(1:381) %>%   
+  select(Ref., Year, `Maize yield (Mg/ha)`) %>% 
+  mutate(pr_Source_yield = paste0(Ref., sep = "_", 
+                                  as.character(`Maize yield (Mg/ha)`), 
+                                  sep = "_", as.character(NA_character_))) %>% 
+  select(pr_Source_yield)
+
+data_pr_temp <- 
+data_pr %>% 
+  filter(DatasetID == "D906") %>% 
+  select(pr_Source_yield) 
+
+map2_lgl(
+  D906_temp, data_pr_temp, 
+  ~ all(.x == .y)
+)
+
+# The result is TRUE, so we can just merge this two datasets based on the rownumber
+rm(D906_temp)
+rm(data_pr_temp)
+
+temp <- 
+data_pr %>% 
+  filter(DatasetID == "D906") %>% 
+  select(No.) 
+
+
+D906_years <- 
+  D906_orig %>%
+  slice(1:381) %>%   
+  select(Ref., Year, `Maize yield (Mg/ha)`) %>% 
+  mutate(pr_Source_yield = paste0(Ref., sep = "_", 
+                                  as.character(`Maize yield (Mg/ha)`), 
+                                  sep = "_", as.character(NA_character_))) %>% 
+  select(Year) %>% 
+  mutate(No. = temp$No.)
+
+
+
+data_pr <-   
+  left_join(data_pr, D906_years, join_by("No."=="No."))   %>% 
+  mutate(pr_harvest_Year = ifelse(DatasetID == "D906", Year, pr_harvest_Year)) %>% 
+  select(-Year)
+
+data_pr <-
+data_pr %>% 
+  mutate(across(pr_harvest_Year, as.numeric))
+```
+
+### 2.3.3 Summary of the harvest years
+
+```{r 2.3.3 Summary of the harvest years}
+
+summary(data_pr$pr_harvest_Year)
+
+```
+### 2.3.4 harvest-publication difference graph
+
+```{r 2.3.4 harvest-publication difference graph}
+
+data_pr %>% 
+  mutate(year_difference = pr_pub_Year - pr_harvest_Year) %>% 
+  ggplot(aes(x = year_difference)) + 
+  geom_bar() #+
+  scale_x_continuous(breaks = seq(min(0), 
+                                  max(70), 
+                                  by = 5))
+
+  data_pr %>% 
+    drop_na(pr_harvest_Year)
+```
+
+### 2.4 Treatment correction for D309
+
+```{r 2.4 Treatment correction for D309}
+# 2.3 Treatment correction D309 
+
+# D309_orig follows the same order of observations as the data_pr
+
+temp <- 
+data_pr %>% 
+  filter(DatasetID == "D309") %>% 
+  select(No.)
+
+D309_treatment <- 
+  D309_orig %>%
+  select(orig_Treatment) %>% 
+  mutate(No. = temp$No.)
+
+
+data_pr <-   
+  left_join(data_pr, D309_treatment, join_by("No."=="No."))   %>% 
+  mutate(pr_Treatment = ifelse(DatasetID == "D309", orig_Treatment, pr_Treatment)) %>% 
+  select(-orig_Treatment)
+
+
+
+```
+
+
+# 3. Prepare the data for the land cover mapping in GEE 
+
+### 3.1 calculating the median of the difference between publication and harvest
+
+```{r 3.1 calculating the median of the difference between publication and harvest}
+data_pr <- 
+data_pr %>% 
+  mutate(pr_Year_difference = pr_pub_Year - pr_harvest_Year)  
+
+summary(data_pr$pr_Year_difference)
+```
+The median of the difference between the harvest and the publication is 7 years. The mean, however, is 10.5 yrs. We decided to use the median value. 
+
+### 3.2 assigning the theoretical harvest year
+
+```{r 3.2 assigning the theoretical harvest year}
+data_pr <- 
+data_pr %>% 
+  mutate(pr_harvest_Year_by_median = pr_pub_Year-7)
+
+summary(data_pr$pr_harvest_Year_by_median)
+```
+
+also, we do not need any points with either no coordinates or no year indications:
+
+### 3.3 cleaning the dataset from NA
+
+```{r 3.3 cleaning the dataset from NA}
+
+data_pr <- 
+data_pr %>% 
+  filter(!(pr_pub_Year %in% NA_character_)) %>% 
+  filter(!(pr_Longitude %in% NA_character_)) %>% 
+   filter(!(pr_Latitude %in% NA_character_)) 
+
+```
+
+The land cover map found in the gee has the year 1985, 1990, 1995, 2000-2022 (yearly).
+Let's assign the land coiver map year:
+
+### 3.4 assigning the land cover map year
+
+```{r 3.4 assigning the land cover map year}
+
+data_pr <- data_pr %>%
+  mutate(pr_land_cover_Year = case_when(
+    pr_harvest_Year_by_median >= 2000 & pr_harvest_Year_by_median <= 2022 ~ pr_harvest_Year_by_median,
+    pr_harvest_Year_by_median < 1975 ~ NA_integer_,
+    pr_harvest_Year_by_median >= 1975 & pr_harvest_Year_by_median <= 1987 ~ 1985,
+    pr_harvest_Year_by_median >= 1988 & pr_harvest_Year_by_median <= 1992 ~ 1990,
+    pr_harvest_Year_by_median >= 1993 & pr_harvest_Year_by_median <= 1997 ~ 1995,
+    pr_harvest_Year_by_median > 1997 & pr_harvest_Year_by_median <= 2000 ~ 2000,
+    TRUE ~ NA_integer_  # default case if none of the above conditions match
+  ))
+
+```
+
+
+### 3.5 checking the points that land in the sea
+
+```{r 3.5 checking the points that land in the sea}
+
+pts <- st_as_sf(data_pr, coords=c("pr_Longitude", "pr_Latitude"), crs=4326)
+
+## Find which points fall over land
+ii <- !is.na(as.numeric(st_intersects(pts, world)))
+
+
+data_pr$pr_falls_on_land <- ii
+
+data_pr_map <- 
+data_pr %>% 
+  filter(pr_falls_on_land == TRUE)
+
+ptsmap <- st_as_sf(data_pr_map, coords=c("pr_Longitude", "pr_Latitude"), crs=4326)
+
+## Check that it worked
+plot(st_geometry(world))
+plot(ptsmap, col = "#76C3AF", pch=16, add=TRUE)
+
+```
+
+
+### 3.6 writing a final clean version of the processed dataset for GEE
+
+```{r 3.6 writing a final clean version of the processed dataset for GEE}
+data_pr_final_wide <- 
+data_pr %>% 
+  filter(pr_falls_on_land == TRUE) %>% 
+  select(-pr_StudyID, -pr_Source_yield, -pr_falls_on_land)
+
+write.csv(data_pr_final_wide, "yield_points_in_wide_format.csv", row.names = FALSE)
+summary(data_pr_final_wide)
+
+```
+
+### 3.6.1 subset datasets for 2009 p1 and p2
+
+```{r 3.6.1 subset datasets for 2009 p1 and p2}
+
+
+yield_points_in_wide_format_2009_part1 <- 
+data_pr_final_wide %>% 
+  filter(pr_land_cover_Year == 2009) %>% 
+  head(498)
+
+write.csv(yield_points_in_wide_format_2009_part1, 
+          "yield_points_in_wide_format_2009_part1.csv", row.names = FALSE)
+
+
+yield_points_in_wide_format_2009_part2 <- 
+data_pr_final_wide %>% 
+  filter(pr_land_cover_Year == 2009) %>% 
+  tail(498)
+
+write.csv(yield_points_in_wide_format_2009_part2, 
+          "yield_points_in_wide_format_2009_part2.csv", row.names = FALSE)
+
+
+```
+
+
+    **Prcoessing everything in the GEE**
+
+# 4. Writing the final data set with GEE calculations
+
+### 4.1.0 areaproportion and edgelength datasets merge 5000 m
+
+```{r 4.1.0 areaproportion and edgelength datasets merge 5000 m}
+
+areaproportion_1985_5000 <- read.csv("GEE area proportion 5000 m/lm_area_proportion_1985.csv")
+areaproportion_1990_5000 <- read.csv("GEE area proportion 5000 m/lm_area_proportion_1990.csv")
+areaproportion_1995_5000 <- read.csv("GEE area proportion 5000 m/lm_area_proportion_1995.csv")
+
+# Initialize an empty list to store the data frames
+areaproportion_5000 <- list()
+
+# Loop from 2000 to 2015
+for (year in 2000:2016) {
+  # Construct the file path using the current year
+  file_path <- paste0("GEE area proportion 5000 m/lm_area_proportion", year, ".csv")
+
+  # Read the CSV file into a data frame and add a year column
+  areaproportion_5000[[as.character(year)]] <- read.csv(file_path)
+}
+
+# Combine all data frames into one
+areaproportion_full_5000 <- bind_rows(areaproportion_5000)
+
+areaproportion_full_5000 <- 
+  bind_rows(areaproportion_full_5000, areaproportion_1985_5000, 
+            areaproportion_1990_5000, areaproportion_1995_5000)
+
+
+# prepare for future merge with data_pr dataset:
+areaproportion_full_5000_tomerge <- 
+areaproportion_full_5000 %>% 
+  mutate(buffer_radius_m = 5000) %>% 
+  mutate(across(No, as.factor)) %>% # because data_pr has No as factor
+  select(No, buffer_radius_m, class, areaM2, proportion)
+
+
+###### edgelength 5000
+
+edgelength_1985_5000 <- read.csv("GEE edgelength 5000 m/lm_edgelength_5000m_1985.csv")
+edgelength_1990_5000 <- read.csv("GEE edgelength 5000 m/lm_edgelength_5000m_1990.csv")
+edgelength_1995_5000 <- read.csv("GEE edgelength 5000 m/lm_edgelength_5000m_1995.csv")
+edgelength_2009_p1_5000 <- read.csv("GEE edgelength 5000 m/lm_edgelength_5000m_2009_p1.csv")
+edgelength_2009_p2_5000 <- read.csv("GEE edgelength 5000 m/lm_edgelength_5000m_2009_p2.csv")
+# Initialize an empty list to store the data frames
+edgelength_p1_5000 <- list()
+edgelength_p2_5000 <- list()
+
+# Loop from 2000 to 2015
+for (year in 2000:2008) {  
+  # Construct the file path using the current year
+  file_path <- paste0("GEE edgelength 5000 m/lm_edgelength_5000m_", year, ".csv")
+  
+  # Read the CSV file into a data frame and add a year column
+  edgelength_p1_5000[[as.character(year)]] <- read.csv(file_path)
+}
+
+# Combine all data frames into one
+edgelength_p1_full_5000 <- bind_rows(edgelength_p1_5000)
+
+for (year in 2010:2016) {  
+  # Construct the file path using the current year
+  file_path <- paste0("GEE edgelength 5000 m/lm_edgelength_5000m_", year, ".csv")
+  
+  # Read the CSV file into a data frame and add a year column
+  edgelength_p2_5000[[as.character(year)]] <- read.csv(file_path)
+}
+
+
+# Combine all data frames into one
+edgelength_p2_full_5000 <- bind_rows(edgelength_p2_5000)
+
+edgelength_full_5000 <- bind_rows(edgelength_p1_full_5000, 
+                                  edgelength_p2_full_5000, 
+                                  edgelength_1985_5000, 
+                                  edgelength_1990_5000, 
+                                  edgelength_1995_5000, 
+                                  edgelength_2009_p1_5000, 
+                                  edgelength_2009_p2_5000)
+
+
+# prepare for future merge with data_pr dataset:
+edgelength_full_5000_tomerge <- 
+edgelength_full_5000 %>% 
+  mutate(buffer_radius_m = 5000) %>% 
+  mutate(across(No, as.factor)) %>% # because data_pr has No as factor
+  group_by(No, class, buffer_radius_m) %>% 
+  summarise(edgelength_m = length_m) # just rename the column for future better understanding 
+
+
+
+
+
+```
+
+### 4.1.1 areaproportion and edgelength datasets merge 2000 m
+
+```{r 4.1.1 areaproportion and edgelength datasets merge 2000 m}
+
+areaproportion_1985_2000 <- read.csv("GEE area proportion 2000 m/lm_area_proportion_1985.csv")
+areaproportion_1990_2000 <- read.csv("GEE area proportion 2000 m/lm_area_proportion_1990.csv")
+areaproportion_1995_2000 <- read.csv("GEE area proportion 2000 m/lm_area_proportion_1995.csv")
+
+# Initialize an empty list to store the data frames
+areaproportion_2000 <- list()
+
+# Loop from 2000 to 2015
+for (year in 2000:2016) {
+  # Construct the file path using the current year
+  file_path <- paste0("GEE area proportion 2000 m/lm_area_proportion", year, ".csv")
+
+  # Read the CSV file into a data frame and add a year column
+  areaproportion_2000[[as.character(year)]] <- read.csv(file_path)
+}
+
+# Combine all data frames into one
+areaproportion_full_2000 <- bind_rows(areaproportion_2000)
+
+areaproportion_full_2000 <- bind_rows(areaproportion_full_2000, 
+                                      areaproportion_1985_2000,
+                                      areaproportion_1990_2000,
+                                      areaproportion_1995_2000)
+
+
+
+# prepare for future merge with data_pr dataset:
+areaproportion_full_2000_tomerge <- 
+areaproportion_full_2000 %>% 
+  mutate(buffer_radius_m = 2000) %>% 
+  mutate(across(No, as.factor)) %>% # because data_pr has No as factor
+  select(No, buffer_radius_m, class, areaM2, proportion)
+
+
+###### edgelength 2000
+
+edgelength_1985_2000 <- read.csv("GEE edgelength 2000 m/lm_edgelength_2000m_1985.csv")
+edgelength_1990_2000 <- read.csv("GEE edgelength 2000 m/lm_edgelength_2000m_1990.csv")
+edgelength_1995_2000 <- read.csv("GEE edgelength 2000 m/lm_edgelength_2000m_1995.csv")
+# Initialize an empty list to store the data frames
+edgelength_2000 <- list()
+
+# Loop from 2000 to 2015
+for (year in 2000:2016) {  
+  # Construct the file path using the current year
+  file_path <- paste0("GEE edgelength 2000 m/lm_edgelength_2000m_", year, ".csv")
+  
+  # Read the CSV file into a data frame and add a year column
+  edgelength_2000[[as.character(year)]] <- read.csv(file_path)
+}
+
+# Combine all data frames into one
+edgelength_full_2000 <- bind_rows(edgelength_2000)
+
+
+edgelength_full_2000 <- bind_rows(edgelength_full_2000, 
+                                  edgelength_1985_2000, 
+                                  edgelength_1990_2000,
+                                  edgelength_1995_2000)
+
+
+# prepare for future merge with data_pr dataset:
+edgelength_full_2000_tomerge <- 
+edgelength_full_2000 %>% 
+  mutate(buffer_radius_m = 2000) %>% 
+  mutate(across(No, as.factor)) %>% # because data_pr has No as factor
+  group_by(No, class, buffer_radius_m) %>% 
+  summarise(edgelength_m = length_m) # just rename the column for future better understanding 
+
+
+
+
+
+
+
+```
+
+### 4.1.2 areaproportion and edgelength datasets merge 1000 m
+
+```{r 4.1.2 areaproportion and edgelength datasets merge 1000 m}
+
+areaproportion_1985_1000 <- read.csv("GEE area proportion 1000 m/lm_area_proportion_1985.csv")
+areaproportion_1990_1000 <- read.csv("GEE area proportion 1000 m/lm_area_proportion_1990.csv")
+areaproportion_1995_1000 <- read.csv("GEE area proportion 1000 m/lm_area_proportion_1995.csv")
+
+# Initialize an empty list to store the data frames
+areaproportion_1000 <- list()
+
+# Loop from 2000 to 2015
+for (year in 2000:2016) {
+  # Construct the file path using the current year
+  file_path <- paste0("GEE area proportion 1000 m/lm_area_proportion", year, ".csv")
+
+  # Read the CSV file into a data frame and add a year column
+  areaproportion_1000[[as.character(year)]] <- read.csv(file_path)
+}
+
+# Combine all data frames into one
+areaproportion_full_1000 <- bind_rows(areaproportion_1000)
+
+areaproportion_full_1000 <- bind_rows(areaproportion_full_1000, 
+                                      areaproportion_1985_1000, 
+                                      areaproportion_1990_1000, 
+                                      areaproportion_1995_1000)
+
+
+
+# prepare for future merge with data_pr dataset:
+areaproportion_full_1000_tomerge <- 
+areaproportion_full_1000 %>% 
+  mutate(buffer_radius_m = 1000) %>% 
+  mutate(across(No, as.factor)) %>% # because data_pr has No as factor
+  select(No, buffer_radius_m, class, areaM2, proportion)
+
+
+###### edgelength 1000
+
+edgelength_1985_1000 <- read.csv("GEE edgelength 1000 m/lm_edgelength_1000m_1985.csv")
+edgelength_1990_1000 <- read.csv("GEE edgelength 1000 m/lm_edgelength_1000m_1990.csv")
+edgelength_1995_1000 <- read.csv("GEE edgelength 1000 m/lm_edgelength_1000m_1995.csv")
+# Initialize an empty list to store the data frames
+edgelength_1000 <- list()
+
+# Loop from 2000 to 2015
+for (year in 2000:2016) {  
+  # Construct the file path using the current year
+  file_path <- paste0("GEE edgelength 1000 m/lm_edgelength_1000m_", year, ".csv")
+  
+  # Read the CSV file into a data frame and add a year column
+  edgelength_1000[[as.character(year)]] <- read.csv(file_path)
+}
+
+# Combine all data frames into one
+edgelength_full_1000 <- bind_rows(edgelength_1000)
+
+
+edgelength_full_1000 <- bind_rows(edgelength_full_1000, 
+                                  edgelength_1985_1000, 
+                                  edgelength_1990_1000, 
+                                  edgelength_1995_1000)
+
+
+# prepare for future merge with data_pr dataset:
+edgelength_full_1000_tomerge <- 
+edgelength_full_1000 %>% 
+  mutate(buffer_radius_m = 1000) %>% 
+  mutate(across(No, as.factor)) %>% # because data_pr has No as factor
+  group_by(No, class, buffer_radius_m) %>% 
+  summarise(edgelength_m = length_m) # just rename the column for future better understanding 
+
+
+
+
+
+
+```
+
+### 4.2 combining he calculations with the original full dataset and calculating shannons diversity index
+
+```{r 4.2 combining he calculations with the original full dataset and calculating shannons diversity index}
+
+areaproportion_full <- bind_rows(areaproportion_full_5000_tomerge, 
+                                 areaproportion_full_2000_tomerge,
+                                 areaproportion_full_1000_tomerge)
+edgelength_full <- bind_rows(edgelength_full_5000_tomerge,
+                             edgelength_full_2000_tomerge,
+                             edgelength_full_1000_tomerge)
+
+
+areaproportion_shannons <-
+  areaproportion_full %>% 
+  group_by(No, buffer_radius_m) %>%
+  summarise(shannons = -sum(proportion*log(proportion))) 
+
+
+data_pr_shannons <- 
+  left_join(data_pr_final_wide, areaproportion_shannons, join_by("No."=="No"))
+
+data_pr_shannons_area_proportion <- 
+  left_join(data_pr_shannons, areaproportion_full, 
+            join_by("No."=="No", "buffer_radius_m" == "buffer_radius_m"))
+
+data_pr_shannons_area_proportion_edgelength <- 
+  left_join(data_pr_shannons_area_proportion, 
+            edgelength_full, 
+            join_by("No."=="No", "class" == "class", "buffer_radius_m" == "buffer_radius_m")) 
+# here a lot of observations from edgelength were left out,
+# because they had zeroes in the classes. 
+# so the class observations were left out 
+# because they collided with the class from areaproportion. 
+# now we only have observations that have no zero in area and no zero in edge. 
+
+data_pr_shannons_area_proportion_edgelength_apr <- 
+  data_pr_shannons_area_proportion_edgelength %>% 
+  mutate(areatoperimeterratio = edgelength_m/areaM2)
+
+data_results <- data_pr_shannons_area_proportion_edgelength_apr
+
+write.csv(data_results, "data_with_landscape_metrics.csv", row.names = FALSE)
+
+```
+
+# 5. Further remarks 
+
+1.  The "greenhouse" croptype comes and only occurs in the dataset "D669". The dataset D669 only differentiates between "greenhouse" and "open vegetables", because the authors wanted to compare the results obtained in the "greenhouse"  and in the field ("open vegetables"). Therefore, they do not differentiate between croptypes in their dataset. For the data selection criteria of the crop type they had vegetables (cabbage, small rape, lettuce, etc.), fruits, and pod  
+vegetables (potatoes, beans, cucumbers, etc.) The croptype was not differentiated in the dataset, all set to "greenhouse" or "open vegetables". Therefore, we added "_veggie" to the "greenhouse" value.   
+1.  Chinese meta-studies often make use of the CNKI by collecting their data. This database allows Master Thesises to be included. Therefore, some of the observations coming from the chinese studies are not *critically speaking* peer reviewed.
