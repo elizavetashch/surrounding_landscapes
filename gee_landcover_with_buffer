@@ -1,5 +1,4 @@
 
-
 // Load the datasets 
 var points = ee.FeatureCollection('projects/ee-elizaveta/assets/points');
 var annual = ee.ImageCollection('projects/sat-io/open-datasets/GLC-FCS30D/annual');
