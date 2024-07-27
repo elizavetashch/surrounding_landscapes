@@ -34,7 +34,7 @@
 // import immage collections 
 var five_year = ee.ImageCollection('projects/sat-io/open-datasets/GLC-FCS30D/five-years-map'); // image collection for 1985, 1990, 1995 ("b1", "b2", "b3")
 var annual = ee.ImageCollection('projects/sat-io/open-datasets/GLC-FCS30D/annual'); // image collection annual for 2000-2022 ("b1"-"b23")
-var points = ee.FeatureCollection('projects/ee-elizaveta/assets/yield_points_in_wide_format'); // yield points from the yield_points_in_wide_format.csv that can be found on github 
+var points = ee.FeatureCollection('projects/ee-elizaveta/assets/yield_points_in_wide_format'); // yield points from the yield_points_in_wide_format.csv that can be found on github. Upload it in your assets.
 
 // since the years 1985-1995 and 2000-2022 are two different image collections, we work with them separately
 
