@@ -37,7 +37,7 @@
 
 var five_year = ee.ImageCollection('projects/sat-io/open-datasets/GLC-FCS30D/five-years-map');
 var annual = ee.ImageCollection('projects/sat-io/open-datasets/GLC-FCS30D/annual');
-var points = ee.FeatureCollection('projects/ee-elizaveta/assets/yield_points_in_wide_format');
+var points = ee.FeatureCollection('projects/ee-elizaveta/assets/yield_points_in_wide_format'); // yield points from the yield_points_in_wide_format.csv that can be found on github. Upload it in your assets. 
 
 /////// (2) Filter points by year ////////////////////////////////////
 
