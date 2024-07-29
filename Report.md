@@ -30,4 +30,7 @@ Land cover metrics, including area, proportion, and edge length for each land co
 
 ## Results 
 
-### Data Structure 
+### Data Profile 
+
+1. Missing Data
+![missing data of data_results]("C:\Users\lisa7\Documents\surrounding_landscapes\Report\DataStructure\missing.png")
