@@ -1,5 +1,6 @@
 # Contents
 
+* **Report.md** is the final report of my internship, where you can find Introduction, Methods, Data Exploration and Results of the project. You can also check this file for better understanding of the dataset.  
 * "All_yield_coords_decimals_20240417 - Copy.csv" is the original dataset given me in the beginning of May. This file is used in the R Markdown as input and is processed there (typos, mistakes, treatment assignments corrected).#
 * "yield_points_in_wide_format.csv" is the result of processing of All_yield_coords_decimals_20240417 - Copy.csv in the R_data_processing.Rmd. ***Use it for your GEE assets.***
 * R_data_processing.Rmd is the Markdown file you 1) process the original dataset (All_yield_coords_decimals_20240417 - Copy.csv), 2) save the processed dataset to use for your google earth engine asset, 3) then after making the calculations in google earth Engine you import the csv files generated in the GEE into this Markdown file, 4) and process them to get the shannon's index, area-to-proportion index and as a result one final table that you can later use for the analysis.
