@@ -40,14 +40,15 @@ Land cover metrics, including area, proportion, and edge length for each land co
 
 **Note:** the data is written in the long format, meaning that one harvest point will be represented by multiple rows. 
 
-#### Data sets
-The data sets were extracted from the supplementary data of the following papers: 
-| DatasetID | Title of the Paper                                    | Citation  |
+#### Datasets
+The datasets were extracted from the supplementary data of the following metastudy papers: 
+
+| DatasetID | Title of the Metastudy Paper                                    | Citation  |
 |------------|-------------------------------------------------------------|-----------|
 | D331         | Agricultural management strategies for balancing yield increase, carbon sequestration, and emission reduction after straw return for three major grain crops in China: A meta-analysis                                           | Liu, D., Song, C., Xin, Z., Fang, C., Liu, Z., & Xu, Y. (2023). Agricultural management strategies for balancing yield increase, carbon sequestration, and emission reduction after straw return for three major grain crops in China: A meta-analysis. Journal of Environmental Management, 340, 117965. https://doi.org/10.1016/j.jenvman.2023.117965   |
 | D973         | Potential benefits of liming to acid soils on climate change mitigation and food security                                   | Wang, Y., Yao, Z., Zhan, Y., Zheng, X., Zhou, M., Yan, G., Wang, L., Werner, C., & Butterbach-Bahl, K. (2021). Potential benefits of liming to acid soils on climate change mitigation and food security. Global Change Biology, 27(12), 2807–2821. https://doi.org/10.1111/gcb.15607  |
 | D1120         | The adaptive capacity of maize-based conservation agriculture systems to climate stress in tropical and subtropical environments: A meta-regression of yields                      | Steward, P. R., Dougill, A. J., Thierfelder, C., Pittelkow, C. M., Stringer, L. C., Kudzala, M., & Shackelford, G. E. (2018). The adaptive capacity of maize-based conservation agriculture systems to climate stress in tropical and subtropical environments: A meta-regression of yields. Agriculture, Ecosystems & Environment, 251, 194–202. https://doi.org/10.1016/j.agee.2017.09.019   |
-| D921         | Integrated biochar solutions can achieve carbon-neutral staple crop production                                        | Xia, L., Cao, L., Yang, Y., Ti, C., Liu, Y., Smith, P., van Groenigen, K. J., Lehmann, J., Lal, R., Butterbach-Bahl, K., Kiese, R., Zhuang, M., Lu, X., & Yan, X. (2023). Integrated biochar solutions can achieve carbon-neutral staple crop production. Nature Food, 4(3), 236–246. https://doi.org/10.1038/s43016-023-00694-0   |
+| D921A & D921B        | Integrated biochar solutions can achieve carbon-neutral staple crop production                                        | Xia, L., Cao, L., Yang, Y., Ti, C., Liu, Y., Smith, P., van Groenigen, K. J., Lehmann, J., Lal, R., Butterbach-Bahl, K., Kiese, R., Zhuang, M., Lu, X., & Yan, X. (2023). Integrated biochar solutions can achieve carbon-neutral staple crop production. Nature Food, 4(3), 236–246. https://doi.org/10.1038/s43016-023-00694-0   |
 | D309         | Improving yield and nitrogen use efficiency through alternative fertilization options for rice in China: A meta-analysis.                           | Ding, W., Xu, X., He, P., Ullah, S., Zhang, J., Cui, Z., & Zhou, W. (2018). Improving yield and nitrogen use efficiency through alternative fertilization options for rice in China: A meta-analysis. Field Crops Research, 227, 11–18. https://doi.org/10.1016/j.fcr.2018.08.001   |
 | D669         | Effects of the Ratio of Substituting Mineral Fertilizers with Manure Nitrogen on Soil Properties and Vegetable Yields in China: A Meta-Analysis                         | Wang, S., Lv, R., Yin, X., Feng, P., & Hu, K. (2023). Effects of the Ratio of Substituting Mineral Fertilizers with Manure Nitrogen on Soil Properties and Vegetable Yields in China: A Meta-Analysis. Plants, 12(4), Article 4. https://doi.org/10.3390/plants12040964   |
 | D473        | A global meta-analysis of cover crop response on soil carbon storage within a corn production system             | Joshi, D. R., Sieverding, H. L., Xu, H., Kwon, H., Wang, M., Clay, S. A., Johnson, J. M., Thapa, R., Westhoff, S., & Clay, D. E. (2023). A global meta-analysis of cover crop response on soil carbon storage within a corn production system. Agronomy Journal, 115(4), 1543–1556. https://doi.org/10.1002/agj2.21340   |
@@ -55,6 +56,14 @@ The data sets were extracted from the supplementary data of the following papers
 | D906         | Assessment of drainage nitrogen losses on a yield-scaled basis           | Zhao, X., Christianson, L. E., Harmel, D., & Pittelkow, C. M. (2016). Assessment of drainage nitrogen losses on a yield-scaled basis. Field Crops Research, 199, 156–166. https://doi.org/10.1016/j.fcr.2016.07.015   |
 | D352         | Effect of soil erosion depth on crop yield based on topsoil removal method: a meta‑analysis           | Zhang, L., Huang, Y., Rong, L., Duan, X., Zhang, R., Li, Y., & Guan, J. (2021). Effect of soil erosion depth on crop yield based on topsoil removal method: A meta-analysis. Agronomy for Sustainable Development, 41(5), 63. https://doi.org/10.1007/s13593-021-00718-8   |
 
+The papers' main focus was on the effect of some treatment on the crop yield. Hence, different crops and treatments were included in different datasets: 
+![frequencygrid](images/dataprofile/sankey_dataset_crop_treatment.png)
+
+
+**Notes:**
+* The Paper **D921** had two supplementary datasets, therefore they were gived D921A and D921B DatasetID's.
+* Some crop types like "Grassland", "Cotton", "Oat", "Oilcrops" are represented by only one dataset.
+* Some chinese papers were including not-peer-reviewed studies such as "Master thesis". Since I was looking up the primary sources for the datasets D331 and D652 to note the publication date, it turned out that they also included some sources marked as "Master Thesis" in the CKNI. To check what sources were tagged as "Master Thesis" check the "data" older for "d331_years.csv" and "d652_years.csv". 
 
 #### Map: Locations of the points 
 ![map](images/dataprofile/map.png)
@@ -68,6 +77,17 @@ The data sets were extracted from the supplementary data of the following papers
 ![frequencygrid](images/dataprofile/country.png)
 
 #### Distribution plots 
+![frequencygrid](images/dataprofile/distribution.png)
+
+Distribution of yield: 
+**initial yield metric as filling color:**
+![frequencygrid](images/dataprofile/yield.png)
+**Crop type as filling color:**
+![frequencygrid](images/dataprofile/yield_croptype.png)
+**Treatment as filling color:**
+![frequencygrid](images/dataprofile/yield_treatment.png)
+
+### Landscape Metrics  
 
 **What do the class codes stay for?**
 | Class Code | Class Description by ESA                                    | HEX Code  |
