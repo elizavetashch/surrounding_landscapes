@@ -446,7 +446,7 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 445,D331,Luo et al. (2005),China,,35.65,107.85,Wheat,4360,4890,kg/ha,Straw return,,Degr-Min-Sec
 446,D331,Luo et al. (2005),China,,35.65,107.85,Wheat,4770,4550,kg/ha,Straw return,,Degr-Min-Sec
 447,D331,Luo et al. (2005),China,,35.65,107.85,Wheat,1520,1280,kg/ha,Straw return,,Degr-Min-Sec
-448,D331,Luo et al. (2005),China,,35��,107.85,Wheat,1540,1410,kg/ha,Straw return,,Degr-Min-Sec
+448,D331,Luo et al. (2005),China,,35ï¿½ï,107.85,Wheat,1540,1410,kg/ha,Straw return,,Degr-Min-Sec
 449,D331,Effects of straw deep returning with double lines width ridge on growth and yield of compact corn,,,41.14,119.22,Maize,11047,11214,kg/ha,Straw return,,Decimal
 450,D331,Effects of combining application of wheat straw with fertilization on yield and plant characteristics of summer maize,,,33.26477,116.5646,Maize,9579.58,10758.41,kg/ha,Straw return,,Decimal
 451,D331,Effects of combining application of wheat straw with fertilization on yield and plant characteristics of summer maize,,,33.26477,116.5646,Maize,8926.88,9776.25,kg/ha,Straw return,,Decimal
@@ -485,10 +485,10 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 484,D331,Wang et al. (2012),,,39.59770833,116.5887528,Wheat,3824.4,4048.4,kg/ha,Straw return,,Degr-Min-Sec
 485,D331,Wang et al. (2012),,,39.59770833,116.5887528,Wheat,4071.5,4360.5,kg/ha,Straw return,,Degr-Min-Sec
 486,D331,Wang et al. (2012),,,39.59770833,116.5887528,Wheat,3794.4,4035.1,kg/ha,Straw return,,Degr-Min-Sec
-487,D331,Wang et al. (2014),China,,35.210831,105.242061�,Maize,8560.4,8880.7,kg/ha,Straw return,,Decimal
-488,D331,Wang et al. (2014),China,,35.210831,105.242061�,Maize,7778.6,8134.7,kg/ha,Straw return,,Decimal
-489,D331,Wang et al. (2014),China,,35.210831,105.242061�,Maize,9438.1,9801.1,kg/ha,Straw return,,Decimal
-490,D331,Wang et al. (2014),China,,35.210831,105.242061�,Maize,8223.8,8419.5,kg/ha,Straw return,,Decimal
+487,D331,Wang et al. (2014),China,,35.210831,105.242061ï,Maize,8560.4,8880.7,kg/ha,Straw return,,Decimal
+488,D331,Wang et al. (2014),China,,35.210831,105.242061ï,Maize,7778.6,8134.7,kg/ha,Straw return,,Decimal
+489,D331,Wang et al. (2014),China,,35.210831,105.242061ï,Maize,9438.1,9801.1,kg/ha,Straw return,,Decimal
+490,D331,Wang et al. (2014),China,,35.210831,105.242061ï,Maize,8223.8,8419.5,kg/ha,Straw return,,Decimal
 491,D331,Wang et al. (2016),,,34.2,108.1166667,Maize,9188.25,9696.33,kg/ha,Straw return,,Degr-Min-Sec
 492,D331,Wang et al. (2016),,,34.2,108.1166667,Maize,11005.8,12940.95,kg/ha,Straw return,,Degr-Min-Sec
 493,D331,Wang et al. (2016),,,34.2,108.1166667,Maize,9752.8,11027.3,kg/ha,Straw return,,Degr-Min-Sec
@@ -636,10 +636,10 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 635,D331,Li et al. (2020),,,35.2,107.6666667,Maize,14405.33,15780.32,kg/ha,Straw return,,Degr-Min-Sec
 636,D331,Li et al. (2020),,,35.2,107.6666667,Maize,11826.83,13269.26,kg/ha,Straw return,,Degr-Min-Sec
 637,D331,Li et al. (2020),,,35.2,107.6666667,Maize,17091.96,17785.05,kg/ha,Straw return,,Degr-Min-Sec
-638,D331,Yi et al. (2007),,,29.429972�,111.139711,Maize,5998.5,6490.5,kg/ha,Straw return,,Decimal
-639,D331,Yi et al. (2007),,,29.429972�,111.139711,Maize,6583.5,6892.5,kg/ha,Straw return,,Decimal
-640,D331,Yi et al. (2007),,,29.429972�,111.139711,Maize,8173.5,8271,kg/ha,Straw return,,Decimal
-641,D331,Yi et al. (2007),,,29.429972�,111.139711,Maize,8239.5,8644.5,kg/ha,Straw return,,Decimal
+638,D331,Yi et al. (2007),,,29.429972ï,111.139711,Maize,5998.5,6490.5,kg/ha,Straw return,,Decimal
+639,D331,Yi et al. (2007),,,29.429972ï,111.139711,Maize,6583.5,6892.5,kg/ha,Straw return,,Decimal
+640,D331,Yi et al. (2007),,,29.429972ï,111.139711,Maize,8173.5,8271,kg/ha,Straw return,,Decimal
+641,D331,Yi et al. (2007),,,29.429972ï,111.139711,Maize,8239.5,8644.5,kg/ha,Straw return,,Decimal
 642,D331,Lou et al. (2011),,,41.66666667,119.4666667,Maize,612,872,kg/ha,Straw return,,Degr-Min-Sec
 643,D331,Lou et al. (2011),,,41.66666667,119.4666667,Maize,4028,5440,kg/ha,Straw return,,Degr-Min-Sec
 644,D331,Zhao et al. (2009),,,35.56666667,106.6833333,Maize,2520,2760,kg/ha,Straw return,,Degr-Min-Sec
@@ -706,7 +706,7 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 705,D331,Liu et al. (2017),,,34.3,108.0666667,Wheat,1120,1358,kg/ha,Straw return,,Degr-Min-Sec
 706,D331,Liu et al. (2017),,,34.3,108.0666667,Wheat,1984,1978,kg/ha,Straw return,,Degr-Min-Sec
 707,D331,Liu et al. (2017),,,34.3,108.0666667,Wheat,3745,3955,kg/ha,Straw return,,Degr-Min-Sec
-708,D331,Liu et al. (2014),,,45.803775,126.534967�,Maize,10000,8000,kg/ha,Straw return,,Decimal
+708,D331,Liu et al. (2014),,,45.803775,126.534967ï,Maize,10000,8000,kg/ha,Straw return,,Decimal
 709,D331,Lu (2015),,,40.20222222,118.3008333,Maize,12610,13120,kg/ha,Straw return,,Degr-Min-Sec
 710,D331,Lyu et al. (2016),,,43.93791667,126.4673889,Maize,13339,14371.7,kg/ha,Straw return,,Degr-Min-Sec
 711,D331,Lyu et al. (2016),,,43.93791667,126.4673889,Maize,12575,12836.4,kg/ha,Straw return,,Degr-Min-Sec
@@ -763,10 +763,10 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 762,D331,Zhang et al. (2014),China,,26.75,111.8666667,Maize,1351,2461,kg/ha,Straw return,,Degr-Min-Sec
 763,D331,Zhang et al. (2010),,,35.68333333,114.55,Maize,11581.66,12424.44,kg/ha,Straw return,,Degr-Min-Sec
 764,D331,Zhang et al. (2010),,,35.68333333,114.55,Maize,12056.39,12550.04,kg/ha,Straw return,,Degr-Min-Sec
-765,D331,Zhang et al. (2016),,,42.021619�,121.670323�,Maize,10140,14720,kg/ha,Straw return,,Decimal
-766,D331,Zhang et al. (2016),,,42.021619�,121.670323�,Maize,10980,14100,kg/ha,Straw return,,Decimal
-767,D331,Zhang et al. (2016),,,42.021619�,121.670323�,Maize,8536,12398,kg/ha,Straw return,,Decimal
-768,D331,Zhang et al. (2016),,,42.021619�,121.670323�,Maize,8990,11998,kg/ha,Straw return,,Decimal
+765,D331,Zhang et al. (2016),,,42.021619ï,121.670323ï,Maize,10140,14720,kg/ha,Straw return,,Decimal
+766,D331,Zhang et al. (2016),,,42.021619ï,121.670323ï,Maize,10980,14100,kg/ha,Straw return,,Decimal
+767,D331,Zhang et al. (2016),,,42.021619ï,121.670323ï,Maize,8536,12398,kg/ha,Straw return,,Decimal
+768,D331,Zhang et al. (2016),,,42.021619ï,121.670323ï,Maize,8990,11998,kg/ha,Straw return,,Decimal
 769,D331,Zhao et al. (2014),China,,37.88333333,115.7,Maize,8663,9598,kg/ha,Straw return,,Degr-Min-Sec
 770,D331,Zhao et al. (2014),China,,37.88333333,115.7,Wheat,5685,6157,kg/ha,Straw return,,Degr-Min-Sec
 771,D331,Xun et al. (2016),,,42.36666667,123.9333333,Maize,8794.1,8902.5,kg/ha,Straw return,,Degr-Min-Sec
@@ -865,8 +865,8 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 864,D331,"Effects of two Ways of cornstalk returning on soil properties, growth and quality of sweet corn",,,22.7325,113.4944444,Maize,15680.1,15021.4,kg/ha,Straw return,,Degr-Min-Sec
 865,D331,Wang et al. (2021),,,34.33333333,108.4,Maize,8844.47,9509.41,kg/ha,Straw return,,Degr-Min-Sec
 866,D331,Wang et al. (2021),,,34.33333333,108.4,Maize,8708.16,9486.54,kg/ha,Straw return,,Degr-Min-Sec
-867,D331,Wang et al. (2021),,,42.3,123.83�,Maize,6346.4,6546,kg/ha,Straw return,,Decimal
-868,D331,Wang et al. (2021),,,42.3,123.83�,Maize,5718,5909,kg/ha,Straw return,,Decimal
+867,D331,Wang et al. (2021),,,42.3,123.83ï,Maize,6346.4,6546,kg/ha,Straw return,,Decimal
+868,D331,Wang et al. (2021),,,42.3,123.83ï,Maize,5718,5909,kg/ha,Straw return,,Decimal
 869,D331,Mei et al. (2017),,,41.98333333,123,Maize,11622.5,10883,kg/ha,Straw return,,Degr-Min-Sec
 870,D331,Mei et al. (2017),,,41.98333333,123,Maize,10059.3,8506.74,kg/ha,Straw return,,Degr-Min-Sec
 871,D331,"Effects of long-Term located fertilization on soil organic matter, nitrogen forms and crop yields",,,37.88333333,115.7,Maize,12432,12707,kg/ha,Straw return,,Degr-Min-Sec
@@ -1360,7 +1360,7 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 1359,D331,"Effects of organic fertilizer replacement on rice-wheat yield, soil fertility and nitrogen and phosphorus loss from farmland",,,31.66194444,117.6830556,Rice,10231.78,9443.49,kg/ha,Straw return,,Degr-Min-Sec
 1360,D331,Hu et al. (2022),,,31.26666667,105.45,Wheat,2390,2690,kg/ha,Straw return,,Degr-Min-Sec
 1361,D331,Hu et al. (2022),,,31.26666667,105.45,Maize,5700,5730,kg/ha,Straw return,,Degr-Min-Sec
-1362,D331,Effects of organic nutrient replacement on wheat yield���soil fertility and runoff loss of nitrogen and phosphorus in whe,,,31.66194444,117.6830556,Wheat,5458.56,5321.96,kg/ha,Straw return,,Degr-Min-Sec
+1362,D331,Effects of organic nutrient replacement on wheat yieldï¿½ï¿½ï¿½soil fertility and runoff loss of nitrogen and phosphorus in whe,,,31.66194444,117.6830556,Wheat,5458.56,5321.96,kg/ha,Straw return,,Degr-Min-Sec
 1363,D331,Xu et al. (2015),,,36.15,117.25,Wheat,7321,7533.7,kg/ha,Straw return,,Degr-Min-Sec
 1364,D331,Effects of corn straw returning combined with microbial agents  on wheat yield and soil carbon and nitrogen components,,,36.3,117.2833333,Wheat,4106.97,5771.03,kg/ha,Straw return,,Degr-Min-Sec
 1365,D331,Effects of corn straw returning combined with microbial agents  on wheat yield and soil carbon and nitrogen components,,,36.3,117.2833333,Wheat,6064.92,7065.8,kg/ha,Straw return,,Degr-Min-Sec
@@ -1406,12 +1406,12 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 1405,D331,Research on yield and economic benefit of different rotation and straw returning methods in black soil region of central Jilin province,,,#VALUE!,#VALUE!,Maize,12237.8,12973,kg/ha,Straw return,,Degr-Min-Sec
 1406,D331,Effects of different straw incorporation ways on N2O emission and soil physicochemical properties of brown soil,,,#VALUE!,#VALUE!,Maize,13335.8,10708,kg/ha,Straw return,,Degr-Min-Sec
 1407,D331,Effects of straw mulch and balanced fertilization on nitrogen loss from farmland in Chaohu lake region,,,#VALUE!,#VALUE!,Maize,6482,7538,kg/ha,Straw return,,Degr-Min-Sec
-1408,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2O���NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8778.14,9356.91,kg/ha,Straw return,,Degr-Min-Sec
-1409,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2O���NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8906.75,9517.68,kg/ha,Straw return,,Degr-Min-Sec
-1410,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2O���NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8554.84,9174.19,kg/ha,Straw return,,Degr-Min-Sec
-1411,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2O���NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,7363.34,7684.89,kg/ha,Straw return,,Degr-Min-Sec
-1412,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2O���NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8825.81,9483.87,kg/ha,Straw return,,Degr-Min-Sec
-1413,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2O���NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,7277.42,7664.52,kg/ha,Straw return,,Degr-Min-Sec
+1408,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2Oï¿½ï¿½ï¿½NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8778.14,9356.91,kg/ha,Straw return,,Degr-Min-Sec
+1409,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2Oï¿½ï¿½ï¿½NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8906.75,9517.68,kg/ha,Straw return,,Degr-Min-Sec
+1410,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2Oï¿½ï¿½ï¿½NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8554.84,9174.19,kg/ha,Straw return,,Degr-Min-Sec
+1411,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2Oï¿½ï¿½ï¿½NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,7363.34,7684.89,kg/ha,Straw return,,Degr-Min-Sec
+1412,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2Oï¿½ï¿½ï¿½NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,8825.81,9483.87,kg/ha,Straw return,,Degr-Min-Sec
+1413,D331,"Study of straw mulching and nitrogen fertilization on Soil fertility, N2Oï¿½ï¿½ï¿½NH3 and CH4 emission intensity in maize and soybean croppin",,,34.28333333,108.0666667,Maize,7277.42,7664.52,kg/ha,Straw return,,Degr-Min-Sec
 1414,D331,Effects of returning methods of straw on soil physical property and spring maize yield,,,#VALUE!,#VALUE!,Maize,10214.84,10501.37,kg/ha,Straw return,,Degr-Min-Sec
 1415,D331,Effects of returning methods of straw on soil physical property and spring maize yield,,,#VALUE!,#VALUE!,Maize,10214.84,11056.1,kg/ha,Straw return,,Degr-Min-Sec
 1416,D331,Effects of returning methods of straw on soil physical property and spring maize yield,,,#VALUE!,#VALUE!,Maize,10214.84,9819.82,kg/ha,Straw return,,Degr-Min-Sec
@@ -5195,7 +5195,7 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 5194,D921B,"Ning, 2008",,,22.841,108.293,Rice,6705,7116,kg/ha,Straw addition,Not sure about control-treatment columns,Decimal
 5195,D921B,"Ning, 2008",,,22.841,108.293,Rice,6705,7274,kg/ha,Straw addition,Not sure about control-treatment columns,Decimal
 5196,D973,"Yamamoto et al., 2014",Japan,Iruma,36.33333333,139.5666667,Upland arable land,1.34,1.19,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
-5197,D973,"H��ppi et al.,",Switzerland,Zurich,47.41666667,8.516666667,Upland arable land,7.25,7.85,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
+5197,D973,"Hï¿½ï¿½ppi et al.,",Switzerland,Zurich,47.41666667,8.516666667,Upland arable land,7.25,7.85,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
 5198,D973,"Yamamoto et al., 2012",Japan,Tsukuba,36.01666667,140.1166667,Upland arable land,1.96,2.46,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
 5199,D973,"Yamamoto et al., 2012",Japan,Tsukuba,36.01666667,140.1166667,Upland arable land,1.96,2.34,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
 5200,D973,"Yamamoto et al., 2013",Japan,Tsukuba,36.01666667,140.1166667,Upland arable land,2.21,1.86,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
@@ -6381,7 +6381,7 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 6380,D973,"Mijangos et al., 2010",Spain,Basque,43.116667,-2.85,Grassland,2.65,2.22,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
 6381,D973,"Mijangos et al., 2010",Spain,Basque,43.116667,-2.85,Grassland,3.84,4.26,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
 6382,D973,"Mijangos et al., 2010",Spain,Basque,43.116667,-2.85,Grassland,2.65,2.3,Mg dry matter/ha,Straw addition,,Degr-Min-Sec
-6383,D1120,Barrios et al. (2006),Argentina,Esteban Echeverría Partid,-34.84,-58.47,Maize,2800,4200,,Straw addition,"Control: conventional tillage, Treatment: no tillage",
+6383,D1120,Barrios et al. (2006),Argentina,Esteban EcheverrÃ­a Partid,-34.84,-58.47,Maize,2800,4200,,Straw addition,"Control: conventional tillage, Treatment: no tillage",
 6384,D1120,Bono et al. (2008),Argentina,Anguil,-36.54,-63.986,Maize,6140,8160,,Straw addition,"Control: conventional tillage, Treatment: no tillage",
 6385,D1120,Cassel & Wagger (1996),USA,Salisbury,35.699,-80.622,Maize,2070,3450,,Straw addition,"Control: conventional tillage, Treatment: no tillage",
 6386,D1120,Cassel & Wagger (1996),USA,Salisbury,35.699,-80.622,Maize,8660,11140,,Straw addition,"Control: conventional tillage, Treatment: no tillage",
@@ -7852,7 +7852,7 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 7851,D309,Zhang  et al. (2014),China,Guangxi,23.11,107.13,Rice,7067,7517,kg/hm^2,Straw addition,,
 7852,D309,Zhang  et al. (2014),China,Guangxi,23.11,107.13,Rice,7067,7484,kg/hm^2,Straw addition,,
 7853,D309,Zhang  et al. (2014),China,Guangxi,25.19,110.33,Rice,5922,6666,kg/hm^2,Straw addition,,
-7854,D309,� et al. (2014),China,Guangxi,23.74,107.94,Rice,6408,6859,kg/hm^2,Straw addition,,
+7854,D309,ý et al. (2014),China,Guangxi,23.74,107.94,Rice,6408,6859,kg/hm^2,Straw addition,,
 7855,D309,Unpublished study (2002),China,Guangxi,23.74,109.08,Rice,6202,6638,kg/hm^2,Straw addition,,
 7856,D309,Unpublished study (2002),China,Guangxi,23.74,109.08,Rice,6209,6638,kg/hm^2,Straw addition,,
 7857,D309,Unpublished study (2001),China,Guangxi,23.73,109.09,Rice,5091,5288,kg/hm^2,Straw addition,,
@@ -7906,7 +7906,7 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 7905,D309,Sun  et al. (2013),China,Anhui,30.43,118.87,Rice,5767,6933,kg/hm^2,Straw addition,,
 7906,D309,Sun  et al. (2013),China,Anhui,30.43,118.87,Rice,5767,7333,kg/hm^2,Straw addition,,
 7907,D309,Sun  et al. (2013),China,Anhui,30.43,118.87,Rice,5767,7117,kg/hm^2,Straw addition,,
-7908,D309,� et al. (2013),China,Anhui,30.47,117.35,Rice,9503,9747,kg/hm^2,Straw addition,,
+7908,D309,ý et al. (2013),China,Anhui,30.47,117.35,Rice,9503,9747,kg/hm^2,Straw addition,,
 7909,D309,Fang  et al. (2014),China,Anhui,31.08,117.11,Rice,7620,8040,kg/hm^2,Straw addition,,
 7910,D309,Fang  et al. (2014),China,Anhui,31.08,117.11,Rice,7620,8250,kg/hm^2,Straw addition,,
 7911,D309,Fang  et al. (2014),China,Anhui,31.08,117.11,Rice,7620,7785,kg/hm^2,Straw addition,,
@@ -8036,9 +8036,9 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 8035,D309,Unpublished study (2003),China,Tianjin,39.34,117.07,Rice,9100,9506,kg/hm^2,Straw addition,,
 8036,D309,Unpublished study (2002),China,Yunnan,25.31,103.06,Rice,12125,12331,kg/hm^2,Straw addition,,
 8037,D309,Unpublished study (2003),China,Yunnan,25.32,103.07,Rice,12125,12331,kg/hm^2,Straw addition,,
-8038,D309,� et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13007,kg/hm^2,Straw addition,,
-8039,D309,� et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13407,kg/hm^2,Straw addition,,
-8040,D309,� et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13107,kg/hm^2,Straw addition,,
+8038,D309,ý et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13007,kg/hm^2,Straw addition,,
+8039,D309,ý et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13407,kg/hm^2,Straw addition,,
+8040,D309,ý et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13107,kg/hm^2,Straw addition,,
 8041,D309,Luo  et al. (2013),China,Zhejiang,29.2,119.97,Rice,11885,13275,kg/hm^2,Straw addition,,
 8042,D309,Luo  et al. (2013),China,Zhejiang,29.2,119.97,Rice,11885,12651,kg/hm^2,Straw addition,,
 8043,D309,Luo  et al. (2013),China,Zhejiang,29.2,119.97,Rice,11256,12791,kg/hm^2,Straw addition,,
@@ -8063,9 +8063,9 @@ No.,DatasetID,Source,Country,Site/Region,Latitude,Longitude,Crop type,yield_cont
 8062,D309,Yang  et al. (2013),China,Zhejiang,27.93,119.62,Rice,8555,9354,kg/hm^2,Straw addition,,
 8063,D309,Yang  et al. (2013),China,Zhejiang,27.93,119.62,Rice,8555,9204,kg/hm^2,Straw addition,,
 8064,D309,Yang  et al. (2013),China,Zhejiang,27.93,119.62,Rice,8555,8904,kg/hm^2,Straw addition,,
-8065,D309,� et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13007,kg/hm^2,Straw addition,,
-8066,D309,� et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13407,kg/hm^2,Straw addition,,
-8067,D309,� et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13107,kg/hm^2,Straw addition,,
+8065,D309,ý et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13007,kg/hm^2,Straw addition,,
+8066,D309,ý et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13407,kg/hm^2,Straw addition,,
+8067,D309,ý et al. (2015),China,Zhejiang,29.32,121.57,Rice,12431,13107,kg/hm^2,Straw addition,,
 8068,D309,Wang  et al. (2014),China,Zhejiang,29.68,121.51,Rice,8325,9810,kg/hm^2,Straw addition,,
 8069,D309,Wang  et al. (2014),China,Zhejiang,29.68,121.51,Rice,8325,9375,kg/hm^2,Straw addition,,
 8070,D309,Wang  et al. (2014),China,Zhejiang,29.68,121.51,Rice,8325,8610,kg/hm^2,Straw addition,,
