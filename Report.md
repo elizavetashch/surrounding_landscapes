@@ -31,6 +31,64 @@ Land cover metrics, including area, proportion, and edge length for each land co
 ## Results 
 
 ### Data Profile 
+**In short words:** 
+* **7959** data points with all complete landscape metrics
+* **11** data sets
+* **10** crop types
+* **13** treatments
+* **5** initial yield metrics
 
-1. Missing Data
+**Note:** the data is written in the long format, meaning that one harvest point will be represented by multiple rows. 
+
+#### Map: Locations of the points 
+![map](images/map.png)
+
+**Notes:** 
+* The points are distributed across **all continents**.
+* The current dataset is biased towards **chinese experiments**
+
+#### Frequency charts 
 ![missing data of data_results](images/missing.png)
+
+
+
+**What do the class codes stay for?**
+| Class Code | Class Description by ESA                                    | HEX Code  |
+|------------|-------------------------------------------------------------|-----------|
+| 10         | Rainfed cropland                                            | #ffff64   |
+| 11         | Herbaceous cover cropland                                   | #ffff64   |
+| 12         | Tree or shrub cover (Orchard) cropland                      | #ffff00   |
+| 20         | Irrigated cropland                                          | #aaf0f0   |
+| 51         | Open evergreen broadleaved forest                           | #4c7300   |
+| 52         | Closed evergreen broadleaved forest                         | #006400   |
+| 61         | Open deciduous broadleaved forest (0.15<fc<0.4)             | #a8c800   |
+| 62         | Closed deciduous broadleaved forest (fc>0.4)                | #00a000   |
+| 71         | Open evergreen needle-leaved forest (0.15<fc<0.4)           | #005000   |
+| 72         | Closed evergreen needle-leaved forest (fc>0.4)              | #003c00   |
+| 81         | Open deciduous needle-leaved forest (0.15<fc<0.4)           | #286400   |
+| 82         | Closed deciduous needle-leaved forest (fc>0.4)              | #285000   |
+| 91         | Open mixed leaf forest (broadleaved and needle-leaved)      | #a0b432   |
+| 92         | Closed mixed leaf forest (broadleaved and needle-leaved)    | #788200   |
+| 120        | Shrubland                                                   | #966400   |
+| 121        | Evergreen shrubland                                         | #964b00   |
+| 122        | Deciduous shrubland                                         | #966400   |
+| 130        | Grassland                                                   | #ffb432   |
+| 140        | Lichens and mosses                                          | #ffdcd2   |
+| 150        | Sparse vegetation (fc<0.15)                                 | #ffebaf   |
+| 152        | Sparse shrubland (fc<0.15)                                  | #ffd278   |
+| 153        | Sparse herbaceous (fc<0.15)                                 | #ffebaf   |
+| 181        | Swamp                                                       | #00a884   |
+| 182        | Marsh                                                       | #73ffdf   |
+| 183        | Flooded flat                                                | #9ebb3b   |
+| 184        | Saline                                                      | #828282   |
+| 185        | Mangrove                                                    | #f57ab6   |
+| 186        | Salt marsh                                                  | #66cdab   |
+| 187        | Tidal flat                                                  | #444f89   |
+| 190        | Impervious surfaces                                         | #c31400   |
+| 200        | Bare areas                                                  | #fff5d7   |
+| 201        | Consolidated bare areas                                     | #dcdcdc   |
+| 202        | Unconsolidated bare areas                                   | #fff5d7   |
+| 210        | Water body                                                  | #0046c8   |
+| 220        | Permanent ice and snow                                      | #ffffff   |
+| 0          | Filled value                                                | #ffffff   |
+
