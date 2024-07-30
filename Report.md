@@ -57,6 +57,7 @@ The datasets were extracted from the supplementary data of the following metastu
 | D352         | Effect of soil erosion depth on crop yield based on topsoil removal method: a meta‑analysis           | Zhang, L., Huang, Y., Rong, L., Duan, X., Zhang, R., Li, Y., & Guan, J. (2021). Effect of soil erosion depth on crop yield based on topsoil removal method: A meta-analysis. Agronomy for Sustainable Development, 41(5), 63. https://doi.org/10.1007/s13593-021-00718-8   |
 
 The papers' main focus was on the effect of some treatment on the crop yield. Hence, different crops and treatments were included in different datasets: 
+
 ![frequencygrid](images/dataprofile/sankey_dataset_crop_treatment.png)
 
 
@@ -77,55 +78,69 @@ The papers' main focus was on the effect of some treatment on the crop yield. He
 ![frequencygrid](images/dataprofile/country.png)
 
 #### Distribution plots 
+
 ![frequencygrid](images/dataprofile/distribution.png)
 
 Distribution of yield: 
+
 **initial yield metric as filling color:**
+
 ![frequencygrid](images/dataprofile/yield.png)
+
 **Crop type as filling color:**
+
 ![frequencygrid](images/dataprofile/yield_croptype.png)
+
 **Treatment as filling color:**
+
 ![frequencygrid](images/dataprofile/yield_treatment.png)
 
 ### Landscape Metrics  
 
-**What do the class codes stay for?**
-| Class Code | Class Description by ESA                                    | HEX Code  |
-|------------|-------------------------------------------------------------|-----------|
-| 10         | Rainfed cropland                                            | #ffff64   |
-| 11         | Herbaceous cover cropland                                   | #ffff64   |
-| 12         | Tree or shrub cover (Orchard) cropland                      | #ffff00   |
-| 20         | Irrigated cropland                                          | #aaf0f0   |
-| 51         | Open evergreen broadleaved forest                           | #4c7300   |
-| 52         | Closed evergreen broadleaved forest                         | #006400   |
-| 61         | Open deciduous broadleaved forest (0.15<fc<0.4)             | #a8c800   |
-| 62         | Closed deciduous broadleaved forest (fc>0.4)                | #00a000   |
-| 71         | Open evergreen needle-leaved forest (0.15<fc<0.4)           | #005000   |
-| 72         | Closed evergreen needle-leaved forest (fc>0.4)              | #003c00   |
-| 81         | Open deciduous needle-leaved forest (0.15<fc<0.4)           | #286400   |
-| 82         | Closed deciduous needle-leaved forest (fc>0.4)              | #285000   |
-| 91         | Open mixed leaf forest (broadleaved and needle-leaved)      | #a0b432   |
-| 92         | Closed mixed leaf forest (broadleaved and needle-leaved)    | #788200   |
-| 120        | Shrubland                                                   | #966400   |
-| 121        | Evergreen shrubland                                         | #964b00   |
-| 122        | Deciduous shrubland                                         | #966400   |
-| 130        | Grassland                                                   | #ffb432   |
-| 140        | Lichens and mosses                                          | #ffdcd2   |
-| 150        | Sparse vegetation (fc<0.15)                                 | #ffebaf   |
-| 152        | Sparse shrubland (fc<0.15)                                  | #ffd278   |
-| 153        | Sparse herbaceous (fc<0.15)                                 | #ffebaf   |
-| 181        | Swamp                                                       | #00a884   |
-| 182        | Marsh                                                       | #73ffdf   |
-| 183        | Flooded flat                                                | #9ebb3b   |
-| 184        | Saline                                                      | #828282   |
-| 185        | Mangrove                                                    | #f57ab6   |
-| 186        | Salt marsh                                                  | #66cdab   |
-| 187        | Tidal flat                                                  | #444f89   |
-| 190        | Impervious surfaces                                         | #c31400   |
-| 200        | Bare areas                                                  | #fff5d7   |
-| 201        | Consolidated bare areas                                     | #dcdcdc   |
-| 202        | Unconsolidated bare areas                                   | #fff5d7   |
-| 210        | Water body                                                  | #0046c8   |
-| 220        | Permanent ice and snow                                      | #ffffff   |
-| 0          | Filled value                                                | #ffffff   |
+![frequencygrid](images/landclass_and_buffer.png)
 
+**What do the class codes stay for?**
+| Class Code | Class Description by ESA                                    | HEX Code  | Bigger CLass  |
+|------------|-------------------------------------------------------------|-----------|---------------|
+| 10         | Rainfed cropland                                            | #ffff64   | Cropland |
+| 11         | Herbaceous cover cropland                                   | #ffff64   | Cropland |
+| 12         | Tree or shrub cover (Orchard) cropland                      | #ffff00   | Cropland |
+| 20         | Irrigated cropland                                          | #aaf0f0   | Cropland |
+| 51         | Open evergreen broadleaved forest                           | #4c7300   | Forest |
+| 52         | Closed evergreen broadleaved forest                         | #006400   | Forest |
+| 61         | Open deciduous broadleaved forest (0.15<fc<0.4)             | #a8c800   | Forest |
+| 62         | Closed deciduous broadleaved forest (fc>0.4)                | #00a000   | Forest |
+| 71         | Open evergreen needle-leaved forest (0.15<fc<0.4)           | #005000   | Forest |
+| 72         | Closed evergreen needle-leaved forest (fc>0.4)              | #003c00   | Forest |
+| 81         | Open deciduous needle-leaved forest (0.15<fc<0.4)           | #286400   | Forest |
+| 82         | Closed deciduous needle-leaved forest (fc>0.4)              | #285000   | Forest |
+| 91         | Open mixed leaf forest (broadleaved and needle-leaved)      | #a0b432   | Forest |
+| 92         | Closed mixed leaf forest (broadleaved and needle-leaved)    | #788200   | Forest |
+| 120        | Shrubland                                                   | #966400   | Shrubland |
+| 121        | Evergreen shrubland                                         | #964b00   | Shrubland |
+| 122        | Deciduous shrubland                                         | #966400   | Shrubland |
+| 130        | Grassland                                                   | #ffb432   | Grassland |
+| 140        | Lichens and mosses                                          | #ffdcd2   | Sparse Vegetation |
+| 150        | Sparse vegetation (fc<0.15)                                 | #ffebaf   | Sparse Vegetation |
+| 152        | Sparse shrubland (fc<0.15)                                  | #ffd278   | Sparse Vegetation |
+| 153        | Sparse herbaceous (fc<0.15)                                 | #ffebaf   | Sparse Vegetation |
+| 181        | Swamp                                                       | #00a884   | Flooded Surfaces |
+| 182        | Marsh                                                       | #73ffdf   | Flooded Surfaces |
+| 183        | Flooded flat                                                | #9ebb3b   | Flooded Surfaces |
+| 184        | Saline                                                      | #828282   | Flooded Surfaces |
+| 185        | Mangrove                                                    | #f57ab6   | Flooded Surfaces |
+| 186        | Salt marsh                                                  | #66cdab   | Flooded Surfaces |
+| 187        | Tidal flat                                                  | #444f89   | Flooded Surfaces |
+| 190        | Impervious surfaces                                         | #c31400   | Bare Surfaces |
+| 200        | Bare areas                                                  | #fff5d7   | Bare Surfaces |
+| 201        | Consolidated bare areas                                     | #dcdcdc   | Bare Surfaces |
+| 202        | Unconsolidated bare areas                                   | #fff5d7   | Bare Surfaces |
+| 210        | Water body                                                  | #0046c8   | Water Body |
+| 220        | Permanent ice and snow                                      | #ffffff   | Water Body |
+| 0          | Filled value                                                | #ffffff   | NA | 
+
+**What is the relationship between yield and the area (m^2) of each land class?**
+
+**What is the relationship between yield and the fragmentation level of each land class?**
+
+**What is the relationship between yield and the shannon's landscape diversity of each land class?**
