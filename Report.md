@@ -151,6 +151,7 @@ Distribution of yield:
 
 ![frequencygrid](images/results/shannonscorrelation.png)
 
+
 ## References
 Akter, S., Rizvi, S. Z. M., Haque, A., Reynolds, O. L., Furlong, M. J., Melo, M. C., Osborne, T., Mo, J., McDonald, S., Johnson, A. C., & Gurr, G. M. (2023). Continent-wide evidence that landscape context can mediate the effects of local habitats on in-field abundance of pests and natural enemies. Ecology and Evolution, 13(1), e9737. https://doi.org/10.1002/ece3.9737
 Bishop, J., Garratt, M. P. D., & Nakagawa, S. (2022). Animal pollination increases stability of crop yield across spatial scales. Ecology Letters, 25(9), 2034–2047. https://doi.org/10.1111/ele.14069
