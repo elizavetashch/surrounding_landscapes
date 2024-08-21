@@ -173,7 +173,7 @@ means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
 reg.data<-means[,c(1,3,4, 6:7,9:16, 19:22)]
 col.names<-colnames(means)
 
-# (1) create the semi natural habitat proportion (including grassland)
+##### (A) create the semi natural habitat proportion (including grassland) #####
 
 # (i) get the classes which need to be included
 nat.hab.class.code<-landcover.meta$Class.Code[-which(
@@ -196,7 +196,7 @@ nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_5000'))
 reg.data$nat.hab.5000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
 # not that there is still this coding mistake and the radii data are still identical...
 
-# (2) create the semi natural habitat proportion (now without grassland)
+##### (B) create the semi natural habitat proportion (now without grassland) #####
 
 # (i) get the classes which need to be included
 nat.hab.class.code<-landcover.meta$Class.Code[-which(
@@ -220,7 +220,7 @@ reg.data$nat.hab.wo.grass.5000<-rowSums(means[,which(is.element(col.names,nat.ha
 
 plot(reg.data$nat.hab.wo.grass.5000, reg.data$nat.hab.5000) # looks nice and right on the first glance
 
-# (3) create the cropland proportion data
+##### (C) create the cropland proportion data #####
 
 # (i) get the classes which need to be included and create their col-names
 cropland.class.code<-landcover.meta$Class.Code[which(landcover.meta$Bigger.CLass=='Cropland')]
@@ -236,27 +236,75 @@ reg.data$cropland.2000<-rowSums(means[,which(is.element(col.names,names))], na.r
 names<-c(paste0('proportion_',cropland.class.code,'_5000'))
 reg.data$cropland.5000<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
 
-# (4) create the cropland area vs perimeter data
+##### (D) create the cropland area vs perimeter data #####
 
-# create the column names
+# (i) create the column names
 names<-c(paste0('areaM2_',cropland.class.code,'_1000'))
 names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
 
+# (ii) create the variable
 reg.data$crop.peri.area.ratio.1000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
-  rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000 # unit: m/ha
 
-
+# some diagnostic check - can that be, that the values are so low?
 check<-data$edgelength_m[is.element(data$class, cropland.class.code)]/
   data$areaM2[is.element(data$class, cropland.class.code)]*10000
 
 summary(check)
 summary(reg.data$crop.peri.area.ratio.1000)
+# okay, we have a difference in median edge lendge per ha. but that difference seems rather low
+# potential PROBLEM - quite low value, but maybe still realistic?
+
+# (iii) repeat that for the 2 and 5km radii
+names<-c(paste0('areaM2_',cropland.class.code,'_2000'))
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_2000'))
+reg.data$crop.peri.area.ratio.2000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000 # unit: m/ha
+
+names<-c(paste0('areaM2_',cropland.class.code,'_5000'))
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_5000'))
+reg.data$crop.peri.area.ratio.5000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000 # unit: m/ha
+
+##### (E) create the agricultural edge-length #####
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
+reg.data$crop.edgelength.1000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_2000'))
+reg.data$crop.edgelength.2000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_5000'))
+reg.data$crop.edgelength.5000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+
+##### (F) create the inert land-cover #####
+# (i) get the classes which need to be included and create their col-names
+inert.land.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow')]
+names<-c(paste0('proportion_',inert.land.class.code,'_1000'))
+
+# (ii) create the data for the 1km radius - here we also have urban areas and other built environments, which are
+# not included in our land-cover classes, so we have to use the not inert area and substract it from 1 to get the 
+# right value.
+reg.data$inert.1000<- 1-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+# (iii) repeat that for the 2 and 5km radii
+names<-c(paste0('proportion_',inert.land.class.code,'_2000'))
+reg.data$inert.2000<- 1-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+names<-c(paste0('proportion_',inert.land.class.code,'_5000'))
+reg.data$inert.5000<- 1-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+##### (G) create the inert land-cover #####
+
+
+
+
+
+
+
 
 # save the file
-write.csv(means, file = 'data/data_processed.csv',row.names = TRUE)
+write.csv(reg.data, file = 'data/data_processed.csv',row.names = TRUE)
 
-rm(nat.hab.col.names,nat.hab.class.code,cropland.class.code,names, names.per )
-
-
-hist(reg.data$nat.hab.1000)
-summary(reg.data$nat.hab.1000)
+rm(nat.hab.col.names,nat.hab.class.code,cropland.class.code,names, names.per, inert.land.class.code)
