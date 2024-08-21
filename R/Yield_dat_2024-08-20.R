@@ -170,7 +170,7 @@ means$logrr.yi <- log10(means$pr_yield_treatm_kgha/means$pr_yield_control_kgha)
 means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
 
 ##### (III) Prepare predictors ##########
-reg.data<-means[,c(1,2:7,9:12, 14:15, 18:21)]
+reg.data<-means[,c(1,3,4, 6:7,9:16, 19:22)]
 col.names<-colnames(means)
 
 # (1) create the semi natural habitat proportion (including grassland)
@@ -242,23 +242,18 @@ reg.data$cropland.5000<-rowSums(means[,which(is.element(col.names,names))], na.r
 names<-c(paste0('areaM2_',cropland.class.code,'_1000'))
 names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
 
-reg.data$crop.peri.area.ratio.1000<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+reg.data$crop.peri.area.ratio.1000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
   rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000
 
 
+check<-data$edgelength_m[is.element(data$class, cropland.class.code)]/
+  data$areaM2[is.element(data$class, cropland.class.code)]*10000
 
-
-
-# get rid of multibyte string issue
-# I think the issue is in this last bit - it is duplicating the source column
-#means$Source[means$Source == "\xfd et al. (2013)"] <- "newref et al. 2013"
-#means$Source[means$Source == "\xfd et al. (2014)"] <- "newref et al. 2014"
-#means$Source[means$Source == "\xfd et al. (2015)"] <- "newref et al. 2015"
+summary(check)
+summary(reg.data$crop.peri.area.ratio.1000)
 
 # save the file
 write.csv(means, file = 'data/data_processed.csv',row.names = TRUE)
-
-data$edgelength_m/data$areaM2*10000
 
 rm(nat.hab.col.names,nat.hab.class.code,cropland.class.code,names, names.per )
 
