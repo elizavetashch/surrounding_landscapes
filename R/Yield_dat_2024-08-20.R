@@ -20,7 +20,7 @@ x<-data[which(is.element(data$No., problems)),]
 plot(x$areaM2[1:15],x$areaM2[16:30])
 plot(x$areaM2[1:15],x$areaM2[46:60])
 
-#hmmm - the issue is that for several unique data entries (i.e. unique treatment yield meassures), there are multiple times
+# PROBLEM:the issue is that for several unique data entries (i.e. unique treatment yield measures), there are multiple times
 # values for different land-cover classes provided. to get rid of that, I would suggest to just take the first data entries.
 # But we need to look into that!
 
@@ -49,24 +49,24 @@ means<-aggregate(list(data$areaM2),
                  by = list(data$buffer_radius_m,  data$No.),
                  function(x){sum(x)})
 
-# there is a major issue here - if you check the output, you will see that all the different land-cover data for the different
+# PROBLEM - if you check the output, you will see that all the different land-cover data for the different
 # radii of the sam unique yield measurement are identical - something went wrong!! 
 
 ####### (c) check for missing landscape data #######
 x<-data[which(is.na(data$buffer_radius_m)), ]
-# why are these data missing - here we have a lat and long?? And a land cover map (seemingly, as we have the year), but no land-cover
-# data
+# PROBLEM: why are these data missing - here we have a lat and long?? And a land cover map (seemingly, as we have the year),
+# but no land-cover data
 
-# also, we have some places, where we have no 2 and 5km radii, but Elina says that is okay, because those places were close to the
-# ocean and hence were not considered
+# PROBLEM: also, we have some places, where we have no 2 and 5km radii, but Elina says that is okay, because those places 
+# were close to the ocean and hence were not considered
 table(data.mod$buffer_radius_m)
 
-# I am not sure that this is the best approach - maybe it is better to still calculate 2 and 5km radii and then exclude water from 
-# landcover indicies...?? Otherwise we would loose these data.
+# I am not sure that this is the best approach - maybe it is better to still calculate 2 and 5km radii and then exclude 
+# water from landcover indicies...?? Otherwise we would loose these data.
 
 ####### (D) check the latitude data #######
 summary(data$pr_Latitude)
-# wow! Why do we have latitude more than 90 degrees???
+# wow! Why do we have latitude more than 90 degrees??? - this issues is resolved when the pr_Latidue is used : )
 
 # there are 184 data points (at least where this is an issue!!)
 #length(which(abs(data.mod.2$Latitude)>90))
@@ -107,67 +107,69 @@ data.mod.2<- pivot_wider(data.mod, names_from = buffer_radius_m, values_from = c
 # For consistency, we decided that we should also average for those that provide raw data.
 data.mod.2$Lat_long<- paste0(data.mod.2$pr_Latitude, data.mod.2$pr_Longitude)
 
-###
-### Jake Note: nb. I changed Croptype to pr_Croptype and the number of values went from 1777 to 1739...
-###
+# additional check
+means.check<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha, data.mod.2$No.),
+                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment,
+                           data.mod.2$pr_Croptype,  data.mod.2$Source),   function(x){mean(x, na.rm = T)})
+colnames(means.check)<-c('pr_land_cover_Year','Lat_long', 'pr_Treatment', 'pr_Croptype', 'Source_A','pr_yield_control_kgha',
+                   'pr_yield_treatm_kgha', 'No.')
+means.check.2<-aggregate(list(means.check$pr_yield_control_kgha, means.check$pr_yield_treatm_kgha, means.check$No.),
+                 by = list(means.check$pr_land_cover_Year , means.check$Lat_long, means.check$pr_Treatment,
+                           means.check$pr_Croptype),   function(x){sd(x,  na.rm = T)})
+# PROBLEM: there are multiple entries, which share location, year, treatment and croptype, but they do have not the same
+# yield values
 
-# get means
-means<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha, data.mod.2$No.), 
-<<<<<<< HEAD
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, 
-                           data.mod.2$pr_Croptype, data.mod.2$Source),
-=======
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, data.mod.2$pr_Croptype,  
-                           data.mod.2$Source),
->>>>>>> 71c2796f6237d16ad72803239df0fdb73b698e9a
-                 function(x){mean(x, na.rm = T)})
-colnames(means)<-c('pr_land_cover_Year','Lat_long', 'Treatment', 'Croptype', 'Source', 'pr_yield_control_kgha',
-colnames(means)<-c('pr_land_cover_Year','Lat_long', 'pr_Treatment', 'pr_Croptype', 'Source', 'pr_yield_control_kgha',
+# for now, we just deal with the issue by maintaining them
+means<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha, data.mod.2$No.),
+                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment,
+                           data.mod.2$pr_Croptype,  data.mod.2$Source),   function(x){mean(x, na.rm = T)})
+colnames(means)<-c('pr_land_cover_Year','Lat_long', 'pr_Treatment', 'pr_Croptype', 'Source_A','pr_yield_control_kgha',
                    'pr_yield_treatm_kgha', 'No.')
 
 # get SDs and sample number
 sds<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha), 
-<<<<<<< HEAD
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, 
-                           data.mod.2$pr_Croptype, data.mod.2$Source),
-=======
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, data.mod.2$pr_Croptype,  
-                           data.mod.2$Source),
->>>>>>> 71c2796f6237d16ad72803239df0fdb73b698e9a
+                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, 
+                           data.mod.2$pr_Croptype,  data.mod.2$Source),
                  function(x){sd(x, na.rm = T)})
 means$pr_yield_control_kgha_sd<-sds[,6]; means$pr_yield_treatm_kgha_sd<-sds[,7]
 
 n<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha,  data.mod.2$No.), 
-<<<<<<< HEAD
-               by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, 
+               by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, 
                          data.mod.2$pr_Croptype, data.mod.2$Source),
-=======
-               by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, data.mod.2$pr_Croptype,  
-                         data.mod.2$Source),
->>>>>>> 71c2796f6237d16ad72803239df0fdb73b698e9a
                function(x){length(x[which(is.na(x)==F)])})
 means$pr_yield_control_kgha_n<-n[,6]; means$pr_yield_treatm_kgha_n<-n[,7]
 
 rm(sds, n, x, check)
 
-colnames(means)
-colnames(data.mod.2)
-
 # now pull in the remaining data variables
 # it should be that we can pull in things that have the same latidude-longitude combination and the same land-cover map-year
 
+# diagnostic check: no the assumption above is not true - but that is already addressed in PROBLEM above...
+means.check<-cbind(means, data.mod.2[match(paste0(means$Lat_long, means$pr_land_cover_Year, means$pr_Treatment, 
+                                            means$pr_Croptype), 
+                                     paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year, data.mod.2$pr_Treatment,
+                                            data.mod.2$pr_Croptype)), 
+                               c(2:7,13,18,20,21,27:ncol(data.mod.2))])
 
-means<-cbind(means, data.mod.2[match(paste0(means$Lat_long, means$pr_land_cover_Year), 
-                                     paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year)), 
-                               c(3:7,13,18,20,21,27:ncol(data.mod.2))])
+check<-data.frame(means.check$Source, means.check$Source_A)
+which((check$means.check.Source == check$means.check.Source_A)==F)
+# here you can identify where the problem occurs...
+
+rm(check, means.check, means.check.2)
+
+means<-cbind(means, data.mod.2[match(paste0(means$Lat_long, means$pr_land_cover_Year, means$pr_Treatment, 
+                                            means$pr_Croptype,  means$Source), 
+                                     paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year, data.mod.2$pr_Treatment,
+                                            data.mod.2$pr_Croptype,  data.mod.2$Source)), 
+                               c(2:7,13,18,20,21,27:ncol(data.mod.2))])
+
 # compute the log-response ratio
 means$logrr.yi <- log10(means$pr_yield_treatm_kgha/means$pr_yield_control_kgha)
 
-# remove NANs
+# remove NANs in the data set (the data that had no treatment yield data...)
 means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
 
-<<<<<<< HEAD
-##### (C) Prepare predictors ##########
+##### (III) Prepare predictors ##########
 reg.data<-means[,c(1,2:7,9:12, 14:15, 18:21)]
 col.names<-colnames(means)
 
