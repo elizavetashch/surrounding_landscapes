@@ -2,7 +2,10 @@ library(tidyr)
 
 data <- read.csv('data/data_with_landscape_metrics.csv', sep = ',', dec = '.') 
 # variable description: DatasetID -> meta-data study
+# No. -> an indiviudal measurement of yield treatment
 
+landcover.meta<-read.csv('data/legend_classcode_landcovertypes.csv', sep = ',', dec = '.') 
+  
 ####### (I) check data #######
 ####### (A) check frequency of class entries per unique treatment yield measurement (i.e. No.) #######
 check<-as.data.frame(table(data$class, data$buffer_radius_m, data$No.))
@@ -11,6 +14,7 @@ colnames(check)<- c('class', 'radius', 'number','Freq')
 # It seems that we have a problem here! There are several times the same land-cover class for unique yield data
 problems<- unique(check$number [which(check$Freq>1)]) 
 x<-data[which(is.element(data$No., problems)),]
+
 
 # class values match at the beginning but later on there is really an issue here!
 plot(x$areaM2[1:15],x$areaM2[16:30])
@@ -129,8 +133,16 @@ rm(sds, n)
 # now pull in the remaining data variables
 # it should be that we can pull in things that have the same latidude-longitude combination and the same land-cover map-year
 
+
 means<-cbind(means, data.mod.2[match(paste0(means$Lat_long, means$pr_land_cover_Year), 
-                              paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year)), 
-                              c(3:7,13,18,20,21,27:ncol(data.mod.2))])
+                                     paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year)), 
+                               c(3:7,13,18,20,21,27:ncol(data.mod.2))])
 # compute the log-response ratio
-data.mod.2$logrr.yi <- log(data.mod.2$pr_yield_treatm_kgha/data.mod.2$pr_yield_control_kgha)
+means$logrr.yi <- log10(means$pr_yield_treatm_kgha/means$pr_yield_control_kgha)
+
+# remove NANs
+means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
+
+
+
+
