@@ -3,10 +3,13 @@
 # reading in the processed file
 
 ###
-data <- read.csv('data/data_processed.csv', sep = ',', dec = '.') #1777 obs
+data <- read.csv('data/data_processed.csv', sep = ',', dec = '.') #1739 obs
 colnames(data)
 
+#################  
 ### add in some climate info
+### optional for now
+#################
 
 # Load necessary libraries
 library(sf)  # for handling spatial data
@@ -36,9 +39,13 @@ data <- st_drop_geometry(data)
 
 # finish climate processing stuff
 colnames(data)
+# we got 20 new rows - lets check these
+dataextra <- read.csv('data/data_processed.csv', sep = ',', dec = '.')
+dataextra$pr_yield_treatm_kgha==data$pr_yield_treatm_kgha
+# the problem here is that some coordinates have two climate types 
 
-# first remove some NA values
-data <- data[!is.na(data$shannons_5000),] # lose 10 vals
+##################
+##################
 
 # also remove greenhouse vegetables as a crop type
 levels(factor(data$pr_Croptype))
@@ -49,57 +56,41 @@ str(data$pr_Treatment)
 levels(factor(data$pr_Treatment))
 data <- droplevels(data[data$pr_Treatment!="Topsoil removal experiment",])
 
-# look at lnrr vs shannon at 5000
-with(data, plot(logrr.yi~shannons_5000,
-                pch=16,
-                col=rgb(0,0,0,0.1)))
-abline(h=0)
-with(data, abline(lm(logrr.yi~shannons_5000),col="blue",lwd=2))
+# create lnrr variable
+data$lnrr.yi <- log(data$pr_yield_treatm_kgha/data$pr_yield_control_kgha)
+hist(data$lnrr.yi)
 
-# look at lnrr vs shannon at 2000
-with(data, plot(logrr.yi~shannons_2000,
-                pch=16,
-                col=rgb(0,0,0,0.1)))
-abline(h=0)
-with(data, abline(lm(logrr.yi~shannons_2000),col="blue",lwd=2))
+colnames(data)
 
-# look at lnrr vs shannon at 1000
-with(data, plot(logrr.yi~shannons_1000,
+# look at lnrr vs amount of natural habitat without grassland
+with(data, plot(lnrr.yi~nat.hab.wo.grass.5000,
                 pch=16,
                 col=rgb(0,0,0,0.1)))
 abline(h=0)
-with(data, abline(lm(logrr.yi~shannons_1000),col="blue",lwd=2))
+with(data, abline(lm(lnrr.yi~nat.hab.5000),col="blue",lwd=2))
 
 # we can try now and run a first mixed model
 library(lme4)
 # nested random effects for primary source paper, and meta-analysis paper
 # also random effects for country, croptype and treatment
-#lme.1 <- lmer(logrr.yi~shannons_5000+(1|DatasetID/Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
-lme.1 <- lmer(logrr.yi~shannons_2000+(1|Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
+lme.1 <- lmer(lnrr.yi~nat.hab.wo.grass.5000+I(nat.hab.wo.grass.5000^2)+(1|Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
 summary(lme.1)
 
 # test vs null model
-lme.null <- lmer(logrr.yi~1+(1|Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
+lme.null <- lmer(lnrr.yi~1+(1|Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
 summary(lme.null)
 AIC(lme.null) #-3592.374 with main_climate, -3594.252 without -> less than 1.878
 
 anova(lme.1,lme.null)
-# no difference in model fit from including shannons_5000
-
-# what else might we want to look at as a random effect
-levels(factor(data$pr_Croptype))
+# no difference in model fit from including proportion natural habitat
 
 # can we look whether logrr.yi varies between crops?
 # the estimate per crop is quite similar
-lme.crop <- lmer(logrr.yi~pr_Croptype-1+(1|Source)+(1|Country)+(1|pr_Treatment),data)
+lme.crop <- lmer(lnrr.yi~pr_Croptype-1+(1|Source)+(1|Country)+(1|pr_Treatment),data)
 summary(lme.crop)
 
-# we have some inaccuracy in the latitude and longitude
+# we have some inaccuracy in the latitude and longitude values
 # can we count then number of decimal places, and then weight according to that?
-
-data$pr_Latitude
-round(data$pr_Latitude,2)[997]
-round(data$pr_Latitude,4)
 
 # chatgpt function to count non-zero
 
@@ -126,34 +117,225 @@ count_nonzero_decimal_places <- function(x) {
 
 # these variables count the number of trailing zeros
 # values with more trailing zeros are less accurate
-# so I think we want to invert it, or similar
 data$pr_Latitude_acc <- sapply(data$pr_Latitude,count_nonzero_decimal_places)
 data$pr_Longitude_acc <- sapply(data$pr_Longitude,count_nonzero_decimal_places)
-summary(data$pr_Longitude_acc)
+summary(data$pr_Latitude_acc) 
+# take a look at some with only 2 decimal places
+subset(data,pr_Latitude_acc==2)
+
 # for now, drop the zero value
-data <- subset(data,pr_Longitude_acc!=0)
-badvals <- subset(data,pr_Longitude_acc==5)
+data <- subset(data,pr_Latitude_acc!=0) # lose 30 points: 1678 to 
 
-# use inverse number of zeros as weighting in the mixed model - so this means we give a higher weighting
-# to the value where we have 'more accurate' longitude coordinates
-# but what value do we give
-# 5 decimal places is to the nearest metre, 4 decimal is to the nearest 10 metre - this is basically equivalent
-# 3 decimal places (2 trailing zeros) is to the nearest 100m so shouldn't be penalised either
-# so we give 3 and 4 decimals (1 and 2 trailing zeros) the same weighting
-
-data$pr_Longitude_acc[data$pr_Longitude_acc==2] <- "good"
+# so, we want to treat points with 2-5 decimal places the same
 # 2 decimal places (3 trailing zeros) is to the nearest 1km - give this 1/2 of 2 trailing zero group
 # 1 decimal places (4 trailing zeros) is to the nearest 10km - give this 1/10 of 2 trailing zero group
+# all others are equivalent
+data$weights <- data$pr_Latitude_acc
+data$weights[data$pr_Latitude_acc>2] <- 10
+data$weights[data$pr_Latitude_acc==2] <- 5
+data$weights[data$pr_Latitude_acc==1] <- 1
+hist(data$weights)
 
+# the trouble is that some of these are actually none rounded
 
-lme.2 <- lmer(logrr.yi~shannons_5000+(1|DatasetID/Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),
-              weights=1/data$pr_Longitude_acc,data)
+lme.2 <- lmer(lnrr.yi~nat.hab.wo.grass.5000+(1|DatasetID/Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),
+              weights=weights,data)
 summary(lme.2)
 
 # make new null model with these same weights
-lme.2.null <- lmer(logrr.yi~1+(1|DatasetID/Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),
-              weights=1/data$pr_Longitude_acc,data)
+lme.2.null <- lmer(lnrr.yi~1+(1|DatasetID/Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),
+                   weights=weights,data)
 
 # compare this to null model with LRT
-anova(lme.2,lme.2.null)
+anova(lme.2,lme.2.null) # with this weighting, we still don't have a significant effect 
 
+colnames(data)
+
+# crop.peri.area.ratio.5000
+sub <- data[!is.na(data$crop.peri.area.ratio.5000),]
+
+lme.3 <- lmer(lnrr.yi~crop.peri.area.ratio.5000+
+                (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+              weights=weights,
+              sub)
+summary(lme.3)
+
+lme.3.null <- lmer(lnrr.yi~
+                (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+                   weights=weights,
+                data=sub)
+summary(lme.3.null)
+
+anova(lme.3,lme.3.null)
+
+with(data, plot(lnrr.yi~crop.peri.area.ratio.5000))
+abline(1.315e-01,-4.200e-05)
+abline(h=0)
+
+# so we have a negative effect of crop.peri.area.ratio.5000
+# a high ratio means that small fields (fields with many boundaries)
+
+# try it with edge length
+# the weights don't make a big difference
+sub <- data[!is.na(data$crop.edgelength.5000),]
+lme.4 <- lmer(lnrr.yi~crop.edgelength.5000+
+                (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+              weights=weights,
+              sub)
+lme.4.null <- lmer(lnrr.yi~1+
+                     (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+                   weights=weights,
+                   sub)
+anova(lme.4,lme.4.null)
+summary(lme.4)
+
+# what other variables do we have?
+# so crop peri area ratio was significant - what might that be measuring? field size? what else..
+colnames(data)
+cropland.5000
+
+# area of crop land
+sub <- data[!is.na(data$cropland.5000),]
+lme.5 <- lmer(lnrr.yi~cropland.5000+
+                (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+              weights=weights,
+              sub)
+lme.5.null <- lmer(lnrr.yi~1+
+                     (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+                   weights=weights,
+                   sub)
+anova(lme.5,lme.5.null)
+summary(lme.5)
+
+with(data, plot(lnrr.yi~cropland.5000))
+abline(h=0)
+
+# what about not looking at the lnrr.yi but at the actual control yield
+with(data, plot(pr_yield_control_kgha~cropland.5000))
+sub <- data[!is.na(data$pr_yield_control_kgha),]
+lme.6 <- lmer(pr_yield_control_kgha~cropland.5000+
+                (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+              weights=weights,
+              sub)
+lme.6.null <- lmer(pr_yield_control_kgha~1+
+                (1|DatasetID/Source)+(1|pr_Croptype)+(1|pr_Treatment),
+              weights=weights,
+              sub)
+anova(lme.6,lme.6.null)
+summary(lme.6)
+abline(4272.5,835.9)
+
+# what about some relationships between our lnrr.yi (the benefit of the treatments) and control or treatment yield
+with(data,plot(lnrr.yi~pr_yield_treatm_kgha))
+with(data,abline(lm(lnrr.yi~pr_yield_treatm_kgha)))
+
+with(data,plot(lnrr.yi~pr_yield_control_kgha))
+with(data,abline(lm(lnrr.yi~pr_yield_control_kgha)))
+
+### lets try using our variables as a random effect instead
+# this is basically to explain some "noise" while trying to find treatment effects rather than anything more
+# more like the original idea
+lme.7 <- lmer(lnrr.yi~pr_Treatment-1 + 
+                (1|DatasetID/Source)+(1|pr_Croptype)+(1|crop.edgelength.5000),
+              weights=weights,
+              sub)
+summary(lme.7)
+AIC(lme.7)
+
+# Extract fixed effects estimates
+estimates <- fixef(lme.7)
+
+# Extract standard errors
+std_errors <- sqrt(diag(vcov(lme.7)))
+
+# Calculate 95% Wald confidence intervals
+z_value <- qnorm(0.975)  # 1.96 for 95% CI
+
+CI_Lower <- estimates - z_value * std_errors
+CI_Upper <- estimates + z_value * std_errors
+
+# Combine into a data frame
+results_df_with <- data.frame(
+  Term = names(estimates),
+  Estimate = estimates,
+  Std_Error = std_errors,
+  CI_Lower = CI_Lower,
+  CI_Upper = CI_Upper
+)
+
+# Print the results
+print(results_df_with)
+
+with_land <- ggplot(results_df_with, aes(x = Estimate, y = Term)) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) +
+  labs(title = "Fixed Effects Estimates with 95% Confidence Intervals",
+       x = "Estimate",
+       y = "Term") +
+  theme_minimal()
+with_land
+
+# redo without land cover as a random effect
+
+lme.8 <- lmer(lnrr.yi~pr_Treatment-1 + 
+                (1|DatasetID/Source)+(1|pr_Croptype),
+              weights=weights,
+              sub)
+summary(lme.8)
+AIC(lme.8)
+
+# Extract fixed effects estimates
+estimates <- fixef(lme.8)
+
+# Extract standard errors
+std_errors <- sqrt(diag(vcov(lme.8)))
+
+# Calculate 95% Wald confidence intervals
+z_value <- qnorm(0.975)  # 1.96 for 95% CI
+
+CI_Lower <- estimates - z_value * std_errors
+CI_Upper <- estimates + z_value * std_errors
+
+# Combine into a data frame
+results_df_without <- data.frame(
+  Term = names(estimates),
+  Estimate = estimates,
+  Std_Error = std_errors,
+  CI_Lower = CI_Lower,
+  CI_Upper = CI_Upper
+)
+
+without_land <- ggplot(results_df_without, aes(x = Estimate, y = Term)) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), height = 0.2) +
+  labs(title = "Fixed Effects Estimates with 95% Confidence Intervals",
+       x = "Estimate",
+       y = "Term") +
+  theme_minimal()
+without_land
+
+# some more chatgpt fun
+
+# Add a column indicating the model
+results_df_with$Model <- "With Land"
+results_df_without$Model <- "Without Land"
+
+# Combine the two data frames
+combined_results_df <- rbind(results_df_with, results_df_without)
+
+# Create the plot
+ggplot(combined_results_df, aes(x = Estimate, y = Term, color = Model)) +
+  geom_point(position = position_dodge(width = 0.5), size = 3) +
+  geom_errorbarh(aes(xmin = CI_Lower, xmax = CI_Upper), 
+                 position = position_dodge(width = 0.5), height = 0.2) +
+  labs(title = "Comparison of Fixed Effects Estimates with and without Land Cover",
+       x = "Estimate",
+       y = "Term") +
+  theme_minimal() +
+  theme(legend.position = "top", 
+        axis.text.y = element_text(size = 10), 
+        axis.title.x = element_text(size = 12),
+        plot.title = element_text(hjust = 0.5)) +
+  scale_color_manual(values = c("With Land" = "blue", "Without Land" = "red"))
+
+# note, this is currently random intercepts
