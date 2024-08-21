@@ -109,26 +109,26 @@ data.mod.2$Lat_long<- paste0(data.mod.2$pr_Latitude, data.mod.2$pr_Longitude)
 
 # get means
 means<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha, data.mod.2$No.), 
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, data.mod.2$Croptype,  
-                           data.mod.2$Source),
+                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, 
+                           data.mod.2$pr_Croptype, data.mod.2$Source),
                  function(x){mean(x, na.rm = T)})
 colnames(means)<-c('pr_land_cover_Year','Lat_long', 'Treatment', 'Croptype', 'Source', 'pr_yield_control_kgha',
                    'pr_yield_treatm_kgha', 'No.')
 
 # get SDs and sample number
 sds<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha), 
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, data.mod.2$Croptype,  
-                           data.mod.2$Source),
+                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, 
+                           data.mod.2$pr_Croptype, data.mod.2$Source),
                  function(x){sd(x, na.rm = T)})
 means$pr_yield_control_kgha_sd<-sds[,6]; means$pr_yield_treatm_kgha_sd<-sds[,7]
 
 n<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha,  data.mod.2$No.), 
-               by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, data.mod.2$Croptype,  
-                         data.mod.2$Source),
+               by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, 
+                         data.mod.2$pr_Croptype, data.mod.2$Source),
                function(x){length(x[which(is.na(x)==F)])})
 means$pr_yield_control_kgha_n<-n[,6]; means$pr_yield_treatm_kgha_n<-n[,7]
 
-rm(sds, n)
+rm(sds, n, x, check)
 
 # now pull in the remaining data variables
 # it should be that we can pull in things that have the same latidude-longitude combination and the same land-cover map-year
@@ -143,6 +143,87 @@ means$logrr.yi <- log10(means$pr_yield_treatm_kgha/means$pr_yield_control_kgha)
 # remove NANs
 means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
 
+##### (C) Prepare predictors ##########
+reg.data<-means[,c(1,2:7,9:12, 14:15, 18:21)]
+col.names<-colnames(means)
+
+# (1) create the semi natural habitat proportion (including grassland)
+
+# (i) get the classes which need to be included
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+  landcover.meta$Bigger.CLass=='Cropland' )]
+
+# (ii) natural habitat for the three different radii: get the column names for the 1000 radius
+# create the column names that should be included
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_1000'))
+
+# create the nat. habitat variable
+reg.data$nat.hab.1000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+# (iii) now for the other two radii
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_2000'))
+reg.data$nat.hab.2000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.5000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+# not that there is still this coding mistake and the radii data are still identical...
+
+# (2) create the semi natural habitat proportion (now without grassland)
+
+# (i) get the classes which need to be included
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+    landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+    landcover.meta$Bigger.CLass=='Grassland' |
+    landcover.meta$Bigger.CLass=='Cropland' )]
+
+# (ii) natural habitat for the three different radii: 
+# create the column names that should be included
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_1000'))
+reg.data$nat.hab.wo.grass.1000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+# now for the other two radii
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_2000'))
+reg.data$nat.hab.wo.grass.2000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.wo.grass.5000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+# not that there is still this coding mistake and the radii data are still identical...
+
+plot(reg.data$nat.hab.wo.grass.5000, reg.data$nat.hab.5000) # looks nice and right on the first glance
+
+# (3) create the cropland proportion data
+
+# (i) get the classes which need to be included and create their col-names
+cropland.class.code<-landcover.meta$Class.Code[which(landcover.meta$Bigger.CLass=='Cropland')]
+names<-c(paste0('proportion_',cropland.class.code,'_1000'))
+
+# (ii) create the data for the 1km radius
+reg.data$cropland.1000<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+# (iii) repeat that for the 2 and 5km radii
+names<-c(paste0('proportion_',cropland.class.code,'_2000'))
+reg.data$cropland.2000<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+names<-c(paste0('proportion_',cropland.class.code,'_5000'))
+reg.data$cropland.5000<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+# (4) create the cropland area vs perimeter data
+
+# create the column names
+names<-c(paste0('areaM2_',cropland.class.code,'_1000'))
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
+
+reg.data$crop.peri.area.ratio.1000<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000
 
 
+data$edgelength_m/data$areaM2*10000
 
+rm(nat.hab.col.names,nat.hab.class.code,cropland.class.code,names, names.per )
+
+
+hist(reg.data$nat.hab.1000)
+summary(reg.data$nat.hab.1000)
