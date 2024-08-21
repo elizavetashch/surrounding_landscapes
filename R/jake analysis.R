@@ -75,21 +75,24 @@ library(lme4)
 # nested random effects for primary source paper, and meta-analysis paper
 # also random effects for country, croptype and treatment
 #lme.1 <- lmer(logrr.yi~shannons_5000+(1|DatasetID/Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
-lme.1 <- lmer(logrr.yi~shannons_5000+(1|Source)+(1|Country)+(1|main_climate)+(1|pr_Croptype)+(1|pr_Treatment),data)
+lme.1 <- lmer(logrr.yi~shannons_2000+(1|Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
 summary(lme.1)
 
 # test vs null model
-lme.null <- lmer(logrr.yi~1+(1|Source)+(1|Country)+(1|pr_Treatment),data)
+lme.null <- lmer(logrr.yi~1+(1|Source)+(1|Country)+(1|pr_Croptype)+(1|pr_Treatment),data)
 summary(lme.null)
 AIC(lme.null) #-3592.374 with main_climate, -3594.252 without -> less than 1.878
 
 anova(lme.1,lme.null)
 # no difference in model fit from including shannons_5000
 
-# what else might we want to look at as a random effect?
-levels(factor(data$Country))
-
+# what else might we want to look at as a random effect
 levels(factor(data$pr_Croptype))
+
+# can we look whether logrr.yi varies between crops?
+# the estimate per crop is quite similar
+lme.crop <- lmer(logrr.yi~pr_Croptype-1+(1|Source)+(1|Country)+(1|pr_Treatment),data)
+summary(lme.crop)
 
 # we have some inaccuracy in the latitude and longitude
 # can we count then number of decimal places, and then weight according to that?
