@@ -130,9 +130,11 @@ means$pr_yield_control_kgha_n<-n[,6]; means$pr_yield_treatm_kgha_n<-n[,7]
 
 rm(sds, n)
 
+colnames(means)
+colnames(data.mod.2)
+
 # now pull in the remaining data variables
 # it should be that we can pull in things that have the same latidude-longitude combination and the same land-cover map-year
-
 
 means<-cbind(means, data.mod.2[match(paste0(means$Lat_long, means$pr_land_cover_Year), 
                                      paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year)), 
@@ -143,6 +145,11 @@ means$logrr.yi <- log10(means$pr_yield_treatm_kgha/means$pr_yield_control_kgha)
 # remove NANs
 means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
 
+# get rid of multibyte string issue
+# I think the issue is in this last bit - it is duplicating the source column
+means$Source[means$Source == "\xfd et al. (2013)"] <- "newref et al. 2013"
+means$Source[means$Source == "\xfd et al. (2014)"] <- "newref et al. 2014"
+means$Source[means$Source == "\xfd et al. (2015)"] <- "newref et al. 2015"
 
-
-
+# save the file
+write.csv(means, file = 'data/data_processed.csv',row.names = TRUE)
