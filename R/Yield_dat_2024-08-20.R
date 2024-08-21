@@ -12,6 +12,7 @@ colnames(check)<- c('class', 'radius', 'number','Freq')
 problems<- unique(check$number [which(check$Freq>1)]) 
 x<-data[which(is.element(data$No., problems)),]
 
+
 # class values match at the beginning but later on there is really an issue here!
 plot(x$areaM2[1:15],x$areaM2[16:30])
 plot(x$areaM2[1:15],x$areaM2[46:60])
@@ -129,8 +130,14 @@ rm(sds, n)
 # now pull in the remaining data variables
 # it should be that we can pull in things that have the same latidude-longitude combination and the same land-cover map-year
 
+
 means<-cbind(means, data.mod.2[match(paste0(means$Lat_long, means$pr_land_cover_Year), 
-                              paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year)), 
-                              c(3:7,13,18,20,21,27:ncol(data.mod.2))])
+                                     paste0(data.mod.2$Lat_long, data.mod.2$pr_land_cover_Year)), 
+                               c(3:7,13,18,20,21,27:ncol(data.mod.2))])
 # compute the log-response ratio
-data.mod.2$logrr.yi <- log(data.mod.2$pr_yield_treatm_kgha/data.mod.2$pr_yield_control_kgha)
+means$logrr.yi <- log10(means$pr_yield_treatm_kgha/means$pr_yield_control_kgha)
+
+# remove NANs
+means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
+
+
