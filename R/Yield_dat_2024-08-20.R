@@ -245,7 +245,10 @@ names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
 reg.data$crop.peri.area.ratio.1000<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
   rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000
 
-=======
+
+
+
+
 # get rid of multibyte string issue
 # I think the issue is in this last bit - it is duplicating the source column
 #means$Source[means$Source == "\xfd et al. (2013)"] <- "newref et al. 2013"
@@ -254,7 +257,6 @@ reg.data$crop.peri.area.ratio.1000<-rowSums(means[,which(is.element(col.names,na
 
 # save the file
 write.csv(means, file = 'data/data_processed.csv',row.names = TRUE)
->>>>>>> 71c2796f6237d16ad72803239df0fdb73b698e9a
 
 data$edgelength_m/data$areaM2*10000
 
