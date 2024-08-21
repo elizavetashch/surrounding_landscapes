@@ -2,7 +2,10 @@ library(tidyr)
 
 data <- read.csv('data/data_with_landscape_metrics.csv', sep = ',', dec = '.') 
 # variable description: DatasetID -> meta-data study
+# No. -> an indiviudal measurement of yield treatment
 
+landcover.meta<-read.csv('data/legend_classcode_landcovertypes.csv', sep = ',', dec = '.') 
+  
 ####### (I) check data #######
 ####### (A) check frequency of class entries per unique treatment yield measurement (i.e. No.) #######
 check<-as.data.frame(table(data$class, data$buffer_radius_m, data$No.))
@@ -139,5 +142,7 @@ means$logrr.yi <- log10(means$pr_yield_treatm_kgha/means$pr_yield_control_kgha)
 
 # remove NANs
 means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
+
+
 
 
