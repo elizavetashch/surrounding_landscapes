@@ -107,23 +107,27 @@ data.mod.2<- pivot_wider(data.mod, names_from = buffer_radius_m, values_from = c
 # For consistency, we decided that we should also average for those that provide raw data.
 data.mod.2$Lat_long<- paste0(data.mod.2$pr_Latitude, data.mod.2$pr_Longitude)
 
+###
+### Jake Note: nb. I changed Croptype to pr_Croptype and the number of values went from 1777 to 1739...
+###
+
 # get means
 means<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha, data.mod.2$No.), 
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, data.mod.2$Croptype,  
+                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, data.mod.2$pr_Croptype,  
                            data.mod.2$Source),
                  function(x){mean(x, na.rm = T)})
-colnames(means)<-c('pr_land_cover_Year','Lat_long', 'Treatment', 'Croptype', 'Source', 'pr_yield_control_kgha',
+colnames(means)<-c('pr_land_cover_Year','Lat_long', 'pr_Treatment', 'pr_Croptype', 'Source', 'pr_yield_control_kgha',
                    'pr_yield_treatm_kgha', 'No.')
 
 # get SDs and sample number
 sds<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha), 
-                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, data.mod.2$Croptype,  
+                 by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, data.mod.2$pr_Croptype,  
                            data.mod.2$Source),
                  function(x){sd(x, na.rm = T)})
 means$pr_yield_control_kgha_sd<-sds[,6]; means$pr_yield_treatm_kgha_sd<-sds[,7]
 
 n<-aggregate(list(data.mod.2$pr_yield_control_kgha, data.mod.2$pr_yield_treatm_kgha,  data.mod.2$No.), 
-               by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$Treatment, data.mod.2$Croptype,  
+               by = list(data.mod.2$pr_land_cover_Year , data.mod.2$Lat_long, data.mod.2$pr_Treatment, data.mod.2$pr_Croptype,  
                          data.mod.2$Source),
                function(x){length(x[which(is.na(x)==F)])})
 means$pr_yield_control_kgha_n<-n[,6]; means$pr_yield_treatm_kgha_n<-n[,7]
@@ -147,9 +151,11 @@ means<-means[-which(is.nan(means$pr_yield_treatm_kgha)),]
 
 # get rid of multibyte string issue
 # I think the issue is in this last bit - it is duplicating the source column
-means$Source[means$Source == "\xfd et al. (2013)"] <- "newref et al. 2013"
-means$Source[means$Source == "\xfd et al. (2014)"] <- "newref et al. 2014"
-means$Source[means$Source == "\xfd et al. (2015)"] <- "newref et al. 2015"
+#means$Source[means$Source == "\xfd et al. (2013)"] <- "newref et al. 2013"
+#means$Source[means$Source == "\xfd et al. (2014)"] <- "newref et al. 2014"
+#means$Source[means$Source == "\xfd et al. (2015)"] <- "newref et al. 2015"
 
 # save the file
 write.csv(means, file = 'data/data_processed.csv',row.names = TRUE)
+
+
