@@ -295,14 +295,49 @@ reg.data$inert.2000<- 1-rowSums(means[,which(is.element(col.names,names))], na.r
 names<-c(paste0('proportion_',inert.land.class.code,'_5000'))
 reg.data$inert.5000<- 1-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
 
-##### (G) create the inert land-cover #####
+# PROBLEM: there is something wrong with this one data point here - it should not be allowed to be negative...
+which(reg.data$inert.1000<0)
+reg.data$nat.hab.1000[which(reg.data$inert.1000<0)]
+reg.data$cropland.1000[which(reg.data$inert.1000<0)] # hmm the agricultural proportion is very high...
+
+#for now I can set that value to 0
+reg.data$inert.1000[which(reg.data$inert.1000<0)]<-0
+
+# once the radius stuff is fixed, one can have a look at these plots...
+plot(reg.data$inert.1000, reg.data$inert.5000)
+plot(reg.data$inert.2000, reg.data$inert.5000)
 
 
+##### (H) create the shannon index #####
+# (i) define the variables that need to be included
+names<-c(paste0('areaM2_',inert.land.class.code,'_1000'))
 
+# (ii) create the data frame for the analysis
+shannon.df<-means[,which(is.element(col.names,names))]
+shannon.df$inert<- reg.data$inert.1000
 
+# (iii) replace NAs with 0s
+for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
+  
+# (iv) calculate the shannon diversity
+library(vegan) # 'species' need to be the columns
+reg.data$shannon.1000<-diversity(shannon.df, index = "shannon")
 
+# (v) repeat for the other two radii
+names<-c(paste0('areaM2_',inert.land.class.code,'_2000'))
+shannon.df<-means[,which(is.element(col.names,names))]
+shannon.df$inert<- reg.data$inert.2000
+for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
+reg.data$shannon.2000<-diversity(shannon.df, index = "shannon")
 
+names<-c(paste0('areaM2_',inert.land.class.code,'_5000'))
+shannon.df<-means[,which(is.element(col.names,names))]
+shannon.df$inert<- reg.data$inert.5000
+for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
+reg.data$shannon.5000<-diversity(shannon.df, index = "shannon")
 
+# clean up some objects that are not needed anymore
+rm(nat.hab.col.names,nat.hab.class.code,cropland.class.code,names, names.per, inert.land.class.code, shannon.df)
 
 # save the file
 write.csv(reg.data, file = 'data/data_processed.csv',row.names = TRUE)
