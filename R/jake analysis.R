@@ -6,10 +6,16 @@
 data <- read.csv('data/data_processed.csv', sep = ',', dec = '.') #1739 obs
 colnames(data)
 
+library(lme4)
+library(ggplot2)
+
 #################  
 ### add in some climate info
 ### optional for now
 #################
+
+# save the lat and long to paste back
+latlongs <- data
 
 # Load necessary libraries
 library(sf)  # for handling spatial data
@@ -37,12 +43,16 @@ data <- st_join(points, ecoregions, join = st_intersects)
 # You can drop the geometry column to get back to a standard dataframe if the spatial attributes are no longer needed.
 data <- st_drop_geometry(data)
 
+# we got 20 new rows - remove these by getting rid of rows with decimal
+data$rownames <- as.numeric(rownames(data))
+data <- data[data$rownames %% 1 == 0, ]
+
+# add back in the latlongs
+data$pr_Latitude <- latlongs$pr_Latitude
+data$pr_Longitude <- latlongs$pr_Longitude
+
 # finish climate processing stuff
 colnames(data)
-# we got 20 new rows - lets check these
-dataextra <- read.csv('data/data_processed.csv', sep = ',', dec = '.')
-dataextra$pr_yield_treatm_kgha==data$pr_yield_treatm_kgha
-# the problem here is that some coordinates have two climate types 
 
 ##################
 ##################
@@ -192,7 +202,6 @@ summary(lme.4)
 # what other variables do we have?
 # so crop peri area ratio was significant - what might that be measuring? field size? what else..
 colnames(data)
-cropland.5000
 
 # area of crop land
 sub <- data[!is.na(data$cropland.5000),]
@@ -236,7 +245,8 @@ with(data,abline(lm(lnrr.yi~pr_yield_control_kgha)))
 # this is basically to explain some "noise" while trying to find treatment effects rather than anything more
 # more like the original idea
 lme.7 <- lmer(lnrr.yi~pr_Treatment-1 + 
-                (1|DatasetID/Source)+(1|pr_Croptype)+(1|crop.edgelength.5000),
+                (1|DatasetID/Source)+(1|pr_Croptype)+
+                (1|nat.hab.wo.grass.1000)+(1|crop.peri.area.ratio.1000)+(1|crop.edgelength.1000),
               weights=weights,
               sub)
 summary(lme.7)
@@ -339,3 +349,85 @@ ggplot(combined_results_df, aes(x = Estimate, y = Term, color = Model)) +
   scale_color_manual(values = c("With Land" = "blue", "Without Land" = "red"))
 
 # note, this is currently random intercepts
+
+# we should actuallly look at how our variables are correlated
+
+# make a correlation matrix
+corr_matrix <- cor(data[, 19:36], use = "complete.obs")
+corrplot(corr_matrix)
+
+# there are highly correlated values, so we should only pick some
+# - nat.hab.wo.grass - any radius is ok, these are all the same for now (until an error with extraction)
+# - crop.peri.area.ratio - only go with 1000, area is incorrect for other sizes but edge is correct across sizes so we divide area by different numbers
+# - crop.edgelength - this is correct at different buffers
+# - shannon
+
+# run scatter plot matrix instead
+tiff(file = "images/regmatrix.tiff",
+     width=500,height=500,res=600,units="mm",compression="lzw")
+plot(data[, 19:36],pch=16,col=rgb(0,0,0,0.1))
+dev.off()
+
+# put them all in a mixed model for now
+lme.9 <- lmer(lnrr.yi~1 + scale(nat.hab.wo.grass.1000)
+              +scale(crop.peri.area.ratio.1000)
+              +scale(crop.edgelength.1000)+
+                +(1|DatasetID/Source)+(1|pr_Croptype),
+              weights=weights,
+              data)
+summary(lme.9)
+AIC(lme.9)
+
+# quadratic terms -2101.854
+# without quadratics -2135.895
+
+
+# and a corresponding null
+lme.9.null <- lmer(lnrr.yi~1 +
+                (1|DatasetID/Source)+(1|pr_Croptype),
+              weights=weights,
+              data)
+summary(lme.9.null)
+AIC(lme.9.null) # -2178.621
+anova(lme.9,lme.9.null)
+
+##################################
+### a different option - can we instead look at treatment yield and include control yield as a predictor?
+##################################
+
+# how would that differ from the lnrr approach?
+# we have some non-independence
+lme.10 <- lmer(pr_yield_treatm_kgha ~  
+                 pr_yield_control_kgha*scale(nat.hab.wo.grass.1000)
+               +pr_yield_control_kgha*scale(crop.peri.area.ratio.1000)
+               +pr_yield_control_kgha*scale(crop.edgelength.1000)
+               +(1|DatasetID/Source),
+               weights=weights,
+               data)
+summary(lme.10)
+AIC(lme.10) # 27739.03, with interactions 27615.78
+
+# get blups estimates from this model
+blups <- ranef(lme.10)
+t.Source <- blups$Source
+library(tibble)
+t.Source <- rownames_to_column(t.Source, var = "Source")
+
+# this is deviation from the meta-analytic mean -ve values mean more pollinator dependence and +ve means less than the average cultivar
+
+# Create a dataframe from the BLUPs
+t.Source <- blups$Source %>% 
+  rownames_to_column(var = "Source")
+
+# Abbreviate the Source names to the first 5 characters
+t.Source$ShortSource <- substr(t.Source$Source, 1, 5)
+
+# Plot the BLUPs with short labels
+ggplot(t.Source, aes(x = reorder(ShortSource, `(Intercept)`), y = `(Intercept)`)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  labs(title = "BLUPs for Source Random Effects",
+       x = "Source (Abbreviated)",
+       y = "BLUPs (Intercept)") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
