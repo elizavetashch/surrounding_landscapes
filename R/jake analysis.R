@@ -398,10 +398,13 @@ anova(lme.9,lme.9.null)
 # how would that differ from the lnrr approach?
 # we have some non-independence
 lme.10 <- lmer(pr_yield_treatm_kgha ~  
-                 pr_yield_control_kgha*scale(nat.hab.wo.grass.1000)
+                pr_yield_control_kgha*scale(nat.hab.wo.grass.1000)
                +pr_yield_control_kgha*scale(crop.peri.area.ratio.1000)
                +pr_yield_control_kgha*scale(crop.edgelength.1000)
-               +(1|DatasetID/Source),
+               +pr_Latitude
+               +pr_Longitude
+               +(1|DatasetID/Source)
+               +(1|pr_Croptype),
                weights=weights,
                data)
 summary(lme.10)
@@ -431,3 +434,24 @@ ggplot(t.Source, aes(x = reorder(ShortSource, `(Intercept)`), y = `(Intercept)`)
        y = "BLUPs (Intercept)") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# make null model
+lme.10.noint <- lmer(pr_yield_treatm_kgha ~  
+pr_yield_control_kgha
++scale(nat.hab.wo.grass.1000)
++scale(crop.peri.area.ratio.1000)
++scale(crop.edgelength.1000)
++pr_Latitude
++pr_Longitude
++(1|DatasetID/Source)
++(1|pr_Croptype),
+weights=weights,
+data)
+summary(lme.10.noint)
+anova(lme.10.noint,lme.10) # significnat effect of interactions between control yield and natural habitats
+
+with(data,plot(pr_yield_treatm_kgha~pr_yield_control_kgha,pch=16,col=rgb(0,0,0,0.1)))
+with(data,plot(log(pr_yield_treatm_kgha)~log(pr_yield_control_kgha),pch=16,col=rgb(0,0,0,0.1)))
+with(data,plot(pr_yield_treatm_kgha~scale(nat.hab.wo.grass.1000),pch=16,col=rgb(0,0,0,0.1)))
+with(data,plot(pr_yield_treatm_kgha~scale(crop.peri.area.ratio.1000),pch=16,col=rgb(0,0,0,0.1)))
+with(data,plot(pr_yield_treatm_kgha~scale(crop.edgelength.1000),pch=16,col=rgb(0,0,0,0.1)))
