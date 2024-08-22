@@ -246,14 +246,22 @@ names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
 reg.data$crop.peri.area.ratio.1000 <-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
   rowSums(means[,which(is.element(col.names,names))], na.rm = T)*10000 # unit: m/ha
 
+colnames(means)[which(is.element(col.names,names.per))]
+colnames(means)[which(is.element(col.names,names))]
+
 # some diagnostic check - can that be, that the values are so low?
 check<-data$edgelength_m[is.element(data$class, cropland.class.code)]/
   data$areaM2[is.element(data$class, cropland.class.code)]*10000
 
 summary(check)
 summary(reg.data$crop.peri.area.ratio.1000)
-# okay, we have a difference in median edge lendge per ha. but that difference seems rather low
+
+# okay, we have a difference in median edge length per ha. but that difference seems rather low
 # potential PROBLEM - quite low value, but maybe still realistic?
+
+# check whether the proportion data matches with the area data 
+plot(means$areaM2_72_1000 , means$proportion_72_1000)
+# yes - it does, good!
 
 # (iii) repeat that for the 2 and 5km radii
 names<-c(paste0('areaM2_',cropland.class.code,'_2000'))
@@ -336,10 +344,32 @@ shannon.df$inert<- reg.data$inert.5000
 for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
 reg.data$shannon.5000<-diversity(shannon.df, index = "shannon")
 
+# Diagnostic check whether we have NAs - we should not have them
+which(is.na(reg.data$inert.1000))
+which(is.na(reg.data$cropland.1000))
+which(is.na(reg.data$crop.edgelength.1000))
+which(is.na(reg.data$nat.hab.1000))
+which(is.na(reg.data$nat.hab.wo.grass.1000))
+# that all looks good
+
+# here we have PROBLEMs: we have both - 0s in the cropland area but we have an edgelength above 0 and we have values 
+# where the edgelength is 0 and the area is above 0 (the one results in NAs, the other creates INF values)
+which(is.na(reg.data$crop.peri.area.ratio.1000))
+
+# temporal fix: we set the NAs to 0 and the Inf to the max value
+reg.data$crop.peri.area.ratio.1000[which(is.nan(reg.data$crop.peri.area.ratio.1000))]<-
+  max(reg.data$crop.peri.area.ratio.1000,na.rm = T)
+
 # clean up some objects that are not needed anymore
 rm(nat.hab.col.names,nat.hab.class.code,cropland.class.code,names, names.per, inert.land.class.code, shannon.df)
 
 # save the file
 write.csv(reg.data, file = 'data/data_processed.csv',row.names = TRUE)
 
-rm(nat.hab.col.names,nat.hab.class.code,cropland.class.code,names, names.per, inert.land.class.code)
+plot(reg.data$shannon.1000~reg.data$cropland.1000)
+plot(reg.data$shannon.1000~reg.data$nat.hab.1000)
+plot(reg.data$shannon.1000~reg.data$nat.hab.wo.grass.1000)
+
+# check how many data points we have per study now...
+summary(as.vector(table(reg.data$Source)))
+
