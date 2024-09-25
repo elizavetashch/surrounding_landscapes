@@ -4,7 +4,42 @@
 
 ###
 data <- read.csv('data/data_processed.csv', sep = ',', dec = '.') #1739 obs
+data <- read.csv('data/data_yield_24092024_v2.csv', sep = ',', dec = '.') # 233155 obs
 colnames(data)
+
+# some datasets included mean annual T and P
+# we should now use latitude_decimal rather than pr_latitude and same for 
+
+# dataset description from Elizaveta Shcherbinina:
+
+# ma_id - original meta-analysis publication
+# row_id - this should be unique for each row, but this is a processed dataset with multiple rows, because there are multiple land cover
+# study_id - original publication
+# comparison_id - experiment ID, same as 'shared control cluster ID'
+# long and lat, as reported from original study
+
+# control_replicates - sample size for controls. this is *within* the same lat and long values.
+# treatment_replicates - as above
+## same site, 
+## we can't tell difference between within site spatial and/or temporal variation
+## depends upon whether harvest year is reported
+
+# crop_type_grouped_small - tiny groups of crops
+# crop_type_grouped_big - 6 groupings of crops
+# yield_SD_control - SD *within* the same lat and long, this could be variation in time *or* space within lat long (e.g. between smaller plots in same field)
+# reference - citation 
+# longitude_decimal - this is processed, including switching if latitude was bigger (90) than can exist etc 
+# country.new - country assigned based on processed lat long, there are c.16 values that don't have a country assigned.
+# country_match - this is a direct text match, e.g. USA and United States are identified as false. some of these are really wrong, e.g. USA vs Mongolia, this could be because lat and long are reversed, or lat and long are minus
+# harvest_year_by_median - when we don't know harvest...
+# yield_control_kgha - this is yield converted to kg/ha, same for treatment
+# city is classed as impervious services
+# class - 
+# nb. land cover is based on harvest_year_by_median
+# buffer_radius_m - this is either 1000 or 5000
+# proportion - proportion of each land cover class within an area
+# simpsons_index
+# species_richness - number of land cover classes within a radius
 
 library(lme4)
 library(ggplot2)
@@ -33,7 +68,7 @@ ecoregions$main_climate <- cut(ecoregions$GRIDCODE, breaks=c(10,20,30,40,60,70),
 
 # Step 2: Convert the latitude and longitude columns into a 'sf' object (spatial points)
 # First, create the points using the longitude and latitude values.
-points <- st_as_sf(data, coords = c("pr_Longitude", "pr_Latitude"), crs = st_crs(ecoregions))
+points <- st_as_sf(data, coords = c("longitude_decimal", "latitude_decimal"), crs = st_crs(ecoregions))
 
 # Step 3: Perform a spatial join to extract the Köppen-Geiger ecoregions
 # This joins the points with the ecoregions based on spatial overlap.
@@ -48,36 +83,79 @@ data$rownames <- as.numeric(rownames(data))
 data <- data[data$rownames %% 1 == 0, ]
 
 # add back in the latlongs
-data$pr_Latitude <- latlongs$pr_Latitude
-data$pr_Longitude <- latlongs$pr_Longitude
+data$latitude_decimal <- latlongs$latitude_decimal
+data$longitude_decimal <- latlongs$longitude_decimal
 
 # finish climate processing stuff
 colnames(data)
 
+levels(factor(data$main_climate))
+
+
 ##################
 ##################
 
-# also remove greenhouse vegetables as a crop type
-levels(factor(data$pr_Croptype))
-data <- data[data$pr_Croptype!="Greenhouse_vegetable",]
+# also remove the topsoil removal dataset - this wasn't a yield benefiting treatment
+str(data$treatment)
+levels(factor(data$treatment))
+data <- droplevels(data[data$treatment!="Erosion simulation",])
+data <- droplevels(data[data$treatment!="simplified vs diversified",])
 
-# also remove the topsoil removal dataset - this wasn't a yield benefitting treatment
-str(data$pr_Treatment)
-levels(factor(data$pr_Treatment))
-data <- droplevels(data[data$pr_Treatment!="Topsoil removal experiment",])
+# we also have the same for the treatment 'simplified vs diversified' - this shows a negative effect of treatment
+# we could get around that by switching the labels for that one
 
 # create lnrr variable
-data$lnrr.yi <- log(data$pr_yield_treatm_kgha/data$pr_yield_control_kgha)
+data$lnrr.yi <- log(data$yield_treatment_kgha/data$yield_control_kgha)
 hist(data$lnrr.yi)
 
+# lets do a basic thing where we aggregate by row_id
+data2 <- aggregate(data$lnrr.yi,by=list(data$row_id),mean)
+colnames(data2) <- c("row_id","lnrr.yi")
+data2$shannons_index <- aggregate(data$shannons_index,by=list(data$row_id),mean)[,2]
+
+with(data2, plot(lnrr.yi~shannons_index,pch=16,col=rgb(0,0,0,0.05)))
+with(data2, abline(lm(lnrr.yi~shannons_index),col="blue"))
+abline(h=0,col="gray95",lty=2)
+
+# do with other land cover metrics
+data2$simpsons_index <- aggregate(data$simpsons_index,by=list(data$row_id),mean)[,2]
+data2$simpsons_evenness <- aggregate(data$simpsons_evenness,by=list(data$row_id),mean)[,2]
+data2$species_richness <- aggregate(data$species_richness,by=list(data$row_id),mean)[,2]
+data2$perimeter_to_area <- aggregate(data$perimeter_to_area,by=list(data$row_id),mean)[,2]
+
+with(data2, plot(lnrr.yi~simpsons_index,pch=16,col=rgb(0,0,0,0.05)))
+with(data2, abline(lm(lnrr.yi~simpsons_index),col="blue"))
+abline(h=0,col="gray95",lty=2)
+
+with(data2, plot(lnrr.yi~simpsons_evenness,pch=16,col=rgb(0,0,0,0.05)))
+with(data2, abline(lm(lnrr.yi~simpsons_evenness),col="blue"))
+abline(h=0,col="gray95",lty=2)
+
+with(data2, plot(lnrr.yi~species_richness,pch=16,col=rgb(0,0,0,0.05)))
+with(data2, abline(lm(lnrr.yi~species_richness),col="blue"))
+abline(h=0,col="gray95",lty=2)
+
+with(data2, plot(lnrr.yi~perimeter_to_area,pch=16,col=rgb(0,0,0,0.05)))
+with(data2, abline(lm(lnrr.yi~perimeter_to_area),col="blue"))
+abline(h=0,col="gray95",lty=2)
+
+# nb this isn't great because I am currently averaging across both 1000 and 5000 buffers
+
+# some simple questions that we could ask:
+# - are control yields higher in places with greater % of cropland
+# crop land covers are 10, 11, 12 and 20
 colnames(data)
 
-# look at lnrr vs amount of natural habitat without grassland
-with(data, plot(lnrr.yi~nat.hab.wo.grass.5000,
-                pch=16,
-                col=rgb(0,0,0,0.1)))
+# some intitial exploratory analyses
+with(data, boxplot(lnrr.yi~treatment))
 abline(h=0)
-with(data, abline(lm(lnrr.yi~nat.hab.5000),col="blue",lwd=2))
+
+# look at lnrr vs amount of natural habitat without grassland
+#with(data, plot(lnrr.yi~nat.hab.wo.grass.5000,
+#                pch=16,
+#                col=rgb(0,0,0,0.1)))
+#abline(h=0)
+#with(data, abline(lm(lnrr.yi~nat.hab.5000),col="blue",lwd=2))
 
 # we can try now and run a first mixed model
 library(lme4)
