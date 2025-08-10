@@ -1,5 +1,17 @@
 ## Surrounding Landscapes Affect the Productivity of Crop Yields:
-## Data Repository 
+
+### Protocol
+
+### August
+
+**11. August** 
+
+- adding soilgrids data to the current dataset
+
+
+
+### Data Repository 
+
 data organization and cleaning: Elizaveta Shcherbinina 
 
 | Column Name                            | Data Type  | Example                              |
