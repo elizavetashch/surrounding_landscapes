@@ -7,8 +7,11 @@
 **11. August** 
 
 - adding soilgrids data to the current dataset
-
-
+- found the link to the GEE dataset
+https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/markdown/access_on_gee.md
+- GEE code for SoilGrids calculation, must be adjusted: https://code.earthengine.google.com/a64ccf0538f7192ce73c47fcd4f5a2d7
+personal note: 
+maybe accessing biodiversity can be made possible over calculating the number of plant species remotely. 
 
 ### Data Repository 
 
