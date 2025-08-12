@@ -14,6 +14,15 @@ personal note:
 maybe accessing biodiversity can be made possible over calculating the number of plant species remotely. 
 - there is no SoilGrid data available for cities, and some of the points were allocated to cities, that's why they are empty
 
+**12. August**
+
+open tasks: 
+- get the transponder 
++ get the desk 
+- register for the conference 
+- check the code 
+- check the crops data 
+
 ### Data Repository 
 
 data organization and cleaning: Elizaveta Shcherbinina 
