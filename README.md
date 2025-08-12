@@ -12,6 +12,7 @@ https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/markdown/ac
 - GEE code for SoilGrids calculation, must be adjusted: https://code.earthengine.google.com/a64ccf0538f7192ce73c47fcd4f5a2d7
 personal note: 
 maybe accessing biodiversity can be made possible over calculating the number of plant species remotely. 
+- there is no SoilGrid data available for cities, and some of the points were allocated to cities, that's why they are empty
 
 ### Data Repository 
 
