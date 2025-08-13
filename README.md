@@ -20,8 +20,13 @@ open tasks:
 - get the transponder 
 + get the desk 
 - register for the conference 
-- check the code 
+- check the gee code -> collect all the data for all the depths 
 - check the crops data 
+- investigate biodiversity maps 
+
+**Links from August**
+https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/markdown/access_on_gee.md
+https://code.earthengine.google.com/a64ccf0538f7192ce73c47fcd4f5a2d7
 
 ### Data Repository 
 
