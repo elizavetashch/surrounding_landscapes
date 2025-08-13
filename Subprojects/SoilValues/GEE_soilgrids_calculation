@@ -1,30 +1,39 @@
 // -------------------------
-// USER: change these values
+// Read in the data
 // -------------------------
-var points = ee.FeatureCollection("projects/ee-elizaveta/assets/20241010_data_yield");
-var bufferRadius = 1000; // meters
-var useSquareBounds = false; // true => square, false => round
-var scale = 30; // reducer scale (m)
+var points = ee.FeatureCollection("projects/ee-elizaveta/assets/20250812_points_onlyID");
+var bufferRadius = 2500; // meters
+var scale = 250; // reducer scale (m)
 
 // -------------------------
-// IMAGES / LAYERS
+// SoilGrids images
 // -------------------------
-var sand   = ee.Image("projects/soilgrids-isric/sand_mean");
-var bdod   = ee.Image("projects/soilgrids-isric/bdod_mean");
-var cec    = ee.Image("projects/soilgrids-isric/cec_mean");
-var clay   = ee.Image("projects/soilgrids-isric/clay_mean");
-var nitrogen = ee.Image("projects/soilgrids-isric/nitrogen_mean");
-var ocd    = ee.Image("projects/soilgrids-isric/ocd_mean");
-var ocs    = ee.Image("projects/soilgrids-isric/ocs_mean");
-var phh2o  = ee.Image("projects/soilgrids-isric/phh2o_mean");
-var silt   = ee.Image("projects/soilgrids-isric/silt_mean");
-var soc    = ee.Image("projects/soilgrids-isric/soc_mean");
+var imageList = [
+  {name: 'sand',     image: ee.Image("projects/soilgrids-isric/sand_mean")},
+  {name: 'bdod',     image: ee.Image("projects/soilgrids-isric/bdod_mean")},
+  {name: 'cec',      image: ee.Image("projects/soilgrids-isric/cec_mean")},
+  {name: 'clay',     image: ee.Image("projects/soilgrids-isric/clay_mean")},
+  {name: 'nitrogen', image: ee.Image("projects/soilgrids-isric/nitrogen_mean")},
+  {name: 'ocd',      image: ee.Image("projects/soilgrids-isric/ocd_mean")},
+  {name: 'ocs',      image: ee.Image("projects/soilgrids-isric/ocs_mean")},
+  {name: 'phh2o',    image: ee.Image("projects/soilgrids-isric/phh2o_mean")},
+  {name: 'silt',     image: ee.Image("projects/soilgrids-isric/silt_mean")},
+  {name: 'soc',      image: ee.Image("projects/soilgrids-isric/soc_mean")}
+];
 
-var images = [sand, bdod, cec, clay, nitrogen, ocd, ocs, phh2o, silt, soc];
+// Validation: Band name check 
+imageList.forEach(function(obj) {
+  obj = ee.Dictionary(obj);
+  var name = obj.get('name');
+  var img = ee.Image(obj.get('image'));
+  print(name, img.bandNames());
+});
+
 
 // -------------------------
 // Buffer points
 // -------------------------
+
 function bufferPoints(radius, bounds) {
   return function(pt) {
     var geom = bounds ? pt.geometry().buffer(radius).bounds()
@@ -33,38 +42,44 @@ function bufferPoints(radius, bounds) {
   };
 }
 
-var bufferedPoints = points.map(bufferPoints(bufferRadius, useSquareBounds));
+var bufferedPoints = points.map(bufferPoints(bufferRadius, false));
 
 // -------------------------
 // Calculate means
 // -------------------------
-var pointsWithMeans = bufferedPoints.map(function(pt) {
+var soilvalues = bufferedPoints.map(function(pt) {
   var geom = pt.geometry();
 
-  var updated = ee.List(images).iterate(function(img, accFeature) {
+  var updated = ee.List(imageList).iterate(function(obj, accFeature) {
     accFeature = ee.Feature(accFeature);
-    var image = ee.Image(img);
+    obj = ee.Dictionary(obj);
+    var baseName = ee.String(obj.get('name'));
+    var image = ee.Image(obj.get('image'));
 
-    // select 3rd band if exists, else first
-    var bnames = image.bandNames();
-    var bandName = ee.String(
-      ee.Algorithms.If(bnames.size().gt(2), bnames.get(2), bnames.get(0))
-    );
+    // Get band names
+    var bandNames = image.bandNames();
 
-    // reduce to mean inside buffer
-    var meanDict = image.select([bandName]).reduceRegion({
-      reducer: ee.Reducer.mean(),
-      geometry: geom,
-      scale: scale,
-      maxPixels: 1e13
-    });
+    // Iterate over each band in this image
+    var featureWithBands = ee.List(bandNames).iterate(function(band, innerFeature) {
+      innerFeature = ee.Feature(innerFeature);
 
-    var meanVal = meanDict.get(bandName);
+      // Reduce region for this band
+      var meanDict = image.select([ee.String(band)]).reduceRegion({
+        reducer: ee.Reducer.mean(),
+        geometry: geom,
+        scale: scale,
+        maxPixels: 1e13
+      });
 
-    // keep your original labeling approach (system:id + _mean)
-    var propName = ee.String(image.get('system:id')).cat('_mean');
+      var meanVal = meanDict.get(band);
 
-    return accFeature.set(propName, meanVal);
+      // Column name: <imageName>_<bandName>_mean
+      var propName = baseName.cat('_').cat(ee.String(band)).cat('_mean');
+
+      return innerFeature.set(propName, meanVal);
+    }, accFeature);
+
+    return ee.Feature(featureWithBands);
   }, pt);
 
   return ee.Feature(updated);
@@ -73,11 +88,12 @@ var pointsWithMeans = bufferedPoints.map(function(pt) {
 // -------------------------
 // Output & export
 // -------------------------
-print('Sample with mean properties:', pointsWithMeans.limit(5));
 
 Export.table.toDrive({
-  collection: pointsWithMeans,
-  description: '20250810_points_means_export',
+  collection: soilvalues,
+  description: '20250812_soilvalues_2500m',
   folder: "GEE_SoilGrids",
   fileFormat: 'CSV'
 });
+
+
