@@ -1,33 +1,5 @@
 ## Surrounding Landscapes Affect the Productivity of Crop Yields:
 
-### Protocol
-
-### August
-
-**11. August** 
-
-- adding soilgrids data to the current dataset
-- found the link to the GEE dataset
-https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/markdown/access_on_gee.md
-- GEE code for SoilGrids calculation, must be adjusted: https://code.earthengine.google.com/a64ccf0538f7192ce73c47fcd4f5a2d7
-personal note: 
-maybe accessing biodiversity can be made possible over calculating the number of plant species remotely. 
-- there is no SoilGrid data available for cities, and some of the points were allocated to cities, that's why they are empty
-
-**12. August**
-
-open tasks: 
-- get the transponder 
-+ get the desk 
-- register for the conference 
-- check the gee code -> collect all the data for all the depths 
-- check the crops data 
-- investigate biodiversity maps 
-
-**Links from August**
-https://git.wur.nl/isric/soilgrids/soilgrids.notebooks/-/blob/master/markdown/access_on_gee.md
-https://code.earthengine.google.com/a64ccf0538f7192ce73c47fcd4f5a2d7
-
 ### Data Repository 
 
 data organization and cleaning: Elizaveta Shcherbinina 
