@@ -1,0 +1,70 @@
+---
+title: "20250813_description_file"
+output: html_document
+---
+## Description
+description of the 20250813_data.csv file 
+
+df_20250813 was merged from 
+- 20241216_data_processed.csv, 
+- 20250812_soilvalues_1000m.csv, 
+- 20250812_soilvalues_2500m.csv and 
+- 20250812_soilvalues_5000m.csv
+
+## Statistics 
+It has 4152 observations and 136 variables. Out of 134 varibales, 54 are soil variables. 38 observations have NA in soil variables, because there are no values available for the buffer region (often within a city area). 
+
+The name of the soil variable is structured like `bdod_bdod_0.5cm_mean_mean`. First goes the name of the variable (`bdod` for bulk density), then the depth layer name (`bdod_0.5cm_mean` for the bulk density mean at the 0.5 cm depth) and last comes the `mean` as the value is averaged over the buffer size. 
+
+Here are the statistics for the soil variables
+
+| Column Name                          | Description                                                               | Unit       | Min      | 1st Qu  | Median   | Mean     | 3rd Qu  | Max       |
+|--------------------------------------|----------------------------------------------------------------------------|------------|----------|---------|----------|----------|---------|-----------|
+| bdod_bdod_0.5cm_mean_mean             | Bulk density of the fine earth fraction                                   | cg/cm³     | 65.18    | 119.60  | 125.24   | 125.25   | 131.43  | 162.41    |
+| bdod_bdod_100.200cm_mean_mean         | Bulk density of the fine earth fraction                                   | cg/cm³     | 102.8    | 141.8   | 145.8    | 145.7    | 150.4   | 180.1     |
+| bdod_bdod_15.30cm_mean_mean           | Bulk density of the fine earth fraction                                   | cg/cm³     | 90.49    | 132.76  | 139.08   | 138.04   | 142.89  | 171.85    |
+| bdod_bdod_30.60cm_mean_mean           | Bulk density of the fine earth fraction                                   | cg/cm³     | 97.79    | 137.83  | 143.32   | 142.40   | 147.78  | 177.32    |
+| bdod_bdod_5.15cm_mean_mean            | Bulk density of the fine earth fraction                                   | cg/cm³     | 86.67    | 123.36  | 128.56   | 129.23   | 134.22  | 168.97    |
+| bdod_bdod_60.100cm_mean_mean          | Bulk density of the fine earth fraction                                   | cg/cm³     | 99.56    | 140.17  | 145.35   | 144.77   | 149.81  | 179.54    |
+| cec_cec_0.5cm_mean_mean               | Cation Exchange Capacity of the soil                                      | mmol(c)/kg | 75.78    | 182.00  | 204.48   | 213.34   | 237.28  | 481.67    |
+| cec_cec_100.200cm_mean_mean           | Cation Exchange Capacity of the soil                                      | mmol(c)/kg | 42.88    | 146.38  | 164.83   | 170.47   | 190.50  | 517.52    |
+| cec_cec_15.30cm_mean_mean             | Cation Exchange Capacity of the soil                                      | mmol(c)/kg | 47.15    | 151.16  | 174.00   | 181.98   | 206.75  | 507.84    |
+| cec_cec_30.60cm_mean_mean             | Cation Exchange Capacity of the soil                                      | mmol(c)/kg | 42.86    | 150.22  | 169.74   | 177.25   | 197.65  | 508.40    |
+| cec_cec_5.15cm_mean_mean              | Cation Exchange Capacity of the soil                                      | mmol(c)/kg | 49.21    | 155.79  | 179.92   | 187.88   | 214.08  | 507.26    |
+| cec_cec_60.100cm_mean_mean            | Cation Exchange Capacity of the soil                                      | mmol(c)/kg | 41.19    | 151.04  | 169.31   | 175.49   | 194.44  | 511.61    |
+| clay_clay_0.5cm_mean_mean             | Proportion of clay particles (< 0.002 mm) in the fine earth fraction      | g/kg       | 34.55    | 230.67  | 272.38   | 270.35   | 303.30  | 593.77    |
+| clay_clay_100.200cm_mean_mean         | Proportion of clay particles (< 0.002 mm) in the fine earth fraction      | g/kg       | 66.28    | 260.90  | 307.06   | 309.23   | 347.72  | 703.58    |
+| clay_clay_15.30cm_mean_mean           | Proportion of clay particles (< 0.002 mm) in the fine earth fraction      | g/kg       | 31.99    | 250.14  | 287.94   | 289.55   | 322.69  | 635.95    |
+| clay_clay_30.60cm_mean_mean           | Proportion of clay particles (< 0.002 mm) in the fine earth fraction      | g/kg       | 45.52    | 262.92  | 301.01   | 305.91   | 340.73  | 701.44    |
+| clay_clay_5.15cm_mean_mean            | Proportion of clay particles (< 0.002 mm) in the fine earth fraction      | g/kg       | 32.07    | 234.74  | 276.79   | 274.86   | 308.28  | 595.60    |
+| clay_clay_60.100cm_mean_mean          | Proportion of clay particles (< 0.002 mm) in the fine earth fraction      | g/kg       | 62.66    | 264.76  | 304.18   | 309.01   | 346.05  | 708.06    |
+| nitrogen_nitrogen_0.5cm_mean_mean     | Total nitrogen (N)                                                        | cg/kg      | 717      | 1838    | 2737     | 3057     | 3777    | 18198     |
+| nitrogen_nitrogen_100.200cm_mean_mean | Total nitrogen (N)                                                        | cg/kg      | 194.0    | 458.4   | 557.3    | 677.9    | 718.0   | 9553.8    |
+| nitrogen_nitrogen_15.30cm_mean_mean   | Total nitrogen (N)                                                        | cg/kg      | 423.0    | 918.3   | 1097.5   | 1252.8   | 1375.6  | 11151.4   |
+| nitrogen_nitrogen_30.60cm_mean_mean   | Total nitrogen (N)                                                        | cg/kg      | 281.8    | 639.1   | 767.1    | 910.1    | 983.4   | 12259.9   |
+| nitrogen_nitrogen_5.15cm_mean_mean    | Total nitrogen (N)                                                        | cg/kg      | 511.5    | 1137.6  | 1426.2   | 1582.5   | 1770.4  | 11475.4   |
+| nitrogen_nitrogen_60.100cm_mean_mean  | Total nitrogen (N)                                                        | cg/kg      | 219.4    | 510.3   | 610.7    | 738.4    | 792.0   | 10863.1   |
+| phh2o_phh2o_0.5cm_mean_mean           | Soil pH                                                                    | pHx10      | 46.62    | 59.03   | 64.84    | 66.32    | 74.10   | 87.48     |
+| phh2o_phh2o_100.200cm_mean_mean       | Soil pH                                                                    | pHx10      | 49.65    | 60.40   | 66.97    | 68.29    | 77.11   | 90.27     |
+| phh2o_phh2o_15.30cm_mean_mean         | Soil pH                                                                    | pHx10      | 49.10    | 59.55   | 65.64    | 67.22    | 75.80   | 87.95     |
+| phh2o_phh2o_30.60cm_mean_mean         | Soil pH                                                                    | pHx10      | 49.22    | 59.97   | 66.00    | 67.81    | 76.87   | 88.72     |
+| phh2o_phh2o_5.15cm_mean_mean          | Soil pH                                                                    | pHx10      | 47.14    | 59.31   | 65.42    | 66.80    | 74.91   | 88.12     |
+| phh2o_phh2o_60.100cm_mean_mean        | Soil pH                                                                    | pHx10      | 49.77    | 60.40   | 66.60    | 68.26    | 77.31   | 91.75     |
+| sand_sand_0.5cm_mean_mean             | Proportion of sand particles (> 0.05 mm) in the fine earth fraction       | g/kg       | 39.21    | 229.29  | 288.28   | 308.72   | 363.89  | 926.30    |
+| sand_sand_100.200cm_mean_mean         | Proportion of sand particles (> 0.05 mm) in the fine earth fraction       | g/kg       | 35.6     | 215.8   | 276.3    | 291.4    | 353.0   | 878.4     |
+| sand_sand_15.30cm_mean_mean           | Proportion of sand particles (> 0.05 mm) in the fine earth fraction       | g/kg       | 34.36    | 221.78  | 278.81   | 297.58   | 356.20  | 929.91    |
+| sand_sand_30.60cm_mean_mean           | Proportion of sand particles (> 0.05 mm) in the fine earth fraction       | g/kg       | 26.61    | 212.45  | 272.72   | 287.72   | 347.81  | 916.92    |
+| sand_sand_5.15cm_mean_mean            | Proportion of sand particles (> 0.05 mm) in the fine earth fraction       | g/kg       | 38.08    | 225.18  | 284.44   | 305.79   | 360.40  | 928.96    |
+| sand_sand_60.100cm_mean_mean          | Proportion of sand particles (> 0.05 mm) in the fine earth fraction       | g/kg       | 28.41    | 213.09  | 274.07   | 287.49   | 347.17  | 899.14    |
+| silt_silt_0.5cm_mean_mean             | Proportion of silt particles (≥ 0.002 mm and ≤ 0.05 mm) in the fine earth fraction | g/kg | 36.82 | 374.91  | 433.28   | 420.92   | 486.89  | 727.41    |
+| silt_silt_100.200cm_mean_mean         | Proportion of silt particles (≥ 0.002 mm and ≤ 0.05 mm) in the fine earth fraction | g/kg | 41.0  | 356.8   | 409.2    | 399.3    | 468.8   | 666.4     |
+| silt_silt_15.30cm_mean_mean           | Proportion of silt particles (≥ 0.002 mm and ≤ 0.05 mm) in the fine earth fraction | g/kg | 37.35 | 365.74  | 425.09   | 412.87   | 479.26  | 697.67    |
+| silt_silt_30.60cm_mean_mean           | Proportion of silt particles (≥ 0.002 mm and ≤ 0.05 mm) in the fine earth fraction | g/kg | 35.28 | 360.11  | 419.98   | 406.37   | 475.39  | 664.51    |
+| silt_silt_5.15cm_mean_mean            | Proportion of silt particles (≥ 0.002 mm and ≤ 0.05 mm) in the fine earth fraction | g/kg | 38.01 | 372.75  | 432.97   | 419.36   | 485.08  | 725.56    |
+| silt_silt_60.100cm_mean_mean          | Proportion of silt particles (≥ 0.002 mm and ≤ 0.05 mm) in the fine earth fraction | g/kg | 36.16 | 360.91  | 415.71   | 403.49   | 473.70  | 656.05    |
+| soc_soc_0.5cm_mean_mean               | Soil organic carbon content in the fine earth fraction                    | dg/kg     | 58.21    | 182.88  | 265.14   | 300.09   | 386.04  | 1937.58   |
+| soc_soc_100.200cm_mean_mean           | Soil organic carbon content in the fine earth fraction                    | dg/kg     | 7.943    | 33.450  | 43.567   | 61.200   | 63.615  | 849.000   |
+| soc_soc_15.30cm_mean_mean             | Soil organic carbon content in the fine earth fraction                    | dg/kg     | 38.41    | 89.25   | 115.13   | 130.52   | 148.22  | 902.69    |
+| soc_soc_30.60cm_mean_mean             | Soil organic carbon content in the fine earth fraction                    | dg/kg     | 18.13    | 58.58   | 72.13    | 89.01    | 98.94   | 870.00    |
+| soc_soc_5.15cm_mean_mean              | Soil organic carbon content in the fine earth fraction                    | dg/kg     | 35.83    | 115.91  | 149.90   | 172.94   | 199.85  | 1181.80   |
+| soc_soc_60.100cm_mean_mean            | Soil organic carbon content in the fine earth fraction                    | dg/kg     | 13.45    | 41.69   | 52.27    | 66.52    | 70.65   | 880.00    |
