@@ -1,0 +1,16 @@
+
+Self-identified field-size
+
+# 1 ArcGIS Agricultural Field Delineation (Deep Learning Library) 
+
+## Link: 
+https://www.arcgis.com/home/item.html?id=eb5f896bf88b46af8252e17fa404a73d
+
+
+# 2 Introduction to crop-mapping with Google Earth Engine
+
+## Link: 
+https://reagro.org/blocks/where/gee/gee_landsat.html
+
+## Summary
+Basically, they identify the cropland and then apply pixelArea() funcktion

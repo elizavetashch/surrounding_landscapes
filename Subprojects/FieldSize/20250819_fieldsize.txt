@@ -92,6 +92,10 @@ https://pmc.ncbi.nlm.nih.gov/articles/PMC7379266/
 - global map of farm sizes
 - merging two currently available sources of information on the distribution of farm sizes across the world: national level data on farm size distributions, and subnational data on field size distributions.
 
+## Methods: 
+- We define a farming household as one that owns usable land for agriculture or one in which a household member works in an agricultural occupation.
+- Farm per se not defined.
+
 ## Limits: 
 - we caution that this map should not be used for detailed within country-level analysis, but is intended for global assessment studies, where results are typically aggregated at the regional or global level
 
