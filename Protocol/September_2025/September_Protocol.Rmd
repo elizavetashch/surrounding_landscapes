@@ -1,0 +1,15 @@
+---
+title: "August_Protocol"
+output: html_document
+---
+
+### Protocol
+
+### September
+
+**5. September** 
+- downloaded https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.14492 -> https://pure.iiasa.ac.at/id/eprint/15526/
+
+- tried assigning the field size in R 
+-- this took ages: 
+-- > fieldsize_km <- projectRaster(  fieldsize,  crs = CRS("+proj=cea +lon_0=0 +lat_ts=30 +datum=WGS84 +units=km"))
