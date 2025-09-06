@@ -13,3 +13,7 @@ output: html_document
 - tried assigning the field size in R 
 -- this took ages: 
 -- > fieldsize_km <- projectRaster(  fieldsize,  crs = CRS("+proj=cea +lon_0=0 +lat_ts=30 +datum=WGS84 +units=km"))
+
+**6. September** 
+- switched to GEE 
+- calculated the field size for buffers 1000,2500,5000
