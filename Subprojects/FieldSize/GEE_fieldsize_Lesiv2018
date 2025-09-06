@@ -1,0 +1,91 @@
+// Data From 
+// Lesiv, M., Bayas, J. C. L., See, L., Duerauer, M., Dahlia, D., Durando, N., Hazarika, R., Sahariah, P. K., Vakolyuk, M., Blyshchyk, V., Bilous, A., Perez‐Hoyos, A., Gengler, S., Prestele, R., Bilous, S., Akhtar, I. U. H., Singha, K., Choudhury, S. B., Chetri, T., . . . Fritz, S. (2018). Estimating the global distribution of field size using crowdsourcing. Global Change Biology, 25(1), 174–186. https://doi.org/10.1111/gcb.14492
+// https://pure.iiasa.ac.at/id/eprint/15526/.
+
+
+// (0) Read the data and 
+// set the radius and scale 
+var points = ee.FeatureCollection("projects/ee-elizaveta/assets/20250812_points_onlyID");
+var bufferRadius = 1000; // meters
+var scale = 400; // reducer scale (m)
+var fs = ee.Image("projects/ee-elizaveta/assets/dominant_field_size_categories");
+
+// Visualise the map
+var vispar = {min:0, max:3506, palette:["b7b7a4", "923514", "8f8854", "ffc057", "fc9143", "d15515"]};
+Map.addLayer( fs, vispar, 'fs');
+
+
+
+// (1) Function to buffer the points 
+function bufferPoints(radius, bounds) {
+  return function(pt) {
+    var geom = bounds ? pt.geometry().buffer(radius).bounds()
+                      : pt.geometry().buffer(radius);
+    return pt.setGeometry(geom);
+  };
+}
+
+
+// (2) Process points to get area per class
+function processMetricsForYear(points, image, bufferRadius, scale) {
+  var bufferedPoints = points.map(bufferPoints(bufferRadius, false));
+
+  var results = bufferedPoints.map(function(point) {
+    var bufferGeom = point.geometry();
+    var areaImage = ee.Image.pixelArea().addBands(image.rename('class'));
+    var areasum = areaImage.reduceRegion({
+      reducer: ee.Reducer.sum().group({
+        groupField: 1,     
+        groupName: 'class'
+      }),
+      geometry: bufferGeom,
+      scale: scale,
+      maxPixels: 1e13
+    });
+    var groups = ee.List(areasum.get('groups'));
+    // Return results as a feature
+    return ee.Feature(point).set({
+      metrics: groups
+    });
+  });
+
+  return results;
+}
+
+// (3) Unpack the metrics (area and class) list into a feature collection
+// you have to unpack your metrics, because otherwise you will have dictionaries of classes in your csv file.
+function unpackMetrics(feature) {
+  var metrics = ee.List(feature.get('metrics'));
+  var newFeatures = metrics.map(function(metric) {
+    metric = ee.Dictionary(metric);
+    return feature.copyProperties(feature).set({ 
+      'class': metric.get('class'),
+      'area_m2': metric.get('sum')
+    });
+  });
+  return ee.FeatureCollection(newFeatures);
+}
+
+
+// -------------------------
+// Run functions
+// -------------------------
+var metricsResults = processMetricsForYear(points, fs, bufferRadius, scale);
+var unpackedFeatureCollection = ee.FeatureCollection(metricsResults).map(unpackMetrics).flatten();
+ 
+print('Per-point class areas', unpackedFeatureCollection);
+
+// -------------------------
+// Export
+// -------------------------
+
+    Export.table.toDrive({
+    collection: unpackedFeatureCollection,
+    description: '20250906_fieldsize_' + bufferRadius + "m", // customize: change the name of your file (in red)
+    folder: "GEE_fieldsize", // customize: change the name of the folder where your files will be saved (in red)
+    fileFormat: 'CSV' // customize: change the format of your files
+  });
+
+print("♡Complete♡")
+
+
