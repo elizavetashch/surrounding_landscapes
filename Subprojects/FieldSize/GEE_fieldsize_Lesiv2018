@@ -7,7 +7,7 @@
 // Read the data
 // -------------------------
 var points = ee.FeatureCollection("projects/ee-elizaveta/assets/20250812_points_onlyID");
-var bufferRadius = 2500; // meters
+var bufferRadius = 1000; // meters
 var scale = 400; // reducer scale (m)
 var fs = ee.Image("projects/ee-elizaveta/assets/dominant_field_size_categories");
 
@@ -408,9 +408,9 @@ function unpackMetrics(feature) {
 // -------------------------
 // Run functions
 // -------------------------
-var metricsResults = processMetrics(points, fs, bufferRadius, scale);
-var finalResults = addPixelValue(metricsResults, fs, scale);
-var unpackedFeatureCollection = ee.FeatureCollection(finalResults).map(unpackMetrics).flatten();
+var pointspixels = addPixelValue(points, fs, scale);
+var metricsResults = processMetrics(pointspixels, fs, bufferRadius, scale);
+var unpackedFeatureCollection = ee.FeatureCollection(metricsResults).map(unpackMetrics).flatten();
 
 
 // -------------------------
@@ -419,7 +419,7 @@ var unpackedFeatureCollection = ee.FeatureCollection(finalResults).map(unpackMet
 
     Export.table.toDrive({
     collection: unpackedFeatureCollection,
-    description: '20250908_fieldsize_' + bufferRadius + "m", // customize: change the name of your file (in red)
+    description: '20250908_2_fieldsize_' + bufferRadius + "m", // customize: change the name of your file (in red)
     folder: "GEE_fieldsize", // customize: change the name of the folder where your files will be saved (in red)
     fileFormat: 'CSV' // customize: change the format of your files
   });
