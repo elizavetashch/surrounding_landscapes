@@ -3,7 +3,7 @@ library(dplyr)
 library(tidyr)
 
 ### What do the calsses mean 
-# class == 0 ~ "skipped",
+# class == 0 ~ "nofield",
 # class == 3502 ~ "greater than 100 ha",
 # class == 3503 ~ "between 16 ha and 100 ha",
 # class == 3504 ~ "between 2.56 ha and 16 ha",
@@ -38,23 +38,23 @@ fieldsize <-
   fieldsize_origin %>% 
   mutate( 
   class = case_when(
-    class == 0 ~ "NAvalue",
+    class == 0 ~ "nofield",
     class == 3502 ~ "verylarge",
     class == 3503 ~ "large",
     class == 3504 ~ "medium",
     class == 3505 ~ "small",
     class == 3506 ~ "verysmall",
-    class == 3507 ~ "nofields"
+    class == 3507 ~ "nofield"
   ),
   class = as.factor(class),
   fieldsize = case_when(
-    pixelvalue == 0 ~ "NAvalue",
+    pixelvalue == 0 ~ "nofield",
     pixelvalue == 3502 ~ "verylarge",
     pixelvalue == 3503 ~ "large",
     pixelvalue == 3504 ~ "medium",
     pixelvalue == 3505 ~ "small",
     pixelvalue == 3506 ~ "verysmall",
-    pixelvalue == 3507 ~ "nofields"
+    pixelvalue == 3507 ~ "nofield"
   ),
   fieldsize = as.factor(fieldsize)) %>% 
   select(-pixelvalue)
@@ -81,7 +81,7 @@ fieldsize_org <-
   mutate(bufferradius_m = as.character(bufferradius_m)) %>% 
   select(-bufferarea_m2) %>%
   pivot_wider(names_from = bufferradius_m,
-              values_from = c(NAvalue, small, verysmall, large, verylarge, medium))
+              values_from = c(nofield, small, verysmall, large, verylarge, medium))
 
 # duplicates check
 #d <- fieldsize_org$measurement_id[duplicated(fieldsize_org$measurement_id)]
@@ -100,6 +100,7 @@ data_joined <-
 data_joined <- data_joined[ ,-1]
 write.csv(data_joined, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250908_data.csv", row.names = FALSE )
 
+glimpse(fieldsize_org)
 
 ### Analysis 
 
