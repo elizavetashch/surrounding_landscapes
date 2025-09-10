@@ -1,0 +1,101 @@
+
+Field Size 
+
+Questions: 
+Why do we do it? 
+What are we looking for?
+What about switching to structural diversity? Can we use elevation for that?
+
+Limits: 
+We don't have  time resolution, right? 
+
+
+# 1 Estimating the global distribution of field size using crowdsourcing
+
+## Article Link: https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.14492
+
+## Info: 
+- Automated field size delineation using remote sensing or the estimation of average farm size at subnational level using census data are two approaches that have been used. 
+- Year 2017
+
+## Data Link: 
+https://pure.iiasa.ac.at/id/eprint/15526/.
+
+## Methods: 
+
+### Overall layout:
+- A campaign was run in June 2017, where participants were asked to visually interpret very high resolution satellite imagery from Google Maps and Bing using the Geo-Wiki application. During the campaign, participants collected field size data for 130 K unique locations around the globe. Using this sample, we have produced the most accurate global field size map to date and estimated the percentage of different field sizes, ranging from very small to very large, in agricultural areas at global, continental, and national levels. 
+
+### Creating a global field size map
+- The first global field size map was produced by interpolation of field sizes (Fritz et al., 2015). Inverse distance weighting (IDW) was chosen as the interpolation method. As with many other interpolation methods in spatial statistics such as kriging or nearest neighbor, IDW assumes that pixels close by to one another have similar values. However, this assumption does not hold for the spatial distribution of fields, for example, large fields may be neighboring smaller fields. Therefore, we adapted the nearest neighbor approach as follows:
+
+    A grid of points was created with an interval of circa 1 km, which is also the minimum distance between the sample sites;
+    At each grid point, k nearest neighbors was applied to the crowdsourced data set where k = 5 was found to yield the best visual representation; more than five neighbors led to a loss in spatial information while <5 neighbors resulted in the overestimation of field sizes that were not dominant.
+- We only applied this procedure to grid points that fell inside cropland areas, where we used a recent cropland map for 2015 to indicate cropland areas (https://www.croplands.org/app/map?lat=0&lng=0&zoom=2), which was originally at a 30 m resolution and then aggregated to our grid size.
+
+
+## Data description:
+- Categorical: very small, small, medium, large, very large 
+- Steps: 
+(a) collection of the global field size data via a crowdsourcing campaign; (b) mapping of the dominant field sizes; 
+(c) estimation of the area percentages of the different field size categories;
+(d) comparison of the crowdsourced data with other field size data sets. 
+
+The field size categories were then adjusted to the Geo-Wiki grid approach that we describe below. These categories are:
+
+    Very large fields with an area of >100 ha;
+    Large fields with an area between 16 and 100 ha;
+    Medium fields with an area between 2.56 and 16 ha;
+    Small fields with an area between 0.64 and 2.56 ha; and
+    Very small fields with an area <0.64 ha.
+
+
+## Field description:
+- enclosed agricultural areas, including annual and perennial crops.
+- also included pastures, hayfields and fallow in the definition to minimize confusion between annual crops and pastures when visually interpreting the images.
+- We then defined rules for determining individual fields, which are usually separated by roads, permanent paths, trees, or shrub shelterbelts. Field boundaries can be further defined by the presence of different crop types or pastures. Temporary paths or signs of machinery are not considered as field boundaries.
+
+## Software/Source: 
+- Geo-Wiki
+
+## Interesting citations:
+- Group on Earth Observations Global Agricultural Monitoring Initiative (GEOGLAM - https://ceos.org/document_management/Meetings/SIT/SIT-28/31b_GEOGLAM_Global_Agricultural_Monitoring_User_Requirements_March4.pdf
+
+
+# 2 Mapping global cropland and field size
+
+## Article Link: https://onlinelibrary.wiley.com/doi/10.1111/gcb.12838 
+
+## Info 
+- A new 1 km global IIASA-IFPRI cropland percentage map for the baseline year 2005 has been developed which integrates a number of individual cropland maps at global to regional to national scales.
+- The individual map products include existing global land cover maps such as GlobCover 2005 and MODIS v.5, regional maps such as AFRICOVER and national maps from mapping agencies and other organizations. The different products are ranked at the national level using crowdsourced data from Geo-Wiki to create a map that reflects the likelihood of cropland.
+- Year 2005
+
+## Methods
+- Field size was specified as very small, small, medium and large using high-resolution imagery, where examples were provided to guide the user.
+- eliminating locations where cropland is not found, choosing only those places where the average temperature is >3 °C, and the average annual precipitation is above 200 mm based
+- the sample was included in the final validation data set, which consisted of 10 626 cropland percentage pixels (cropland 3674 and noncropland 6952)
+- As mentioned previously, field size from 1 (very small) to 4 (large) was collected during a Geo-Wiki campaign using high-resolution satellite imagery. Information for approximately 53 000 samples of 1 km2 pixels were gathered at around 36 000 unique locations. Of these unique locations, 13 963 samples contained cropland and therefore the size of the field. This sample data set of ordinal values was then interpolated using inverse weighted distance, treating the ordinal values as a continuum, to create a global map of field size at a 1 km2 resolution, which was then clipped using the IIASA-IFPRI cropland map.
+- Permanent meadows and pastures are excluded from land under permanent crops (see http://faostat.fao.org/site/375/default.aspx).
+
+# 3 Estimating the global distribution of field size using crowdsourcing
+-> same as #1
+
+## Article Link: 
+https://pmc.ncbi.nlm.nih.gov/articles/PMC7379266/
+
+# 4 Global Farm Size, Version 1, 2000
+
+## Article Link: https://ciesin.columbia.edu/data/global-farm-size/ 
+
+## Info: 
+- global map of farm sizes
+- merging two currently available sources of information on the distribution of farm sizes across the world: national level data on farm size distributions, and subnational data on field size distributions.
+
+## Methods: 
+- We define a farming household as one that owns usable land for agriculture or one in which a household member works in an agricultural occupation.
+- Farm per se not defined.
+
+## Limits: 
+- we caution that this map should not be used for detailed within country-level analysis, but is intended for global assessment studies, where results are typically aggregated at the regional or global level
+

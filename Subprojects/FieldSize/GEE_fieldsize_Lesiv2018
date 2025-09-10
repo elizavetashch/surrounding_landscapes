@@ -1,0 +1,429 @@
+// Data From 
+// Lesiv, M., Bayas, J. C. L., See, L., Duerauer, M., Dahlia, D., Durando, N., Hazarika, R., Sahariah, P. K., Vakolyuk, M., Blyshchyk, V., Bilous, A., Perez‐Hoyos, A., Gengler, S., Prestele, R., Bilous, S., Akhtar, I. U. H., Singha, K., Choudhury, S. B., Chetri, T., . . . Fritz, S. (2018). Estimating the global distribution of field size using crowdsourcing. Global Change Biology, 25(1), 174–186. https://doi.org/10.1111/gcb.14492
+// https://pure.iiasa.ac.at/id/eprint/15526/.
+
+
+// -------------------------
+// Read the data
+// -------------------------
+var points = ee.FeatureCollection("projects/ee-elizaveta/assets/20250812_points_onlyID");
+var bufferRadius = 1000; // meters
+var scale = 400; // reducer scale (m)
+var fs = ee.Image("projects/ee-elizaveta/assets/dominant_field_size_categories");
+
+// -------------------------
+// Basemap
+// -------------------------
+
+var basemap = [
+    {
+        "featureType": "all",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "saturation": 36
+            },
+            {
+                "color": "#535353"
+            },
+            {
+                "lightness": 40
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "labels.text.stroke",
+        "stylers": [
+            {
+                "visibility": "on"
+            },
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 16
+            }
+        ]
+    },
+    {
+        "featureType": "all",
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 20
+            }
+        ]
+    },
+    {
+        "featureType": "administrative",
+        "elementType": "geometry.stroke",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            },
+            {
+                "weight": 1.2
+            }
+        ]
+    },
+    {
+        "featureType": "landscape",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 20
+            }
+        ]
+    },
+    {
+        "featureType": "landscape.natural.landcover",
+        "elementType": "all",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "poi",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 21
+            }
+        ]
+    },
+    {
+        "featureType": "poi.business",
+        "elementType": "all",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "poi.business",
+        "elementType": "labels",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "poi.business",
+        "elementType": "labels.icon",
+        "stylers": [
+            {
+                "visibility": "off"
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "geometry.fill",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 17
+            }
+        ]
+    },
+    {
+        "featureType": "road.highway",
+        "elementType": "geometry.stroke",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 29
+            },
+            {
+                "weight": 0.2
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 18
+            }
+        ]
+    },
+    {
+        "featureType": "road.arterial",
+        "elementType": "labels.text.fill",
+        "stylers": [
+            {
+                "invert_lightness": true
+            }
+        ]
+    },
+    {
+        "featureType": "road.local",
+        "elementType": "all",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "road.local",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 16
+            }
+        ]
+    },
+    {
+        "featureType": "road.local",
+        "elementType": "labels.text",
+        "stylers": [
+            {
+                "visibility": "on"
+            }
+        ]
+    },
+    {
+        "featureType": "transit",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#000000"
+            },
+            {
+                "lightness": 19
+            }
+        ]
+    },
+    {
+        "featureType": "water",
+        "elementType": "geometry",
+        "stylers": [
+            {
+                "color": "#5d6163"
+            },
+            {
+                "lightness": 17
+            }
+        ]
+    }
+];
+Map.setOptions('Gray', {'Gray': basemap});
+
+// -------------------------
+// Field Size Map
+// -------------------------
+var masked = fs.updateMask(fs.neq(0)); // Mask out nodata (if 0 is background)
+
+// Remap your class values to a simpler range
+var remapped = masked.remap(
+  [3502, 3503, 3504, 3505, 3506], // original class codes
+  [0, 1, 2, 3, 4]                 // new class IDs
+);
+
+var palette = ["b7b7a4", "923514", "fc9143", "ffc057", "8f8854", "008000"];
+Map.addLayer(remapped, {min: 0, max: 4, palette: palette}, 'Classified Map');
+
+
+Map.addLayer(points, {color:"white"}, 'data points');
+
+// -------------------------
+// Legend
+// -------------------------
+// set position of panel
+var legend = ui.Panel({
+  style: {
+    position: 'bottom-left',
+    padding: '8px 15px'
+  }
+});
+
+// Create legend title
+var legendTitle = ui.Label({
+  value: 'Legend',
+  style: {
+    fontWeight: 'bold',
+    fontSize: '18px',
+    margin: '0 0 4px 0',
+    padding: '0'
+    }
+});
+
+// Add the title to the panel
+legend.add(legendTitle);
+    
+// Creates and styles 1 row of the legend.
+var makeRow = function(color, name) {
+      
+      // Create the label that is actually the colored box.
+      var colorBox = ui.Label({
+        style: {
+          backgroundColor: '#' + color,
+          // Use padding to give the box height and width.
+          padding: '8px',
+          margin: '0 0 4px 0'
+        }
+      });
+      
+      // Create the label filled with the description text.
+      var description = ui.Label({
+        value: name,
+        style: {margin: '0 0 4px 6px'}
+      });
+      
+      // return the panel
+      return ui.Panel({
+        widgets: [colorBox, description],
+        layout: ui.Panel.Layout.Flow('horizontal')
+      });
+};
+
+
+//  Palette with the colors
+var palette = ["923514", "fc9143", "ffc057", "8f8854", "008000"];
+
+// name of the legend
+var names = ['Very Large','Large', "Medium", "Small", "Very Small"];
+
+// Add color and and names
+for (var i = 0; i < 5; i++) {
+  legend.add(makeRow(palette[i], names[i]));
+  }  
+
+// add legend to map (alternatively you can also print the legend to the console)  
+Map.add(legend);
+
+// -------------------------
+// Analysis Code 
+// -------------------------
+
+// (1) Function to buffer the points 
+function bufferPoints(radius, bounds) {
+  return function(pt) {
+    var geom = bounds ? pt.geometry().buffer(radius).bounds()
+                      : pt.geometry().buffer(radius);
+    return pt.setGeometry(geom);
+  };
+}
+
+
+// (2) Add pixel value at point location
+function addPixelValue(points, image, scale) {
+  return points.map(function(point) {
+    var value = image.reduceRegion({
+      reducer: ee.Reducer.first(),
+      geometry: point.geometry(),
+      scale: scale,
+      maxPixels: 1e13
+    });
+    
+    // Get band name (assuming one band image)
+    var bandName = image.bandNames().get(0);
+    var pixelValue = ee.Number(value.get(bandName));
+    
+    return point.set('pixelvalue', pixelValue);
+  });
+}
+
+// (3) Process buffered points to get area per class
+function processMetrics(points, image, bufferRadius, scale) {
+  var bufferedPoints = points.map(bufferPoints(bufferRadius, false));
+
+  var results = bufferedPoints.map(function(point) {
+    var bufferGeom = point.geometry();
+    var areaImage = ee.Image.pixelArea().addBands(image.rename('class'));
+    var areasum = areaImage.reduceRegion({
+      reducer: ee.Reducer.sum().group({
+        groupField: 1,     
+        groupName: 'class'
+      }),
+      geometry: bufferGeom,
+      scale: scale,
+      maxPixels: 1e13
+    });
+    var groups = ee.List(areasum.get('groups'));
+    // Return results as a feature
+    return ee.Feature(point).set({
+      metrics: groups
+    });
+  });
+
+  return results;
+}
+
+
+
+// (4) Unpack the metrics (area and class) list into a feature collection
+// you have to unpack your metrics, because otherwise you will have dictionaries of classes in your csv file.
+function unpackMetrics(feature) {
+  var metrics = ee.List(feature.get('metrics'));
+  var newFeatures = metrics.map(function(metric) {
+    metric = ee.Dictionary(metric);
+    return feature.copyProperties(feature).set({ 
+      'class': metric.get('class'),
+      'area_m2': metric.get('sum')
+    });
+  });
+  return ee.FeatureCollection(newFeatures);
+}
+
+
+// -------------------------
+// Run functions
+// -------------------------
+var pointspixels = addPixelValue(points, fs, scale);
+var metricsResults = processMetrics(pointspixels, fs, bufferRadius, scale);
+var unpackedFeatureCollection = ee.FeatureCollection(metricsResults).map(unpackMetrics).flatten();
+
+
+// -------------------------
+// Export
+// -------------------------
+
+    Export.table.toDrive({
+    collection: unpackedFeatureCollection,
+    description: '20250908_2_fieldsize_' + bufferRadius + "m", // customize: change the name of your file (in red)
+    folder: "GEE_fieldsize", // customize: change the name of the folder where your files will be saved (in red)
+    fileFormat: 'CSV' // customize: change the format of your files
+  });
+
+print("♡Complete♡")
+
+
