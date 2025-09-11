@@ -93,6 +93,7 @@ check <- fieldsize_org$measurement_id[duplicated(fieldsize_org$measurement_id)] 
 
 # Fieldsize check 
 which(is.na(fieldsize_org$fieldsize)) # empty, all fieldsizes assigned
+
 rm(check)
 
 
@@ -111,34 +112,10 @@ data_20250911 <-
 # Check 
 glimpse(data_20250911)
 
-write.csv(data_joined, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/202509011_data.csv", row.names = FALSE )
+# Write
+write.csv(data_20250911, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/202509011_data.csv", row.names = FALSE )
 
 
-### Save the file as an R object
+# Save the file as an R object
 save(data_20250911, file = ".\\data\\202509011_data.RData")
-load("202509011_data.RData")
-
-
-### Analysis 
-
-library(ggplot2)
-ggplot(data_joined, aes(x = fieldsize, y = LRR)) +
-  geom_boxplot(fill = "skyblue") +
-  geom_jitter(width = 0.2, alpha = 0.6) + # show individual points
-  theme_minimal() +
-  labs(title = "LRR by Field Size",
-       x = "Field Size",
-       y = "LRR")
-
-### Data Exploration 
-
-counts <- table(data_joined$fieldsize)
-barplot(counts,
-        main = "Distribution of Field Size",
-        xlab = "Field Size",
-        ylab = "Count",
-        col = "steelblue")
-
-
-### Cleaning
 
