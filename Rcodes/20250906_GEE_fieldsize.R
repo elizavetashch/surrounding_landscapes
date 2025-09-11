@@ -104,7 +104,7 @@ write.csv(data_joined, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landsca
 glimpse(fieldsize_org)
 
 ### Save the file as an R object
-save(data_20250911, file = "202509011_data.RData")
+save(data_20250911, file = ".\\data\\202509011_data.RData")
 load("202509011_data.RData")
 
 
@@ -131,5 +131,3 @@ barplot(counts,
 
 ### Cleaning
 
-d <- fieldsize_org %>% 
-  filter(measurement_id==7980)

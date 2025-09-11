@@ -1,0 +1,16 @@
+---
+title: "20250911_data_exploration"
+author: "Elizaveta Shcherbinina"
+date: "2025-09-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+data <- load("202509011_data.RData")
+```
+
+```{r}
+dplyr::glimpse(data)
+```
+
