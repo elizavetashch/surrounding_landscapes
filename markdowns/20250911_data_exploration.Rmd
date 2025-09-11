@@ -31,13 +31,25 @@ library(ggplot2)
 ggplot(data.frame(data_20250911), aes(x=fieldsize)) +
   geom_bar() +
   geom_text(aes(label=after_stat(count)), vjust=-0.5, stat = "count")+
-  theme_bw()
+  theme_bw() +
+  theme(axis.text=element_text(size=12))
   
 ```
 
 ## Data Overview 
 
 ```{r}
-dplyr::glimpse(data_20250911)
+library(kableExtra)
+library(clipr)
+
+
+schema_table <- tibble(
+  Column = names(data_20250911),
+  Type = sapply(data_20250911, function(x) class(x)[1]),
+  Example = sapply(data_20250911, function(x) paste(head(unique(x), 3), collapse = ", "))
+)
+
+df_markdown <- knitr::kable(schema_table, format = "pipe")
+write_clip(df_markdown)
 ```
 
