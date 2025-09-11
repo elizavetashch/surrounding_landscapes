@@ -77,31 +77,42 @@ fieldsize_org <-
   pivot_wider(names_from = class,
               values_from = area_m2) %>% 
   mutate(bufferradius_m = as.character(bufferradius_m)) %>% 
-  select(-bufferarea_m2) #%>%
-  #pivot_wider(names_from = bufferradius_m,
-  #            values_from = c(nofield, small, verysmall, large, verylarge, medium))
+  select(-bufferarea_m2) %>%
+  pivot_wider(names_from = bufferradius_m,
+              values_from = c(nofield_area_m, small_area_m, verysmall_area_m, large_area_m, verylarge_area_m, medium_area_m),
+              names_glue = "{.value}.{bufferradius_m}")
 
-# duplicates check
-#d <- fieldsize_org$measurement_id[duplicated(fieldsize_org$measurement_id)]
+# Check 
+glimpse(fieldsize_org)
+
+check <- fieldsize_org[,5:22]
+check %>% filter(if_all(everything(), is.na)) # is empty, meaning everything has a value
+
+# Duplicates check
+check <- fieldsize_org$measurement_id[duplicated(fieldsize_org$measurement_id)] # empty
+
+# Fieldsize check 
+which(is.na(fieldsize_org$fieldsize)) # empty, all fieldsizes assigned
+rm(check)
 
 
 ### Merge with the original dataset 
-data <- read.csv("C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250813_data.csv")
+data <- read.csv("C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250911_soildata.csv")
 fieldsize_org$measurement_id <- as.numeric(fieldsize_org$measurement_id)
 fieldsize_org$study_id <- as.numeric(fieldsize_org$study_id)
-fieldsize_org$bufferradius_m <- as.numeric(fieldsize_org$bufferradius_m)
 
-data_joined <- 
+data_20250911 <- 
   left_join(data, fieldsize_org, 
             join_by("ma_id"=="ma_id", 
                     "measurement_id" == "measurement_id",
-                    "study_id"=="study_id",
-                    "buffer_radius"=="bufferradius_m"))
-data_joined <- data_joined[ ,-1]
-data_20250911 <- data_joined
+                    "study_id"=="study_id"))
+
+
+# Check 
+glimpse(data_20250911)
+
 write.csv(data_joined, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/202509011_data.csv", row.names = FALSE )
 
-glimpse(fieldsize_org)
 
 ### Save the file as an R object
 save(data_20250911, file = ".\\data\\202509011_data.RData")
