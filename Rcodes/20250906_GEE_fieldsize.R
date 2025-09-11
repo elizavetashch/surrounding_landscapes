@@ -117,5 +117,5 @@ write.csv(data_20250911, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_lands
 
 
 # Save the file as an R object
-save(data_20250911, file = ".\\data\\202509011_data.RData")
+save(data_20250911, file = ".\\Subprojects\\FieldSize\\202509011_data.RData")
 
