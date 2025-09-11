@@ -38,30 +38,28 @@ fieldsize <-
   fieldsize_origin %>% 
   mutate( 
   class = case_when(
-    class == 0 ~ "nofield",
-    class == 3502 ~ "verylarge",
-    class == 3503 ~ "large",
-    class == 3504 ~ "medium",
-    class == 3505 ~ "small",
-    class == 3506 ~ "verysmall",
-    class == 3507 ~ "nofield"
+    class == 0 ~ "nofield_area_m",
+    class == 3502 ~ "verylarge_area_m",
+    class == 3503 ~ "large_area_m",
+    class == 3504 ~ "medium_area_m",
+    class == 3505 ~ "small_area_m",
+    class == 3506 ~ "verysmall_area_m",
+    class == 3507 ~ "nofield_area_m"
   ),
   class = as.factor(class),
   fieldsize = case_when(
-    pixelvalue == 0 ~ "nofield",
-    pixelvalue == 3502 ~ "verylarge",
-    pixelvalue == 3503 ~ "large",
-    pixelvalue == 3504 ~ "medium",
-    pixelvalue == 3505 ~ "small",
-    pixelvalue == 3506 ~ "verysmall",
-    pixelvalue == 3507 ~ "nofield"
+    pixelvalue == 0 ~ "nofield_area_m",
+    pixelvalue == 3502 ~ "verylarge_area_m",
+    pixelvalue == 3503 ~ "large_area_m",
+    pixelvalue == 3504 ~ "medium_area_m",
+    pixelvalue == 3505 ~ "small_area_m",
+    pixelvalue == 3506 ~ "verysmall_area_m",
+    pixelvalue == 3507 ~ "nofield_area_m"
   ),
   fieldsize = as.factor(fieldsize)) %>% 
   select(-pixelvalue)
 
 fieldsize$area_m2 <- as.numeric(fieldsize$area_m2)
-fieldsize$study_id <- as.factor(fieldsize$study_id)
-summary(fieldsize)
 
 ###  Organization
 
@@ -79,9 +77,9 @@ fieldsize_org <-
   pivot_wider(names_from = class,
               values_from = area_m2) %>% 
   mutate(bufferradius_m = as.character(bufferradius_m)) %>% 
-  select(-bufferarea_m2) %>%
-  pivot_wider(names_from = bufferradius_m,
-              values_from = c(nofield, small, verysmall, large, verylarge, medium))
+  select(-bufferarea_m2) #%>%
+  #pivot_wider(names_from = bufferradius_m,
+  #            values_from = c(nofield, small, verysmall, large, verylarge, medium))
 
 # duplicates check
 #d <- fieldsize_org$measurement_id[duplicated(fieldsize_org$measurement_id)]
@@ -91,16 +89,24 @@ fieldsize_org <-
 data <- read.csv("C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250813_data.csv")
 fieldsize_org$measurement_id <- as.numeric(fieldsize_org$measurement_id)
 fieldsize_org$study_id <- as.numeric(fieldsize_org$study_id)
+fieldsize_org$bufferradius_m <- as.numeric(fieldsize_org$bufferradius_m)
 
 data_joined <- 
   left_join(data, fieldsize_org, 
             join_by("ma_id"=="ma_id", 
                     "measurement_id" == "measurement_id",
-                    "study_id"=="study_id"))
+                    "study_id"=="study_id",
+                    "buffer_radius"=="bufferradius_m"))
 data_joined <- data_joined[ ,-1]
-write.csv(data_joined, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250908_data.csv", row.names = FALSE )
+data_20250911 <- data_joined
+write.csv(data_joined, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/202509011_data.csv", row.names = FALSE )
 
 glimpse(fieldsize_org)
+
+### Save the file as an R object
+save(data_20250911, file = "202509011_data.RData")
+load("202509011_data.RData")
+
 
 ### Analysis 
 
@@ -121,3 +127,9 @@ barplot(counts,
         xlab = "Field Size",
         ylab = "Count",
         col = "steelblue")
+
+
+### Cleaning
+
+d <- fieldsize_org %>% 
+  filter(measurement_id==7980)
