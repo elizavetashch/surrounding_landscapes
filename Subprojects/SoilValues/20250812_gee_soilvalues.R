@@ -48,4 +48,5 @@ df_20250911 <-
 glimpse(df_20250911)
 
 # Write
-write.csv(df_20250911, "C:\\Users\\lisa7\\Documents\\UFZ_CLE\\surrounding_landscapes_full_project\\20250812_surrounding_landscapes\\data\\20250911_soildata.csv")
+write.csv(df_20250911, "C:\\Users\\lisa7\\Documents\\UFZ_CLE\\surrounding_landscapes_full_project\\20250812_surrounding_landscapes\\data\\20250911_soildata.csv",
+          row.names = FALSE)
