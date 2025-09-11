@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 getwd()
-load("..\\data\\202509011_data.RData") #data_20250911
+load("...\\data\\202509011_data.RData") #data_20250911
 ```
 
 ## Data set profile 
