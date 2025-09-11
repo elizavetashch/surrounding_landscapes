@@ -35,7 +35,7 @@ ggplot(data.frame(data_20250911), aes(x=fieldsize)) +
   
 ```
 
-![Fieldsize](../markdowns/images/20250911_fieldsize.png)
+![Fieldsize](../../markdowns/images/20250911_fieldsize.png)
 
 ## Data Overview 
 
