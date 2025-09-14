@@ -14,7 +14,8 @@ load("...\\data\\202509011_data.RData") #data_20250911
 ## Data set profile 
  - **Date**: This dataset was created on the 11.09.2025
  - **Description**: This dataset was built upon the processed dataset from December 2024, which contains the values for natural habitat, cropland, simpsons diversity etc. In addition it contains soil values from the SoilGrids and field size values from 
-Lesiv et al 2018, both of which were calculated for 1000m, 2500m, 5000m radii in GEE. All variables that were calculated for buffers have a .{bufferradius_in_m} suffix at the end of the name. 
+Lesiv et al 2018, both of which were calculated for 1000m, 2500m, 5000m radii in GEE. All variables that were calculated for buffers have a .{bufferradius_in_m} suffix at the end of the name.
+- **Note**: Some observations might have aquired the "nofield" status, although they do have a field within the buffer. It happens due to the way the "fieldsize" is getting assigned and that is by extracting the value of the raster directly beneath the observation point. So, although there might be a fuield present in the buffer, the "fieldsize" will get assigned to the precise point extraction value. 
 
 **What do fieldsizes mean**
 
