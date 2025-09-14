@@ -1,0 +1,89 @@
+
+load(".\\data\\202509011_data.RData") #data_20250911
+
+dplyr::glimpse(data_20250911)
+
+install.packages(c("ggtext", "lme4", "MuMIn", "broom.mixed", "ggplot2", "dplyr"))
+library(lme4)
+library(MuMIn)
+library(broom.mixed)
+library(ggplot2)
+library(dplyr)
+
+
+df <- data_20250911
+
+
+# Core model structure: treatment + crop_type_grouped_small + crop_type_grouped_big  + landcover_map_year + country_new + yield_unit + latitude_decimal
+# Random effects: (1|ma_id) + (1|measurement_id) + (1|study_id) + (1|control_id) + (1|landcover_map_year) +
+
+# Let's start by comparing the three buffers. Which buffer explains best the response ratio?
+
+scale_df <- function(df) {
+  numeric_cols <- sapply(df, is.numeric)
+  df[numeric_cols] <- lapply(df[numeric_cols], scale)
+  return(df)}
+df <- scale_df(df)
+
+# Precipitation 
+precdf <-  df[, c("ma_id", "study_id", "control_id", "LRR", "precipitation" )]
+precdf$precipitation <- as.numeric(precdf$precipitation) 
+precdf <- precdf %>% filter(!is.na(precipitation))
+prec <- lmer(LRR ~ (1|ma_id) + (1|study_id) + precipitation, data = precdf)
+
+
+# Now let's separate habitat types per buffer. 
+# For 1000
+land1000_1 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.1000, data = df)  
+land1000_2 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.wo.grass.1000, data = df)  
+land1000_3 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + cropland.1000, data = df)  
+land1000_4 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + inert.1000, data = df)  
+
+# For 2500
+land2500_1 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.2500, data = df)   
+land2500_2 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.wo.grass.2500, data = df)  
+land2500_3 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + cropland.2500, data = df)  
+land2500_4 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + inert.2500, data = df)  
+
+# For 5000
+land5000_1 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.5000, data = df)    
+land5000_2 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.wo.grass.5000, data = df) 
+land5000_3 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + cropland.5000, data = df) 
+land5000_4 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + inert.5000, data = df) 
+
+# What is the effect of biodiversity?
+bio <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + SR, data = df) 
+
+# Precipitation vs Temperature (All-time averages between 1970-2000)
+temp <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.5000, data = df)
+prec <- lmer(LRR ~ (1|ma_id) + (1|study_id) + nat.hab.5000, data = df)
+
+# Composition vs configuration perbuffer
+comp1000 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.1000+ nat.hab.wo.grass.1000+ cropland.1000+ inert.1000 + shannon.1000+simpsonsevenness.1000, data = df)
+comp2500 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.2500+ nat.hab.wo.grass.2500+ cropland.2500+ inert.2500   +    shannon.2500 +simpsonsevenness.2500, data = df)
+comp5000 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.5000 + nat.hab.wo.grass.5000 + cropland.5000 + inert.5000 +    shannon.5000+simpsonsevenness.5000   , data = df)
+
+config1000 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.peri.area.ratio.1000+ nat.hab.wo.grass.peri.area.ratio.1000+ crop.peri.area.ratio.1000+ inert.peri.area.ratio.1000 + 
+                     nat.hab.edgelength.1000+ nat.hab.wo.grass.edgelength.1000+ crop.edgelength.1000+ inert.edgelength.1000, data = df)
+
+config2500 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.peri.area.ratio.2500+ nat.hab.wo.grass.peri.area.ratio.2500+ crop.peri.area.ratio.2500+ inert.peri.area.ratio.2500   +    
+                     nat.hab.edgelength.2500+ nat.hab.wo.grass.edgelength.2500+ crop.edgelength.2500+ inert.edgelength.2500, data = df)
+
+config5000 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.peri.area.ratio.5000 + nat.hab.wo.grass.peri.area.ratio.5000 + crop.peri.area.ratio.5000 + inert.peri.area.ratio.5000 +  
+                     nat.hab.edgelength.5000 + nat.hab.wo.grass.edgelength.5000 + crop.edgelength.5000 + inert.edgelength.5000, data = df)
+
+models <- list("comp1000" = comp1000, 
+               "comp2500" = comp2500, 
+               "comp5000" = comp5000, 
+               "config1000" = config1000, 
+               "config2500" = config2500, 
+               "config5000" = config5000)
+# Calculate AIC for all models
+aic_results <- data.frame(
+  Model = names(models),
+  AIC = sapply(models, AIC)
+)
+
+# Sort by AIC (lowest first)
+aic_results <- aic_results[order(aic_results$AIC), ]
+
