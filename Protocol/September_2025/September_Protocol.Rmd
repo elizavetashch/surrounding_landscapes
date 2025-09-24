@@ -20,3 +20,7 @@ output: html_document
 
 **no documentation**
 
+- I realised that in the manusxript there was no table that provided an overview, what crops were classified as pollinator dependent and what as pollinator independent.
+
+
+

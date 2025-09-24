@@ -1,0 +1,998 @@
+---
+title: "GLMM_Handbook"
+author: "Elizaveta Shcherbinina"
+date: "2025-09-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(lme4)
+library(MuMIn)
+library(broom.mixed)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(sjPlot)
+```
+
+# Data Exploration 
+
+```{r glimpse on data}
+data <- read.csv("data/202509011_landindex_clim_poll_soil_fsize.csv")
+data <- data[,-1]
+glimpse(data)
+```
+
+
+```{r lrr calculation}
+# Fill only the missing values in your existing columns
+#df$LRR <- ifelse(is.na(df$LRR), df_es$yi, df$LRR)
+#df$LRR_vi <- ifelse(is.na(df$LRR_vi), df_es$vi, df$LRR_vi)
+```
+
+
+```{r years vs yield}
+plot(data$mean_yield_control_kgha~data$landcover_map_year)
+plot(data$mean_yield_treatment_kgha~data$landcover_map_year)
+
+plot(data$LRR~data$landcover_map_year)
+```
+
+```{r was anything else changing}
+
+plot(data$nat.hab.1000~data$landcover_map_year) # no
+plot(data$cropland.1000~data$landcover_map_year) # no
+plot(data$ocs_0.30cm_mean.1000~data$landcover_map_year) # whats that ?? 
+
+```
+
+```{r precipitation and temperature}
+plot(data$prec_avg_1970.2000~data$landcover_map_year) # more or less the same
+plot(data$temp_avg_1970.2000~data$landcover_map_year) # more or less the same 
+
+```
+
+```{r crop types and treatments}
+data %>% 
+  ggplot(aes(x = crop_type_grouped_small, fill = treatment)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(x = "Crop type", y = "Share of treatments", fill = "Treatment") +
+  theme_minimal()
+```
+
+```{r croptypes and pollination}
+data %>% 
+  select(crop_type, crop_type_grouped_small, crop_type_grouped_big, poll_dependent) %>% 
+  unique() # grapes are separated for non-pollinated fruits 
+```
+
+```{r nat hab summary}
+summary(data$nat.hab.1000)
+```
+
+```{r regularity of LRR}
+data %>%
+ # filter(country_new == "China") %>% 
+ # mutate(habitat = ifelse(nat.hab.1000 > 0.5, "natural", "industrial")) %>%
+  group_by(landcover_map_year, fieldsize) %>%
+  summarise(mean_LRR = mean(LRR, na.rm = TRUE), .groups = "drop") %>%
+  ggplot(aes(x = landcover_map_year, y = mean_LRR, color = fieldsize)) +
+  geom_line() +
+  geom_point() +~
+  labs(x = "Year", y = "Mean LRR", color = "Habitat") +
+  theme_minimal() 
+
+# I m really interested what happened in 2003 (?)
+# ALso, the verysmall area is indeed the most stable one
+```
+
+
+
+# GLMM 
+
+```{r sclaing}
+
+scale_df <- function(df) {
+  numeric_cols <- sapply(df, is.numeric)
+  df[numeric_cols] <- lapply(df[numeric_cols], scale)
+  return(df)}
+
+df <- scale_df(data)
+
+```
+
+
+Effects to check: 
+- treatment 
+- precipitation 
+- temperature
+- croptype
+- pollination 
+- study_pubyear
+
+landscape: 
+- complexity
+- composition
+- fieldsize 
+
+ecosystem sevices 
+- nat.hab -> provisioning 
+- SR species richness 
+
+soil:
+
+environmental:
+- precipitation 
+- temperature
+- latitude 
+
+```{r correlation}
+# didn't finish, please proceed
+numeric_cols <- sapply(df, is.numeric)
+df_numeric <- df[numeric_cols]
+df_numeric <- 
+df_numeric %>% 
+  select(-harvest_year, -publication_to_harvest_year_difference,
+         -yield_SD_control, -yield_SD_treatment,
+         -LRR_vi, -small_area_m.5000,
+         -small_area_m.2500, -small_area_m.1000,
+         -large_area_m.5000, -large_area_m.2500,
+         -large_area_m.1000, -verylarge_area_m.2500,
+         -verylarge_area_m.1000, -medium_area_m.5000,
+         -medium_area_m.2500, -medium_area_m.1000,
+         -medium_area_m.2500, -medium_area_m.1000)
+  
+df_env <- 
+df %>% 
+  select(LRR, prec_avg_1970.2000, temp_avg_1970.2000, latitude_decimal)
+
+cor_mat <- rstatix::cor_mat(df_env)
+```
+
+
+```{r land uses effect}
+
+nathab1000 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + nat.hab.1000, data = df)  
+nathabwograss1000 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + nat.hab.wo.grass.1000, data = df)  
+cropland1000 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + cropland.1000, data = df)  
+```
+
+```{r}
+library(splines)
+
+model <- lmer(LRR ~ (1|ma_id) + (1|study_id) + prec_avg_1970.2000 + ns(latitude_decimal, df = 4), data = df)
+
+preclat <- lmer(LRR ~ (1|ma_id) + (1|study_id) + prec_avg_1970.2000 + latitude_decimal, data = df)  
+
+plot_model(preclat, type = "slope") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),        # removes default title
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+preclat <- lmer(LRR ~ (1|ma_id) + (1|study_id) + + prec_avg_1970.2000+ latitude_decimal, data = df)  
+```
+
+
+```{r}
+# Generate predictions
+library(ggeffects)
+library(ggplot2)
+pred <- ggpredict(model, terms = "prec_avg_1970.2000")
+plot(pred) + theme_minimal()
+
+```
+
+
+
+```{r}
+glimpse(df)
+```
+
+```{r}
+# Model 2: More complex model
+model2 <- lmer(LRR ~ nat.hab.1000 + clay_0.5cm_mean.1000 + soc_0.5cm_mean.1000 + crop_type_grouped_big +
+                 (1 + nat.hab.1000 | ma_id), # Random intercept and slope for ma_id
+               data = df,
+               REML = FALSE) # Use ML if you plan to compare fixed effects using likelihood ratio tests
+
+summary(model2)
+```
+
+```{r}
+library(DHARMa)
+library(performance) 
+check_collinearity(model2)
+
+# Simulate residuals with DHARMa
+sim_resids <- simulateResiduals(fittedModel = model2)
+plot(sim_resids)
+```
+
+```{r correlation plot}
+
+library(dplyr)
+library(corrplot)
+
+df_numeric <- df %>%
+  select(
+    temp_avg_1970.2000,
+    prec_avg_1970.2000,
+    nofield_area_m.1000,
+    small_area_m.1000,
+    verysmall_area_m.1000,
+    large_area_m.1000,
+    verylarge_area_m.1000,
+    medium_area_m.1000,
+    SR,
+    soc_15.30cm_mean.1000,
+    ocs_0.30cm_mean.1000,
+    clay_15.30cm_mean.1000,
+    simpsonsevenness.1000,
+    shannon.1000,
+    inert.edgelength.1000,
+    inert.peri.area.ratio.1000,
+    inert.1000,
+    crop.edgelength.1000,
+    crop.peri.area.ratio.1000,
+    cropland.1000,
+    nat.hab.wo.grass.edgelength.1000,
+    nat.hab.wo.grass.peri.area.ratio.1000,
+    nat.hab.wo.grass.1000,
+    nat.hab.peri.area.ratio.1000,
+    nat.hab.edgelength.1000,
+    nat.hab.1000,
+    latitude_decimal,
+    landcover_map_year
+  ) %>%
+  mutate(across(where(is.matrix), as.vector)) %>%
+  mutate(across(everything(), as.numeric))
+
+cor_matrix <- cor(df_numeric, use = "pairwise.complete.obs")
+
+print(cor_matrix)
+
+
+corrplot(cor_matrix,
+         method = "color",
+         type = "upper",
+         tl.cex = 0.8,
+         title = "Pairwise Complete Correlation")
+```
+
+
+```{r}
+model_1 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + SR + nat.hab.1000, data = df, REML = TRUE)
+summary(model_1)
+
+model_2 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + nat.hab.peri.area.ratio.1000 + crop.peri.area.ratio.1000 , data = df, REML = TRUE)
+summary(model_2)
+
+model_21 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + nat.hab.peri.area.ratio.1000 + crop.peri.area.ratio.1000 +SR, data = df, REML = TRUE)
+summary(model_21)
+
+
+model_3 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + soc_30.60cm_mean.1000 + clay_15.30cm_mean.2500 + latitude_decimal, data = df, REML = TRUE)
+summary(model_3)
+
+model_4 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + SR + shannon.1000  + soc_30.60cm_mean.1000 + clay_15.30cm_mean.2500 + latitude_decimal, data = df, REML = TRUE)
+summary(model_4)
+
+model_4 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + SR + shannon.1000  + ocs_0.30cm_mean.1000 + clay_15.30cm_mean.2500, data = df, REML = TRUE)
+summary(model_4)
+
+plot_model(model_4, type = "slope") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),        # removes default title
+    plot.subtitle = element_text(size = 12)
+  ) +
+  labs(subtitle = "Intercept is fieldsize = large 
+AIC = 552.3438")
+
+
+```
+
+```{r}
+# For model_1: LRR ~ SR + nat.hab.1000
+plot(ggpredict(model_1, terms = "SR")) + labs(title = "Effect of Species Richness (SR) on LRR")
+plot(ggpredict(model_1, terms = "nat.hab.1000")) + labs(title = "Effect of Natural Habitat (1000m) on LRR")
+```
+```{r}
+# For model_1: LRR ~ SR + nat.hab.1000
+plot_model(model_1, type = "pred", terms = "SR")
+plot_model(model_1, type = "pred", terms = "nat.hab.1000")
+```
+## START HERE
+
+
+### H1: SR + nat.hab.peri.area.ratio.1000 + poll_dependent
+```{r}
+#H1: species richness will be travelling through the edges of natural landcsapes 
+# and hence increasing the pollinated and not affecting the not pollinated
+# the effect on both can also be damaging because of the pest 
+
+df$poll_dependent <- as.factor(df$poll_dependent)
+
+hyp1 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + SR + nat.hab.peri.area.ratio.1000 + poll_dependent, data = df, REML = TRUE)
+
+summary_hyp1 <- summary(hyp1)
+AIC_hyp1 <- AIC(hyp1)
+
+plot_model(hyp1, type = "slope") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(), 
+    plot.subtitle = element_text(size = 12)) +
+  labs(subtitle = "Intercept is fieldsize = large 
+AIC = 3647.199")
+
+```
+
+```{r}
+plot_model(hyp1, type = "pred", terms = "SR")
+plot_model(hyp1, type = "int", terms = c("SR", "nat.hab.peri.area.ratio.1000"))
+plot_model(hyp1, type = "re")     # random effects
+# A288: treat organic vs contr conventional
+# D352:	Erosion simulation
+
+data %>% 
+  filter(ma_id == "D352")
+```
+Here we see that the response to nat.hab.prei.area.ratio.1000 and SR nonlinear are 
+
+There are several methods to transform nonlinear responses: 
+- poly
+```{r poly error}
+#Error in poly(dots[[1L]], degree, raw = raw, simple = raw && nd > 1) : 
+# missing values are not allowed in 'poly'
+
+#hyp1_poly <- lmer(LRR ~ (1|ma_id) + (1|study_id) + poly(SR, 2) + poly(nat.hab.peri.area.ratio.1000, 2) + poll_dependent, data = df, REML = TRUE)
+
+```
+
+- equation
+for nat.hab.peri.area I cannot imagine an equations that would suit the function so i ll proceed to spines
+- splines
+
+```{r}
+library(splines)
+
+hyp1_splines <- lmer(LRR ~ (1|ma_id) + (1|study_id) + ns(nat.hab.peri.area.ratio.1000, df = 3) + ns(SR, df = 2) + poll_dependent, data = df)
+
+summary_hyp1_splines <- summary(hyp1_splines)
+AIC_hyp1_splines <- AIC(hyp1_splines)
+
+plot_model(hyp1_splines, type = "est") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),        
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+```
+
+
+```{r}
+library(splines)
+
+hyp1_randomslope <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|latitude_decimal) + ns(nat.hab.peri.area.ratio.1000, df = 3) + ns(SR, df = 2) + poll_dependent, data = df)
+
+summary(hyp1_randomslope)
+AIC_hyp1_splines <- AIC(hyp1_splines)
+
+plot_model(hyp1_randomslope, type = "slope") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+```
+
+(... + nat.hab.1000 | ma_id): Allow the strength and direction (slope) of the relationship between nat.hab.1000 and LRR to be different for each ma_id group. It accounts for the possibility that the effect of natural habitat on the yield response might be stronger in some regions (ma_id) and weaker in others.
+
+```{r visualisation ideas}
+library(effects)
+library(ggplot2)
+plot(predictorEffects(hyp1, ~ SR + nat.hab.peri.area.ratio.1000 + poll_dependent),
+     multiline = TRUE, ci.style = "bands")
+```
+
+```{r}
+hyp1_interaction <- lmer(LRR ~ (1|ma_id) + (1|study_id) + ns(nat.hab.peri.area.ratio.1000, df = 3) * ns(SR, df = 2), data = df)
+plot_model(hyp1_interaction, type = "est") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+```
+
+
+### H2: (1|ma_id) + (1|study_id) + nat.hab.peri.area.ratio.1000 + crop.peri.area.ratio.1000
+
+
+```{r}
+hyp2 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + nat.hab.peri.area.ratio.1000+crop.peri.area.ratio.1000 , data = df, REML = TRUE)
+summary(hyp2)
+```
+
+
+
+
+### H3: (1|ma_id) + (1|study_id) + soc_30.60cm_mean.1000 + clay_15.30cm_mean.2500 + latitude_decimal
+
+```{r}
+hyp3 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + soc_30.60cm_mean.1000 + clay_15.30cm_mean.2500 + latitude_decimal, data = df, REML = TRUE)
+summary(model_3)
+```
+
+### H4: Ecological Effects
+(1|ma_id) + (1|study_id) + SR + shannon.1000  + soc_30.60cm_mean.1000 + clay_15.30cm_mean.2500 + latitude_decimal
+
+```{r}
+hyp4 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + SR + shannon.1000  + soc_30.60cm_mean.1000 + clay_15.30cm_mean.2500 + latitude_decimal, data = df, REML = TRUE)
+summary(hyp4)
+```
+
+
+
+### H5: lmer(LRR ~ (1|ma_id) + (1|study_id) + fieldsize, data = df) 
+```{r}
+hyp5 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + fieldsize, data = df) 
+summary(hyp5)
+```
+
+#### predict 
+```{r gow to use predict }
+hyp5 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + fieldsize, data = df) 
+lmer1 <- lmer(y ~ x + (1|unit), data = X)
+
+X <- df %>% 
+  mutate(fit.m = predict(hyp5, re.form = NA),
+         fit.c = predict(hyp5, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = fieldsize, y = LRR)) +
+    geom_point(pch = 16, col = "black") +
+    geom_line(aes(y = fit.m), col = 1, size = 2) +
+    coord_cartesian(ylim = c(-40, 100))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp5))
+
+X %>%
+  ggplot(aes(x = fieldsize, y = fit.m + resid)) +
+  geom_point(pch = 16) +
+  geom_line(aes(y = fit.m), col = 1, size = 2)  +
+  coord_cartesian(ylim = c(-10, 10))+
+  facet_wrap(~crop_type_grouped_big) +
+  theme_bw()
+```
+
+
+
+### H6: hyp6 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|fieldsize) + SR, data = df )
+
+```{r}
+dfhyp6 <- 
+df %>% 
+  select(LRR, ma_id, study_id, fieldsize, SR, crop_type_grouped_big) %>% 
+  na.omit()
+
+hyp6 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + SR, data = dfhyp6 )
+summary(hyp6)
+```
+
+```{r}
+X <- dfhyp6 %>% 
+  mutate(fit.m = predict(hyp6, re.form = NA),
+         fit.c = predict(hyp6, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = SR, y = LRR)) +
+    geom_point(pch = 16, col = "black") +
+    geom_line(aes(y = fit.m), col = 1, size = 2) +
+    coord_cartesian(ylim = c(-40, 100))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp6))
+
+X %>%
+  ggplot(aes(x = SR, y = fit.m + resid, col = crop_type_grouped_big)) +
+  geom_point(pch = 16) +
+  geom_line(aes(y = fit.m), col = 1, size = 1)  +
+  coord_cartesian(ylim = c(-40, 100))+
+  facet_wrap(~fieldsize) +
+  theme_bw()
+```
+
+
+### H7: lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + nat.hab.1000*fieldsize, data = df_dependent)  
+```{r}
+#hyp7 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + nat.hab.1000*fieldsize, data = df_dependent)  
+```
+
+
+### H8: hyp8 <- lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|control_id) + shannon.1000*fieldsize, data = df)
+
+```{r}
+# model 
+dfhyp8 <- 
+df %>% 
+  select(LRR, ma_id, study_id, fieldsize, SR, shannon.1000, crop_type_grouped_big, treatment, poll_dependent) %>% 
+  na.omit()
+
+hyp8 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|poll_dependent) + shannon.1000*SR, data = dfhyp8 )
+summary(hyp8)
+AIC(hyp8)
+
+#plot check
+plot_model(hyp8, type = "slope") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+```
+```{r}
+
+hyp8_eq <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|poll_dependent) + I(shannon.1000^2)*I(SR^2), data = dfhyp8 )
+summary(hyp8_eq)
+AIC(hyp8_eq)
+
+#plot check
+plot_model(hyp8_eq, type = "resid") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+#plot check
+plot_model(hyp8_eq, type = "pred", terms="shannon.1000 [all]") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+```
+
+```{r}
+Cond_DF <- as.data.frame(ranef(hyp8_eq)) %>% transmute(unit = grp, b0_hat = condval) %>% mutate(Intercept_cond = b0_hat + summary(hyp8_eq)$coef[1,1])
+
+X %>%
+  ggplot(aes(x = shannon.1000, y = fit.m + resid)) +
+  geom_point(pch = 16, col = "grey") +
+  geom_violinhalf(data = Cond_DF, aes(x = 0, y = Intercept_cond), trim = FALSE, width = 3, fill = NA) +
+  geom_line(aes(y = fit.m), col = 1, size = 2) +
+  coord_cartesian(ylim = c(-1, 1))
+```
+
+```{r}
+ggplot(df, aes(x = LRR, y = shannon.1000)) +
+  geom_violin() +
+  geom_point()+
+  labs(x = "LRR", y = "shannon") +
+  theme_minimal()
+```
+
+```{r}
+# plot 
+X <- dfhyp8 %>% 
+  mutate(fit.m = predict(hyp8_eq, re.form = NA),
+         fit.c = predict(hyp8_eq, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = SR, y = LRR, col = I(shannon.1000^2))) +
+    geom_point(pch = 16, col = I(shannon.1000^2)) +
+    geom_line(aes(y = fit.m), col = 1, size = 2) +
+    coord_cartesian(ylim = c(-40, 100))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp8))
+
+X %>%
+  ggplot(aes(x = SR, y = fit.m + resid, col = shannon.1000)) +
+  geom_point(pch = 16) +
+  geom_line(aes(y = fit.m), col = 1, size = 1)  +
+  coord_cartesian(ylim = c(-25, 25))+
+  facet_wrap(~poll_dependent) +
+  theme_bw()
+```
+
+### H8.2
+```{r}
+
+hyp8_v2 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|poll_dependent) + ns(shannon.1000, df = 3)*ns(SR, df = 2), data = dfhyp8 )
+summary(hyp8_v2)
+AIC(hyp8_v2)
+
+#plot check
+plot_model(hyp8_v2, type = "resid") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+#plot check
+plot_model(hyp8_v2, type = "pred", terms="shannon.1000 [all]") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+```
+
+```{r}
+hyp8_v2 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|poll_dependent) + ns(shannon.1000, df = 3)*ns(SR, df = 2), data = dfhyp8 )
+
+X <- dfhyp8 %>% 
+  mutate(fit.m = predict(hyp8_v2, re.form = NA),
+         fit.c = predict(hyp8_v2, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = shannon.1000, y = LRR, col = SR)) +
+    geom_point(pch = 16) +
+    geom_smooth(aes(y = fit.m), col = 1, size = 1) +
+    coord_cartesian(ylim = c(-10, 10))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp8_v2))
+
+X %>%
+  ggplot(aes(x = shannon.1000, y = fit.m + resid)) +
+  geom_point(pch = 16, size = 1.5) +
+  geom_smooth(aes(y = fit.m), col = 1, size = 1)  +
+  coord_cartesian(ylim = c(-25, 25))+
+  facet_wrap(~poll_dependent) +
+  theme_bw()
+```
+
+
+
+### H9
+
+```{r}
+# data 
+dfhyp9 <- 
+df %>% 
+  select(LRR, ma_id, study_id, shannon.1000, crop_type_grouped_big, treatment, poll_dependent, cropland.1000,
+        shannon.2500, shannon.5000,cropland.2500, cropland.5000) %>% 
+  na.omit()
+
+
+hyp9 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + ns(shannon.1000, df = 3)*ns(cropland.1000, df = 3), data = dfhyp9)
+summary(hyp9)
+AIC(hyp9)
+
+
+#plot check
+plot_model(hyp9, type = "slope", terms = c("shannon.1000", "cropland.1000")) +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+```
+
+```{r}
+# plot 
+X <- dfhyp9 %>% 
+  mutate(fit.m = predict(hyp9, re.form = NA),
+         fit.c = predict(hyp9, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = shannon.1000, y = LRR, col = cropland.1000)) +
+    geom_point(pch = 16, col = cropland.1000) +
+    geom_line(aes(y = fit.m), col = 1, size = 2) +
+    coord_cartesian(ylim = c(-40, 100))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp9))
+
+X %>%
+  ggplot(aes(x = cropland.1000, y = fit.m + resid, col = shannon.1000)) +
+  geom_point(pch = 16, size = 1.5) +
+  geom_line(aes(y = fit.m), col = 1, size = 1)  +
+  coord_cartesian(ylim = c(-10, 10))+
+  facet_wrap(~crop_type_grouped_big) +
+  theme_bw()
+```
+
+# NEW BEGINNING 2.0 
+
+```{r}
+hist(df$LRR)
+hist(df$SR) # slightly right skewed
+hist(df$cropland.1000)
+hist(df$nat.hab.1000) # right skewed
+hist(df$shannon.1000) 
+hist(df$soc_15.30cm_mean.1000) # very much right skewed
+hist(df$medium_area_m.1000) # very left skewed 
+hist(df$prec_avg_1970.2000) 
+hist(df$temp_avg_1970.2000) 
+hist(df$LRR) 
+hist(df$landcover_map_year) # slightly left skewed
+plot(df$nat.hab.1000, df$LRR)
+```
+
+### H10: latitude_decimal
+
+```{r}
+dfhyp10 <- 
+df %>% 
+  select(LRR, ma_id, study_id, shannon.1000, crop_type_grouped_big, treatment, poll_dependent, cropland.1000,
+        shannon.2500, shannon.5000,cropland.2500, cropland.5000, prec_avg_1970.2000, latitude_decimal, temp_avg_1970.2000) %>% 
+  na.omit()
+
+
+hyp10 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + ns(latitude_decimal, df = 4), data = dfhyp10)
+summary(hyp10)
+AIC(hyp10)
+
+
+plot_model(hyp10, type = "slope", terms = "latitude_decimal") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+X <- dfhyp10 %>% 
+  mutate(fit.m = predict(hyp10, re.form = NA),
+         fit.c = predict(hyp10, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = latitude_decimal, y = LRR)) +
+    geom_point(pch = 16) +
+    geom_line(aes(y = fit.m), col = 1, size = 2) +
+    coord_cartesian(ylim = c(-40, 100))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp10))
+
+X %>%
+  ggplot(aes(x = latitude_decimal, y = fit.m + resid)) +
+  geom_point(pch = 16, size = 1.5) +
+  geom_line(aes(y = fit.m), col = 1, size = 1)  +
+  coord_cartesian(ylim = c(-25, 25))+
+  #facet_wrap(~crop_type_grouped_big) +
+  theme_bw()
+
+```
+
+### H 11
+```{r}
+dfhyp11 <- 
+df %>% 
+  select(LRR, ma_id, study_id, shannon.1000, crop_type_grouped_big, treatment, poll_dependent, cropland.1000,
+        shannon.2500, shannon.5000,cropland.2500, cropland.5000, prec_avg_1970.2000, latitude_decimal, temp_avg_1970.2000, country_new) %>% 
+  na.omit()
+
+hyp11 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + prec_avg_1970.2000, data = dfhyp11)
+summary(hyp11)
+AIC(hyp11)
+
+
+plot_model(hyp11, type = "slope", terms = "") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+X <- dfhyp11 %>% 
+  mutate(fit.m = predict(hyp11, re.form = NA),
+         fit.c = predict(hyp11, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = prec_avg_1970.2000, y = LRR)) +
+    geom_point(pch = 16) +
+    geom_line(aes(y = fit.m), col = 1, size = 2) +
+    coord_cartesian(ylim = c(-40, 100))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp11))
+
+X %>%
+  ggplot(aes(x = prec_avg_1970.2000, y = fit.m + resid, col = ma_id)) +
+  geom_point(pch = 16, size = 1.5) +
+  geom_line(aes(y = fit.m), col = 1, size = 1)  +
+  coord_cartesian(ylim = c(-25, 25))+
+  facet_wrap(~country_new) +
+  theme_bw()
+```
+```{r}
+dfhyp12 <- 
+df %>% 
+  select(LRR, ma_id, study_id, shannon.1000, crop_type_grouped_big, treatment, poll_dependent, cropland.1000,
+        shannon.2500, shannon.5000,cropland.2500, cropland.5000, prec_avg_1970.2000, latitude_decimal, temp_avg_1970.2000, country_new) %>% 
+  na.omit()
+
+hyp12 <-  lmer(LRR ~ (1|ma_id) + (1|study_id) + (1|country_new) + temp_avg_1970.2000, data = dfhyp11)
+summary(hyp12)
+AIC(hyp12)
+
+
+plot_model(hyp12, type = "slope", terms = "") +
+  theme_bw() +
+  theme(
+    axis.text.x = element_text(size = 14),
+    axis.text.y = element_text(size = 14),
+    plot.title   = element_blank(),      
+    plot.subtitle = element_text(size = 12)
+  ) 
+
+X <- dfhyp11 %>% 
+  mutate(fit.m = predict(hyp12, re.form = NA),
+         fit.c = predict(hyp12, re.form = NULL))
+
+X %>%
+  ggplot(aes(x = temp_avg_1970.2000, y = LRR)) +
+    geom_point(pch = 16) +
+    geom_line(aes(y = fit.m), col = 1, size = 2) +
+    coord_cartesian(ylim = c(-40, 100))+
+    theme_bw()
+
+
+X <- X %>%
+  mutate(resid = resid(hyp12))
+
+X %>%
+  ggplot(aes(x = temp_avg_1970.2000, y = fit.m + resid, col = ma_id)) +
+  geom_point(pch = 16, size = 1.5) +
+  geom_line(aes(y = fit.m), col = 1, size = 1)  +
+  coord_cartesian(ylim = c(-25, 25))+
+  facet_wrap(~treatment) +
+  theme_bw()
+```
+
+### Manuscript 
+
+1.	Land cover diversity (measured with the Shannon index) correlates positively with yield treatment effectiveness.
+2.	The correlation between percentage of natural habitat and yield varies between crop types and treatments, due to pollinator dependence and edge effects.
+3.	The correlation between percentage of natural habitat and yield varies with total species richness, climate and location, due to differences in biogeographical characteristics.
+4.	The percentage of arable area is negatively associated with yield, but not in a linear way, because a steep increase of arable land in an area can lead to land degradation and decrease of species richness. 
+5.	Landscape composition and configuration within 1 km radius from the field affect the effectiveness of yield treatments stronger than within 5 km radius.
+
+
+
+
+
+### Clustering 
+```{r}
+# Select variables for clustering
+cluster_vars <- df %>%
+  select(LRR, SR, nat.hab.1000, shannon.1000,, cropland.1000, prec_avg_1970.2000, temp_avg_1970.2000, latitude_decimal) %>%
+  mutate(across(where(is.matrix), as.vector)) %>%
+  mutate(across(everything(), as.numeric)) %>%
+  scale() # Important: standardize variables
+
+# Remove NAs
+cluster_vars <- na.omit(cluster_vars)
+
+# Determine optimal number of clusters
+library(factoextra)
+fviz_nbclust(cluster_vars, kmeans, method = "wss") # Elbow method
+fviz_nbclust(cluster_vars, kmeans, method = "silhouette") # Silhouette method
+
+# Apply k-means with optimal k
+set.seed(123)
+k <- 3 # Choose based on elbow/silhouette plot
+kmeans_result <- kmeans(cluster_vars, centers = k, nstart = 25)
+
+# Add clusters back to original data (matching rows)
+df_clean <- df[complete.cases(select(df, LRR, SR, nat.hab.1000, clay_0.5cm_mean.1000, soc_0.5cm_mean.1000)), ]
+df_clean$cluster <- as.factor(kmeans_result$cluster)
+
+# Visualize clusters
+fviz_cluster(kmeans_result, data = cluster_vars, 
+             palette = "Set2", ggtheme = theme_minimal(),
+             main = "K-means Clustering of Study Sites")
+```
+### RDA 
+```{r}
+# package
+library(vegan)
+dff <- df %>% 
+  select(LRR, nat.hab.1000, shannon.1000, cropland.1000, prec_avg_1970.2000, temp_avg_1970.2000, latitude_decimal)
+dff <- df %>% 
+  select(LRR, soc_15.30cm_mean.1000, nitrogen_15.30cm_mean.1000, bdod_15.30cm_mean.1000) %>% 
+  drop_na()
+res.pca <- prcomp(dff,  scale = TRUE)
+fviz_pca_ind(res.pca, col.ind = dff$LRR)
+```
+
+you will have diffrent slopes with different field sizes -> NO! (like how and why i dont know, but there is no difference in slopes)
+what do you expect?: 
+
+grouping: 
+- ma_id
+- study_id 
+
+varying grouping: 
+- fieldsize -> dif tretments applied, dif edges
+- treatments 
+- crop_types
+- pol dependent 
+
+### H1 but nested random
+```{r}
+hyp1_nest <- lmer(LRR ~ (1|ma_id/study_id) + SR + nat.hab.peri.area.ratio.1000 + poll_dependent, data = df, REML = TRUE)
+
+summary_hyp1_nest <- summary(hyp1_nest)
+AIC_hyp1_nest <- AIC(hyp1_nest) # 3575.568
+
+summary_hyp1 <- summary(hyp1)
+AIC_hyp1 <- AIC(hyp1) # 3644.524
+
+```
+
+
+
+### Findings 
+
+- increase in dispersion of natural habitat is increasing the success of the treatment (nat.hab.peri.area.ratio.1000) (hyp1)
+
+
+
+
+
+
+
+
+
+
+
+
