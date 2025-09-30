@@ -1,0 +1,61 @@
+"","Pollinator_Independent","Pollinator_Dependent"
+"Apple",0,1
+"Beverage",0,1
+"Blueberry",0,2
+"Brussels Sprout-Barley",0,1
+"Cabbage-Mustard",1,0
+"Cauliflower",1,0
+"Cereals",28,0
+"Cherry",0,1
+"Coffee",0,2
+"Corn",1,0
+"Cotton",11,0
+"Cotton-Canola",1,0
+"Cotton-Sorghum",1,0
+"Cotton-Vetch",1,0
+"Cotton-Wheat",1,0
+"Fiber",1,0
+"Forage",1,0
+"Fruit",0,20
+"Grape",2,0
+"Grasses (Pasture)",1,0
+"Grassland",6,0
+"Green Bean",1,0
+"Green Bean-Other",1,0
+"Green Bean-Potato",1,0
+"Green Bean-Sunflower",1,0
+"Guava",0,1
+"Maize",250,0
+"Maize-Cowpea",3,0
+"Maize-Faba Bean",2,0
+"Maize-Green Bean",1,0
+"Maize-Legume",2,0
+"Maize-Mustard",2,0
+"Maize-Potato",2,0
+"Maize-Sesame",1,0
+"Maize-Sweet Potato",1,0
+"Mixed Or Nd",1,0
+"Oat",4,0
+"Oil Crops",0,10
+"Oilcrops",0,25
+"Pulses",0,2
+"Red Clover",0,1
+"Rice",719,0
+"Rice-Vegetables",1,0
+"Rice ",1,0
+"Rice Paddy",11,0
+"Roots & Tubers",3,0
+"Sorghum",3,0
+"Sorghum-Cowpea",1,0
+"Sorghum-Green Bean",1,0
+"Sorghum-Sesame",1,0
+"Sorghum-Sweet Potato",1,0
+"Soybeans",4,0
+"Spelt-Other",1,0
+"Tubercrop",65,0
+"Upland Arable Land",46,0
+"Vegetables",0,35
+"Wheat",91,0
+"Wheat-Garlic",1,0
+"Wheat-Oilseed Rape",1,0
+"Zucchini",0,1
