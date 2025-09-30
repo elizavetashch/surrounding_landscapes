@@ -58,7 +58,7 @@ df <- df %>%
     .fns  = scale
   ))
 
-write.csv(df, "data/df_soiltype_20250930.csv", row.names = FALSE)
+write.csv(df, "data/20250930_df_soiltype.csv", row.names = FALSE)
 
 #########
 # SOIL TYPES: 
