@@ -17,3 +17,10 @@ output: html_document
 **6. September** 
 - switched to GEE 
 - calculated the field size for buffers 1000,2500,5000
+
+**no documentation**
+
+- I realised that in the manusxript there was no table that provided an overview, what crops were classified as pollinator dependent and what as pollinator independent.
+
+
+

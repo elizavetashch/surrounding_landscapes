@@ -1,0 +1,55 @@
+---
+title: "20250911_data_exploration"
+author: "Elizaveta Shcherbinina"
+date: "2025-09-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+getwd()
+load("..\\data\\202509011_data.RData") #data_20250911
+```
+
+## Data set profile 
+ - **Date**: This dataset was created on the 11.09.2025
+ - **Description**: This dataset was built upon the processed dataset from December 2024, which contains the values for natural habitat, cropland, simpsons diversity etc. In addition it contains soil values from the SoilGrids and field size values from 
+Lesiv et al 2018, both of which were calculated for 1000m, 2500m, 5000m radii in GEE. All variables that were calculated for buffers have a .{bufferradius_in_m} suffix at the end of the name. 
+
+**What do fieldsizes mean**
+
+
+ - nofield_area_m ~ "nofield",
+ - verylarge_area_m ~ "greater than 100 ha",
+ - large_area_m ~ "between 16 ha and 100 ha",
+ - medium_area_m~ "between 2.56 ha and 16 ha",
+ - small_area_m ~ "between 0.64 ha and 2.56 ha",
+ - verysmall_area_m ~ "less than 0.64 ha"
+
+```{r fieldsize distribution}
+library(ggplot2)
+ggplot(data.frame(data_20250911), aes(x=fieldsize)) +
+  geom_bar() +
+  geom_text(aes(label=after_stat(count)), vjust=-0.5, stat = "count")+
+  theme_bw() +
+  theme(axis.text=element_text(size=12))
+  
+```
+
+## Data Overview 
+
+```{r}
+library(kableExtra)
+library(clipr)
+
+
+schema_table <- tibble(
+  Column = names(data_20250911),
+  Type = sapply(data_20250911, function(x) class(x)[1]),
+  Example = sapply(data_20250911, function(x) paste(head(unique(x), 3), collapse = ", "))
+)
+
+df_markdown <- knitr::kable(schema_table, format = "pipe")
+write_clip(df_markdown)
+```
+

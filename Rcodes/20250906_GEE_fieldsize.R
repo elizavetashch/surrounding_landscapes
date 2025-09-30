@@ -38,30 +38,28 @@ fieldsize <-
   fieldsize_origin %>% 
   mutate( 
   class = case_when(
-    class == 0 ~ "nofield",
-    class == 3502 ~ "verylarge",
-    class == 3503 ~ "large",
-    class == 3504 ~ "medium",
-    class == 3505 ~ "small",
-    class == 3506 ~ "verysmall",
-    class == 3507 ~ "nofield"
+    class == 0 ~ "nofield_area_m",
+    class == 3502 ~ "verylarge_area_m",
+    class == 3503 ~ "large_area_m",
+    class == 3504 ~ "medium_area_m",
+    class == 3505 ~ "small_area_m",
+    class == 3506 ~ "verysmall_area_m",
+    class == 3507 ~ "nofield_area_m"
   ),
   class = as.factor(class),
   fieldsize = case_when(
-    pixelvalue == 0 ~ "nofield",
-    pixelvalue == 3502 ~ "verylarge",
-    pixelvalue == 3503 ~ "large",
-    pixelvalue == 3504 ~ "medium",
-    pixelvalue == 3505 ~ "small",
-    pixelvalue == 3506 ~ "verysmall",
-    pixelvalue == 3507 ~ "nofield"
+    pixelvalue == 0 ~ "nofield_area_m",
+    pixelvalue == 3502 ~ "verylarge_area_m",
+    pixelvalue == 3503 ~ "large_area_m",
+    pixelvalue == 3504 ~ "medium_area_m",
+    pixelvalue == 3505 ~ "small_area_m",
+    pixelvalue == 3506 ~ "verysmall_area_m",
+    pixelvalue == 3507 ~ "nofield_area_m"
   ),
   fieldsize = as.factor(fieldsize)) %>% 
   select(-pixelvalue)
 
 fieldsize$area_m2 <- as.numeric(fieldsize$area_m2)
-fieldsize$study_id <- as.factor(fieldsize$study_id)
-summary(fieldsize)
 
 ###  Organization
 
@@ -81,43 +79,43 @@ fieldsize_org <-
   mutate(bufferradius_m = as.character(bufferradius_m)) %>% 
   select(-bufferarea_m2) %>%
   pivot_wider(names_from = bufferradius_m,
-              values_from = c(nofield, small, verysmall, large, verylarge, medium))
+              values_from = c(nofield_area_m, small_area_m, verysmall_area_m, large_area_m, verylarge_area_m, medium_area_m),
+              names_glue = "{.value}.{bufferradius_m}")
 
-# duplicates check
-#d <- fieldsize_org$measurement_id[duplicated(fieldsize_org$measurement_id)]
+# Check 
+glimpse(fieldsize_org)
+
+check <- fieldsize_org[,5:22]
+check %>% filter(if_all(everything(), is.na)) # is empty, meaning everything has a value
+
+# Duplicates check
+check <- fieldsize_org$measurement_id[duplicated(fieldsize_org$measurement_id)] # empty
+
+# Fieldsize check 
+which(is.na(fieldsize_org$fieldsize)) # empty, all fieldsizes assigned
+
+rm(check)
 
 
 ### Merge with the original dataset 
-data <- read.csv("C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250813_data.csv")
+data <- read.csv("C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250911_soildata.csv")
 fieldsize_org$measurement_id <- as.numeric(fieldsize_org$measurement_id)
 fieldsize_org$study_id <- as.numeric(fieldsize_org$study_id)
 
-data_joined <- 
+data_20250911 <- 
   left_join(data, fieldsize_org, 
             join_by("ma_id"=="ma_id", 
                     "measurement_id" == "measurement_id",
                     "study_id"=="study_id"))
-data_joined <- data_joined[ ,-1]
-write.csv(data_joined, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/20250908_data.csv", row.names = FALSE )
 
-glimpse(fieldsize_org)
 
-### Analysis 
+# Check 
+glimpse(data_20250911)
 
-library(ggplot2)
-ggplot(data_joined, aes(x = fieldsize, y = LRR)) +
-  geom_boxplot(fill = "skyblue") +
-  geom_jitter(width = 0.2, alpha = 0.6) + # show individual points
-  theme_minimal() +
-  labs(title = "LRR by Field Size",
-       x = "Field Size",
-       y = "LRR")
+# Write
+write.csv(data_20250911, "C:\\Users\\lisa7\\Documents\\UFZ_CLE/surrounding_landscapes_full_project/20250812_surrounding_landscapes/data/202509011_data.csv", row.names = FALSE )
 
-### Data Exploration 
 
-counts <- table(data_joined$fieldsize)
-barplot(counts,
-        main = "Distribution of Field Size",
-        xlab = "Field Size",
-        ylab = "Count",
-        col = "steelblue")
+# Save the file as an R object
+save(data_20250911, file = ".\\Subprojects\\FieldSize\\202509011_data.RData")
+
