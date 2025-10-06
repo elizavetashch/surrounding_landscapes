@@ -21,7 +21,6 @@ df_unscaled_soiltype <- df_unscaled %>%
   mutate(X = row_number())
 
 # which do have NA in soil textures 
-df_unscaled_soiltype
 
 dfsoiltype <- 
   df_unscaled_soiltype %>% 
@@ -46,7 +45,17 @@ soiltype_long <- dfsoiltype %>%
   filter(value == 1) %>%
   select(X, soiltype)
 
-df_long <- df_unscaled_soiltype %>%
+df_wide <- 
+df_unscaled %>%
+  mutate(
+    total= (silt_15.30cm_mean.1000+sand_15.30cm_mean.1000+clay_15.30cm_mean.1000),
+    SAND = (sand_15.30cm_mean.1000 / total)*100,
+    SILT = (silt_15.30cm_mean.1000 / total)*100,
+    CLAY = (clay_15.30cm_mean.1000 / total)*100
+  ) %>%
+  mutate(X = row_number())
+
+df_long <- df_wide %>%
   full_join(soiltype_long, by = join_by(X == X)) %>% 
   select(-X)
 
