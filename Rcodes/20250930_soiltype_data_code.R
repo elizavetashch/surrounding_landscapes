@@ -45,23 +45,25 @@ soiltype_long <- dfsoiltype %>%
   filter(value == 1) %>%
   select(X, soiltype)
 
-df_wide <- 
-df_unscaled %>%
+df_long <- df_unscaled_soiltype %>%
+  full_join(soiltype_long, by = join_by(X == X)) %>% 
+  select(-X)
+
+df_na <- df_unscaled %>%
   mutate(
     total= (silt_15.30cm_mean.1000+sand_15.30cm_mean.1000+clay_15.30cm_mean.1000),
     SAND = (sand_15.30cm_mean.1000 / total)*100,
     SILT = (silt_15.30cm_mean.1000 / total)*100,
-    CLAY = (clay_15.30cm_mean.1000 / total)*100
+    CLAY = (clay_15.30cm_mean.1000 / total)*100,
+    soiltype = NA
   ) %>%
-  mutate(X = row_number())
-
-df_long <- df_wide %>%
-  full_join(soiltype_long, by = join_by(X == X)) %>% 
+  filter(is.na(SAND), is.na(SILT), is.na(CLAY))%>% 
   select(-X)
 
-
+df_1384 <- bind_rows(df_long, df_na)
+    
 # Scale the new dataset 
-df <- as.data.frame(lapply(df_long, function(x) if(is.numeric(x)) round(x, 2) else x))
+df <- as.data.frame(lapply(df_1384, function(x) if(is.numeric(x)) round(x, 2) else x))
 str(df)
 
 exclude_vars <- c(
