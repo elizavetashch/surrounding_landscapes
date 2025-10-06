@@ -1,11 +1,15 @@
 options(scipen = 999) # disable scientific notation
 
+
+# read the data
 df_unscaled <- read.csv("data/202509011_landindex_clim_poll_soil_fsize.csv", header = TRUE, sep = ",") # import 20250908_surroundland_landindex_SR_clim_soil_fsize
-#df1 <- df
-# Round everything to 2 decimals
-df_unscaled <- as.data.frame(lapply(df_unscaled, function(x) if(is.numeric(x)) round(x, 2) else x))
+df_unscaled <- as.data.frame(lapply(df_unscaled, function(x) if(is.numeric(x)) round(x, 2) else x)) # Round everything to 2 decimals
 str(df_unscaled)
 
+library(dplyr)
+library(tidyr)
+
+# add the soil
 df_unscaled_soiltype <- df_unscaled %>%
   mutate(
     total= (silt_15.30cm_mean.1000+sand_15.30cm_mean.1000+clay_15.30cm_mean.1000),
@@ -13,7 +17,11 @@ df_unscaled_soiltype <- df_unscaled %>%
     SILT = (silt_15.30cm_mean.1000 / total)*100,
     CLAY = (clay_15.30cm_mean.1000 / total)*100
   ) %>%
-  filter(!is.na(SAND), !is.na(SILT), !is.na(CLAY))
+  filter(!is.na(SAND), !is.na(SILT), !is.na(CLAY)) %>%
+  mutate(X = row_number())
+
+# which do have NA in soil textures 
+df_unscaled_soiltype
 
 dfsoiltype <- 
   df_unscaled_soiltype %>% 
@@ -39,7 +47,8 @@ soiltype_long <- dfsoiltype %>%
   select(X, soiltype)
 
 df_long <- df_unscaled_soiltype %>%
-  full_join(soiltype_long, by = join_by(X ==X))
+  full_join(soiltype_long, by = join_by(X == X)) %>% 
+  select(-X)
 
 
 # Scale the new dataset 
@@ -58,7 +67,7 @@ df <- df %>%
     .fns  = scale
   ))
 
-write.csv(df, "data/20250930_df_soiltype.csv", row.names = FALSE)
+write.csv(df, "data/20251006_df_soiltype.csv", row.names = FALSE)
 
 #########
 # SOIL TYPES: 
