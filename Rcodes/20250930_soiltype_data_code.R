@@ -61,10 +61,21 @@ df_na <- df_unscaled %>%
   select(-X)
 
 df_1384 <- bind_rows(df_long, df_na)
+
+# change the latitude 
+df_1384 <- df_1384 %>% 
+  mutate(latitude_reversed = case_when(
+    latitude_decimal < 0 ~ -latitude_decimal,
+    TRUE ~ latitude_decimal
+  ))
+
+write.csv(df_1384, "data/20251006_df_soiltype_unscaled.csv", row.names = FALSE)
+
     
 # Scale the new dataset 
 df <- as.data.frame(lapply(df_1384, function(x) if(is.numeric(x)) round(x, 2) else x))
 str(df)
+
 
 exclude_vars <- c(
   "LRR", "LRR_vi", "ma_id", "measurement_id", "study_id", "control_id",
@@ -78,7 +89,7 @@ df <- df %>%
     .fns  = scale
   ))
 
-write.csv(df, "data/20251006_df_soiltype.csv", row.names = FALSE)
+write.csv(df, "data/20251006_df_soiltype_scaled.csv", row.names = FALSE)
 
 #########
 # SOIL TYPES: 
