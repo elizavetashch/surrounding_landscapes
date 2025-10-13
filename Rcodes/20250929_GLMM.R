@@ -1952,7 +1952,7 @@ summary(slsspline.poll.2500)
 summary(slsspline.poll.5000)
 
 
-
+dplyr::glimpse(df)
 
 
 Notes because I forgot my notebook:
