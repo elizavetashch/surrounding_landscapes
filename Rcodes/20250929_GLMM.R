@@ -17,7 +17,7 @@ library(splines)
 
 options(scipen = 999) # disable scientific notation
 
-df_unscaled <- read.csv("data/202509011_landindex_clim_poll_soil_fsize.csv", header = TRUE, sep = ",") # import 20250908_surroundland_landindex_SR_clim_soil_fsize
+df <- read.csv("data/20251006_df_soiltype_scaled.csv", header = TRUE, sep = ",") # import 20250908_surroundland_landindex_SR_clim_soil_fsize
 #df1 <- df
 # Round everything to 2 decimals
 df <- as.data.frame(lapply(df, function(x) if(is.numeric(x)) round(x, 2) else x))
@@ -88,6 +88,11 @@ summary(shannon1000)
 summary(shannon2500)
 summary(shannon5000)
 
+
+# AIC
+AIC(shannon1000)
+AIC(shannon2500)
+AIC(shannon5000)
 
 # Calculate R² for each model
 r2_1000 <- r.squaredGLMM(shannon1000)
@@ -161,6 +166,11 @@ summary(shannon2500_poll)
 summary(shannon5000_poll)
 
 
+# AIC
+AIC(shannon1000_poll)
+AIC(shannon2500_poll)
+AIC(shannon5000_poll)
+
 
 # Calculate R² for each model
 r2_1000 <- r.squaredGLMM(shannon1000_poll)
@@ -233,6 +243,10 @@ summary(shannon1000_nopoll)
 summary(shannon2500_nopoll)
 summary(shannon5000_nopoll)
 
+# AIC
+AIC(shannon1000_nopoll)
+AIC(shannon2500_nopoll)
+AIC(shannon5000_nopoll)
 
 
 # Calculate R² for each model
@@ -1940,7 +1954,7 @@ plot(model_mars)
 
 
 ###### 
-# H10: H10+treatment -----------------
+# H15: H10+treatment -----------------
 ###### 
 
 slsspline.poll.1000 <- lmer(LRR ~ ns(latitude_decimal, df = 3) + soiltype*treatment + shannon.1000 + (1|study_id), data = df)  
@@ -1971,5 +1985,558 @@ investigative work behind large standard errors
 
 
 dont throw water with the baby
+
+###### 
+# H16: Adding other factors to shannon -----------------
+###### 
+
+###############################
+# model variations latitude 
+latshannon.1000 <- lmer(LRR ~ latitude_decimal + shannon.1000 + (1|ma_id/study_id), data = df)  
+lsspline.1000 <- lmer(LRR ~ ns(latitude_decimal, df = 3) + shannon.1000 + (1|ma_id/study_id), data = df)  
+lsreversed.1000 <- lmer(LRR ~ latitude_reversed + shannon.1000 + (1|ma_id/study_id), data = df)  
+
+summary(latshannon.1000)
+summary(lsspline.1000)
+summary(lsreversed.1000)
+
+AIC(latshannon.1000)
+AIC(lsspline.1000)
+AIC(lsreversed.1000)
+
+###############################
+
+###############################
+# model variations latitude and soiltype
+soillatshannon.1000 <- lmer(LRR ~ latitude_decimal + soiltype + shannon.1000 + (1|ma_id/study_id), data = df)  
+slsspline.1000 <- lmer(LRR ~ ns(latitude_decimal, df = 3) + soiltype + shannon.1000 + (1|ma_id/study_id), data = df)  
+slsreversed.1000 <- lmer(LRR ~ latitude_reversed + soiltype + shannon.1000 + (1|ma_id/study_id), data = df)  
+
+summary(soillatshannon.1000)
+summary(slsspline.1000)
+summary(slsreversed.1000)
+
+AIC(soillatshannon.1000)
+AIC(slsspline.1000)
+AIC(slsreversed.1000)
+
+###############################
+
+###############################
+# latitude reversed model -------------------------------------------------
+###############################
+
+###############################
+# df
+LRRlsreversed.1000 <- lmer(LRR ~ latitude_reversed + shannon.1000 + (1|ma_id/study_id), data = df)  # THIS ONE
+CONTROLlsreversed.1000 <- lmer(mean_yield_control_kgha ~ latitude_reversed + shannon.1000 + (1|ma_id/study_id), data = df)  # THIS ONE
+
+summary(LRRlsreversed.1000)
+summary(CONTROLlsreversed.1000)
+
+LRRlsreversed.1000 <- lmer(LRR ~ latitude_reversed + shannon.1000 + (1|ma_id/study_id), data = df)  # THIS ONE
+LRRlongitude.1000 <- lmer(LRR ~ longitude_decimal + shannon.1000 + (1|ma_id/study_id), data = df)  # THIS ONE
+
+summary(LRRlsreversed.1000)
+summary(LRRlongitude.1000)
+
+AIC(LRRlsreversed.1000)
+AIC(LRRlongitude.1000)
+
+hist(df$longitude_decimal)
+
+CONTROLlsreversed.1000 <- lmer(mean_yield_control_kgha ~ latitude_reversed + shannon.1000 + (1|ma_id/study_id), data = df)  # THIS ONE
+
+summary(LRRlsreversed.1000)
+summary(CONTROLlsreversed.1000)
+
+
+
+lsreversedquad.1000 <- lmer(LRR ~ latitude_reversed + I(latitude_reversed^(-2)) + shannon.1000 + (1|ma_id/study_id), data = df)  
+lsreversedspline1.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 1) + shannon.1000 + (1|ma_id/study_id), data = df)  
+lsreversedspline2.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 2) + shannon.1000 + (1|ma_id/study_id), data = df)  
+lsreversedspline3.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 3) + shannon.1000 + (1|ma_id/study_id), data = df)  
+
+AIC(lsreversed.1000)
+AIC(lsreversedquad.1000)
+AIC(lsreversedspline1.1000)
+AIC(lsreversedspline2.1000)
+AIC(lsreversedspline3.1000)
+
+summary(lsreversed.1000)
+summary(lsreversedquad.1000)
+summary(lsreversedspline1.1000)
+summary(lsreversedspline2.1000)
+summary(lsreversedspline3.1000)
+
+###############################
+
+###############################
+# poll 
+lsrpoll.1000 <- lmer(LRR ~ latitude_reversed + shannon.1000 + (1|ma_id/study_id), data = poll)  
+lsrpollquad.1000 <- lmer(LRR ~ latitude_reversed + I(latitude_reversed^(-2)) + shannon.1000 + (1|ma_id/study_id), data = poll)  
+lsrpollspline1.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 1) + shannon.1000 + (1|ma_id/study_id), data = poll)  
+lsrpollspline2.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 2) + shannon.1000 + (1|ma_id/study_id), data = poll)  
+lsrpollspline3.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 3) + shannon.1000 + (1|ma_id/study_id), data = poll)  
+
+summary(lsrpoll.1000)
+summary(lsrpollquad.1000)
+summary(lsrpollspline1.1000)
+summary(lsrpollspline2.1000)
+summary(lsrpollspline3.1000)
+
+AIC(lsrpoll.1000)
+AIC(lsrpollquad.1000)
+AIC(lsrpollspline1.1000)
+AIC(lsrpollspline2.1000)
+AIC(lsrpollspline3.1000)
+
+
+# nopoll 
+lsrnopoll.1000 <- lmer(LRR ~ latitude_reversed + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+lsrnopollquad.1000 <- lmer(LRR ~ latitude_reversed + I(latitude_reversed^(-2)) + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+lsrnopollspline1.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 1) + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+lsrnopollspline2.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 2) + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+lsrnopollspline3.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 3) + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+
+summary(lsrnopoll.1000)
+summary(lsrnopollquad.1000)
+summary(lsrnopollspline1.1000)
+summary(lsrnopollspline2.1000)
+summary(lsrnopollspline3.1000)
+
+
+AIC(lsrnopoll.1000)
+AIC(lsrnopollquad.1000)
+AIC(lsrnopollspline1.1000)
+AIC(lsrnopollspline2.1000)
+AIC(lsrnopollspline3.1000)
+
+###############################
+# latitude reversed model with soil -------------------------------------------------
+###############################
+
+###############################
+# df
+slsreversed.1000 <- lmer(LRR ~ latitude_reversed + soiltype + shannon.1000 + (1|ma_id/study_id), data = df)  
+slsreversedspline1.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 1) + soiltype + shannon.1000 + (1|ma_id/study_id), data = df)  
+slsreversedspline2.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 2) + soiltype + shannon.1000 + (1|ma_id/study_id), data = df)  
+slsreversedspline3.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 3) + soiltype + shannon.1000 + (1|ma_id/study_id), data = df)  
+
+AIC(slsreversed.1000)
+AIC(slsreversedspline1.1000)
+AIC(slsreversedspline2.1000)
+AIC(slsreversedspline3.1000)
+
+summary(slsreversedspline2.1000)
+
+###############################
+
+###############################
+# poll
+slsreversedpoll.1000 <- lmer(LRR ~ latitude_reversed + soiltype + shannon.1000 + (1|ma_id/study_id), data = poll)  
+slsreversedspline2poll.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 2) + soiltype + shannon.1000 + (1|ma_id/study_id), data = poll)  
+slsreversedspline3poll.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 3) + soiltype + shannon.1000 + (1|ma_id/study_id), data = poll)  
+slsreversedspline4poll.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 4) + soiltype + shannon.1000 + (1|ma_id/study_id), data = poll)  
+slsreversedspline7poll.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 7) + soiltype + shannon.1000 + (1|ma_id/study_id), data = poll)  
+slsreversedspline15poll.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 15) + soiltype + shannon.1000 + (1|ma_id/study_id), data = poll)  
+
+AIC(slsreversedpoll.1000)
+AIC(slsreversedspline2poll.1000)
+AIC(slsreversedspline3poll.1000)
+AIC(slsreversedspline4poll.1000)
+AIC(slsreversedspline7poll.1000)
+AIC(slsreversedspline15poll.1000)
+
+
+summary(slsreversedspline2poll.1000)
+
+###############################
+
+###############################
+# nopoll
+
+slsreversednopoll.1000 <- lmer(LRR ~ latitude_reversed + soiltype + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+slsreversedspline2nopoll.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 2) + soiltype + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+slsreversedspline3nopoll.1000 <- lmer(LRR ~ ns(latitude_reversed, df = 3) + soiltype + shannon.1000 + (1|ma_id/study_id), data = nopoll)  
+
+AIC(slsreversednopoll.1000)
+AIC(slsreversedspline2nopoll.1000)
+AIC(slsreversedspline3nopoll.1000)
+
+summary(slsreversedspline2nopoll.1000)
+
+
+###############################
+
+###############################
+# shannon and crop.peri.area -------------------------------------------------
+###############################
+
+scroppar.1000 <-  lmer(LRR ~ shannon.1000*crop.peri.area.ratio.1000 +SR + fieldsize + (1|ma_id/study_id), data = df)
+AIC(scroppar.1000)
+summary(scroppar.1000)
+
+###############################
+# H17: Does the landscape heterogeneity increase species richness? ---------
+###############################
+
+srshannon.1000 <- lmer(SR ~ shannon.1000 + (1|ma_id/study_id), data = df)
+srshannon.2500 <- lmer(SR ~ shannon.2500 + (1|ma_id/study_id), data = df)
+srshannon.5000 <- lmer(SR ~ shannon.5000 + (1|ma_id/study_id), data = df)
+
+AIC(srshannon.1000)
+summary(srshannon.1000)
+
+AIC(srshannon.2500)
+summary(srshannon.2500)
+
+AIC(srshannon.5000)
+summary(srshannon.5000)
+
+###############################
+# simpsons and fieldsize -------------------------------------------------
+###############################
+df <- df %>% 
+  mutate(fieldsize_group = case_when(
+    fieldsize == "nofield_area_m" ~ "nofield",
+    fieldsize == "medium_area_m" ~ "medium",
+    fieldsize == "verysmall_area_m" ~ "small",
+    fieldsize == "small_area_m" ~ "small",
+    fieldsize == "verylarge_area_m" ~ "large",
+    fieldsize == "large_area_m" ~ "large"
+    
+  ),
+  fieldsize_group = as.factor(fieldsize_group),
+  fieldsize_group2 = case_when(
+    fieldsize == "nofield_area_m" ~ "small",
+    fieldsize == "medium_area_m" ~ "large",
+    fieldsize == "verysmall_area_m" ~ "small",
+    fieldsize == "small_area_m" ~ "small",
+    fieldsize == "verylarge_area_m" ~ "large",
+    fieldsize == "large_area_m" ~ "large"
+    
+  ),
+  fieldsize_group2 = as.factor(fieldsize_group2))
+  
+
+ggplot(df, aes(x = fieldsize_group2, y = shannon.1000, fill = fieldsize_group2)) +
+  geom_boxplot(alpha = 0.6, outlier.shape = NA) +    # boxplot without fieldsize_group2 points
+  geom_jitter(width = 0.15, alpha = 0.7, color = "black") +  # show individual points
+  labs(
+    title = "Shannon Diversity Across Field Size Groups",
+    x = "Field Size Group",
+    y = "Shannon Diversity"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(face = "bold", hjust = 0.5)
+  ) +
+  scale_fill_brewer(palette = "Set2")
+
+
+ggplot(df, aes(x = treatment, y = crop.peri.area.ratio.1000, fill = fieldsize_group2)) +
+  geom_boxplot(alpha = 0.6, outlier.shape = NA) +    # boxplot without fieldsize_group2 points
+  geom_jitter(width = 0.15, alpha = 0.7, color = "black") +  # show individual points
+  labs(
+    title = "Crop Area Fragmentation Across Treatments and Field Size Groups",
+    x = "Treatment",
+    y = "Crop Area Fragmentation"
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.text.x = element_text(angle = 45, hjust = 1)  # rotate x labels
+  ) +
+  scale_fill_brewer(palette = "Set2")
+
+
+
+###############################
+# model 
+###############################
+dfsmall <- df %>% 
+  filter(fieldsize_group2 %in% c("small"))
+
+dflarge <- df %>% 
+  filter(fieldsize_group2 %in% c("large"))
+
+
+df$simpsonsevenness.1000
+
+simpsonlarge.1000 <-  lmer(LRR ~ simpsonsevenness.1000 + (1|ma_id/study_id), data = dflarge)
+simpsonsmall.1000 <-  lmer(LRR ~ simpsonsevenness.1000 + (1|ma_id/study_id), data = dfsmall)
+
+shannonlarge.1000 <-  lmer(LRR ~ shannon.1000 + (1|ma_id/study_id), data = dflarge)
+shannonsmall.1000 <-  lmer(LRR ~ shannon.1000 + (1|ma_id/study_id), data = dfsmall)
+
+
+
+AIC(simpson.1000)
+summary(simpsonlarge.1000)
+summary(simpsonsmall.1000)
+summary(shannonlarge.1000)
+summary(shannonsmall.1000)
+
+###############################
+# model 
+###############################
+#1000
+simpsonpoll.1000 <-  lmer(LRR ~ simpsonsevenness.1000+fieldsize_group2 + (1|ma_id/study_id), data = poll)
+simpsonnopoll.1000 <-  lmer(LRR ~ simpsonsevenness.1000+fieldsize_group2 + (1|ma_id/study_id), data = nopoll)
+
+shannonpoll.1000 <-  lmer(LRR ~ shannon.1000+fieldsize_group2 + (1|ma_id/study_id), data = poll)
+shannonnopoll.1000 <-  lmer(LRR ~ shannon.1000+fieldsize_group2 + (1|ma_id/study_id), data = nopoll)
+
+
+summary(simpsonpoll.1000)
+summary(simpsonnopoll.1000)
+summary(shannonpoll.1000)
+summary(shannonnopoll.1000)
+
+#2500
+simpsonpoll.2500 <-  lmer(LRR ~ simpsonsevenness.2500+fieldsize_group2 + (1|ma_id/study_id), data = poll)
+simpsonnopoll.2500 <-  lmer(LRR ~ simpsonsevenness.2500+fieldsize_group2 + (1|ma_id/study_id), data = nopoll)
+
+shannonpoll.2500 <-  lmer(LRR ~ shannon.2500+fieldsize_group2 + (1|ma_id/study_id), data = poll)
+shannonnopoll.2500 <-  lmer(LRR ~ shannon.2500+fieldsize_group2 + (1|ma_id/study_id), data = nopoll)
+
+
+summary(simpsonpoll.2500)
+summary(simpsonnopoll.2500)
+summary(shannonpoll.2500)
+summary(shannonnopoll.2500)
+
+#5000
+simpsonpoll.5000 <-  lmer(LRR ~ simpsonsevenness.5000+fieldsize_group2 + (1|ma_id/study_id), data = poll)
+simpsonnopoll.5000 <-  lmer(LRR ~ simpsonsevenness.5000+fieldsize_group2 + (1|ma_id/study_id), data = nopoll)
+
+shannonpoll.5000 <-  lmer(LRR ~ shannon.5000+fieldsize_group2 + (1|ma_id/study_id), data = poll)
+shannonnopoll.5000 <-  lmer(LRR ~ shannon.5000+fieldsize_group2 + (1|ma_id/study_id), data = nopoll)
+
+
+summary(simpsonpoll.5000)
+summary(simpsonnopoll.5000)
+summary(shannonpoll.5000)
+summary(shannonnopoll.5000)
+
+
+
+# Calculate R² for each model
+r2_1000 <- r.squaredGLMM(simpsonpoll.1000)
+r2_2500 <- r.squaredGLMM(simpsonpoll.2500)
+r2_5000 <- r.squaredGLMM(simpsonpoll.5000)
+
+# Put results into a data frame
+r2_df <- data.frame(
+  Scale = c("1000 m", "2500 m", "5000 m"),
+  Marginal = c(r2_1000[1], r2_2500[1], r2_5000[1]),  # fixed effects
+  Conditional = c(r2_1000[2], r2_2500[2], r2_5000[2]) # fixed + random
+)
+
+# Add random-only component
+r2_df <- r2_df %>%
+  mutate(Random = Conditional - Marginal)
+
+# Reshape for plotting
+r2_long <- r2_df %>%
+  pivot_longer(cols = c("Marginal", "Random", "Conditional"),
+               names_to = "Component", values_to = "R2")
+
+# Plot
+ggplot(r2_long, aes(x = Scale, y = R2, fill = Component)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Marginal" = "skyblue", 
+                               "Random" = "orange", 
+                               "Conditional" = "darkgreen")) +
+  labs(title = "Variance explained (R²) by natural habitat (without grassland) models",
+       x = "Buffer scale", y = "R²") +
+  theme_minimal(base_size = 14)
+
+# Calculate R² for each model
+r2_1000 <- r.squaredGLMM(simpsonnopoll.1000)
+r2_2500 <- r.squaredGLMM(simpsonnopoll.2500)
+r2_5000 <- r.squaredGLMM(simpsonnopoll.5000)
+
+# Put results into a data frame
+r2_df <- data.frame(
+  Scale = c("1000 m", "2500 m", "5000 m"),
+  Marginal = c(r2_1000[1], r2_2500[1], r2_5000[1]),  # fixed effects
+  Conditional = c(r2_1000[2], r2_2500[2], r2_5000[2]) # fixed + random
+)
+
+# Add random-only component
+r2_df <- r2_df %>%
+  mutate(Random = Conditional - Marginal)
+
+# Reshape for plotting
+r2_long <- r2_df %>%
+  pivot_longer(cols = c("Marginal", "Random", "Conditional"),
+               names_to = "Component", values_to = "R2")
+
+# Plot
+ggplot(r2_long, aes(x = Scale, y = R2, fill = Component)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Marginal" = "skyblue", 
+                               "Random" = "orange", 
+                               "Conditional" = "darkgreen")) +
+  labs(title = "Variance explained (R²) by natural habitat (without grassland) models",
+       x = "Buffer scale", y = "R²") +
+  theme_minimal(base_size = 14)
+
+
+
+
+
+# Calculate R² for each model
+r2_1000 <- r.squaredGLMM(shannonpoll.1000)
+r2_2500 <- r.squaredGLMM(shannonpoll.2500)
+r2_5000 <- r.squaredGLMM(shannonpoll.5000)
+
+# Put results into a data frame
+r2_df <- data.frame(
+  Scale = c("1000 m", "2500 m", "5000 m"),
+  Marginal = c(r2_1000[1], r2_2500[1], r2_5000[1]),  # fixed effects
+  Conditional = c(r2_1000[2], r2_2500[2], r2_5000[2]) # fixed + random
+)
+
+# Add random-only component
+r2_df <- r2_df %>%
+  mutate(Random = Conditional - Marginal)
+
+# Reshape for plotting
+r2_long <- r2_df %>%
+  pivot_longer(cols = c("Marginal", "Random", "Conditional"),
+               names_to = "Component", values_to = "R2")
+
+# Plot
+ggplot(r2_long, aes(x = Scale, y = R2, fill = Component)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Marginal" = "skyblue", 
+                               "Random" = "orange", 
+                               "Conditional" = "darkgreen")) +
+  labs(title = "Variance explained (R²) by natural habitat (without grassland) models",
+       x = "Buffer scale", y = "R²") +
+  theme_minimal(base_size = 14)
+
+# Calculate R² for each model
+r2_1000 <- r.squaredGLMM(shannonnopoll.1000)
+r2_2500 <- r.squaredGLMM(shannonnopoll.2500)
+r2_5000 <- r.squaredGLMM(shannonnopoll.5000)
+
+# Put results into a data frame
+r2_df <- data.frame(
+  Scale = c("1000 m", "2500 m", "5000 m"),
+  Marginal = c(r2_1000[1], r2_2500[1], r2_5000[1]),  # fixed effects
+  Conditional = c(r2_1000[2], r2_2500[2], r2_5000[2]) # fixed + random
+)
+
+# Add random-only component
+r2_df <- r2_df %>%
+  mutate(Random = Conditional - Marginal)
+
+# Reshape for plotting
+r2_long <- r2_df %>%
+  pivot_longer(cols = c("Marginal", "Random", "Conditional"),
+               names_to = "Component", values_to = "R2")
+
+# Plot
+ggplot(r2_long, aes(x = Scale, y = R2, fill = Component)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Marginal" = "skyblue", 
+                               "Random" = "orange", 
+                               "Conditional" = "darkgreen")) +
+  labs(title = "Variance explained (R²) by natural habitat (without grassland) models",
+       x = "Buffer scale", y = "R²") +
+  theme_minimal(base_size = 14)
+
+
+###############################
+# model 
+###############################
+
+
+cropperiareapoll.1000 <-  lmer(LRR ~ crop.peri.area.ratio.1000*shannon.1000 + (1|ma_id/study_id) , data = poll)
+cropperiareapoll.2500 <-  lmer(LRR ~ crop.peri.area.ratio.2500 + (1|ma_id/study_id) + (1|treatment), data = poll)
+cropperiareapoll.5000 <-  lmer(LRR ~ crop.peri.area.ratio.5000 + (1|ma_id/study_id) + (1|treatment), data = poll)
+
+summary(cropperiareapoll.1000)
+summary(cropperiareapoll.2500)
+summary(cropperiareapoll.5000)
+
+# Calculate R² for each model
+r2_1000 <- r.squaredGLMM(cropperiareapoll.1000)
+r2_2500 <- r.squaredGLMM(cropperiareapoll.2500)
+r2_5000 <- r.squaredGLMM(cropperiareapoll.5000)
+
+# Put results into a data frame
+r2_df <- data.frame(
+  Scale = c("1000 m", "2500 m", "5000 m"),
+  Marginal = c(r2_1000[1], r2_2500[1], r2_5000[1]),  # fixed effects
+  Conditional = c(r2_1000[2], r2_2500[2], r2_5000[2]) # fixed + random
+)
+
+# Add random-only component
+r2_df <- r2_df %>%
+  mutate(Random = Conditional - Marginal)
+
+# Reshape for plotting
+r2_long <- r2_df %>%
+  pivot_longer(cols = c("Marginal", "Random", "Conditional"),
+               names_to = "Component", values_to = "R2")
+
+# Plot
+ggplot(r2_long, aes(x = Scale, y = R2, fill = Component)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Marginal" = "skyblue", 
+                               "Random" = "orange", 
+                               "Conditional" = "darkgreen")) +
+  labs(title = "Variance explained (R²) by Crop Fragmentation and 
+       Landscape Heterogeneity models in Pollinated Crops",
+       x = "Buffer scale", y = "R²") +
+  theme_minimal(base_size = 14)
+
+
+cropperiareanopoll.1000 <-  lmer(LRR ~ crop.peri.area.ratio.1000*shannon.1000 + (1|ma_id/study_id) + (1|treatment), data = nopoll)
+excropperiareanopoll.1000 <-  lmer(LRR ~ crop.peri.area.ratio.1000*shannon.1000 + (1|ma_id/study_id) , data = nopoll)
+cropperiareanopoll.2500 <-  lmer(LRR ~ crop.peri.area.ratio.2500 + (1|ma_id/study_id) + (1|treatment), data = nopoll)
+cropperiareanopoll.5000 <-  lmer(LRR ~ crop.peri.area.ratio.5000 + (1|ma_id/study_id) + (1|treatment), data = nopoll)
+
+summary(cropperiareanopoll.1000)
+summary(cropperiareanopoll.2500)
+summary(cropperiareanopoll.5000)
+
+# Calculate R² for each model
+r2_1000 <- r.squaredGLMM(cropperiareanopoll.1000)
+r2_2500 <- r.squaredGLMM(cropperiareanopoll.2500)
+r2_5000 <- r.squaredGLMM(cropperiareanopoll.5000)
+
+# Put results into a data frame
+r2_df <- data.frame(
+  Scale = c("1000 m", "2500 m", "5000 m"),
+  Marginal = c(r2_1000[1], r2_2500[1], r2_5000[1]),  # fixed effects
+  Conditional = c(r2_1000[2], r2_2500[2], r2_5000[2]) # fixed + random
+)
+
+# Add random-only component
+r2_df <- r2_df %>%
+  mutate(Random = Conditional - Marginal)
+
+# Reshape for plotting
+r2_long <- r2_df %>%
+  pivot_longer(cols = c("Marginal", "Random", "Conditional"),
+               names_to = "Component", values_to = "R2")
+
+# Plot
+ggplot(r2_long, aes(x = Scale, y = R2, fill = Component)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("Marginal" = "skyblue", 
+                               "Random" = "orange", 
+                               "Conditional" = "darkgreen")) +
+  labs(title = "Variance explained (R²) by Crop Fragmentation and 
+       Landscape Heterogeneity models in Non-pollinated Crops",
+       x = "Buffer scale", y = "R²") +
+  theme_minimal(base_size = 14)
 
 
