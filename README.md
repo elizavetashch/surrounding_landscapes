@@ -176,7 +176,8 @@ The soil variables were imported from the SoilGrids map
 
 ### Soil Texture 
 
-Additionally, soil texture was derived via soiltexture::TT.points.in.classes() function in R using the values from the SoilGrids (silt_15.30cm_mean.1000+sand_15.30cm_mean.1000+clay_15.30cm_mean.1000)
+- Additionally, soil texture was derived via soiltexture::TT.points.in.classes() function in R using the values from the SoilGrids (silt_15.30cm_mean.1000+sand_15.30cm_mean.1000+clay_15.30cm_mean.1000)
+- Soil texture is preliminray called soiltype and will be changed to "soiltexture" asap
 
 **For the summary statistics please unroll the following section** ⬇️
 
@@ -188,7 +189,7 @@ Additionally, soil texture was derived via soiltexture::TT.points.in.classes() f
 | SAND                  | 3.436     | 21.713      | 27.538     | 29.715     | 35.805      | 92.122     | 30       |
 | SILT                  | 3.734     | 36.456      | 42.472     | 41.336     | 48.019      | 69.762     | 30       |
 | CLAY                  | 4.145     | 24.713      | 28.690     | 28.949     | 32.602      | 61.827     | 30       |
-| soiltexture              | factor (11 levels)          | Cl: 59, ClLo: 523, Lo: 374, LoSa: 1, Sa: 1, SaCl: 2, SaClLo: 64, SaLo: 25, SiCl: 16, SiClLo: 164, SiLo: 125, NAs: 30| —          |  —  | —           | —          | —        |
+| soiltype              | factor (11 levels)          | Cl: 59, ClLo: 523, Lo: 374, LoSa: 1, Sa: 1, SaCl: 2, SaClLo: 64, SaLo: 25, SiCl: 16, SiClLo: 164, SiLo: 125, NAs: 30| —          |  —  | —           | —          | —        |
 
 </details>
 
