@@ -1,6 +1,7 @@
 ## Surrounding Landscapes Affect the Productivity of Crop Yields:
 data organization and cleaning: Elizaveta Shcherbinina 
-las update on 24.10.2025
+
+last update on 24.10.2025
 
 ## Description
 description of the 20251006_df_soiltype_unscaled.csv file ([file link](surrounding_landscapes/tree/current_main/data/20251006_df_soiltype_unscaled.csv))
