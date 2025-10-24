@@ -19,13 +19,14 @@ It has 1384 observations and 272 variables. Out of 272 varibales, 54 are soil va
 
 The name of the soil variable is structured like `bdod_bdod_0.5cm_mean`. First goes the name of the variable (`bdod` for bulk density) and then the depth layer name (`bdod_0.5cm_mean` for the bulk density mean at the 0.5 cm depth).
 
-### Data Repository 
+## Data Repository 
 
 ### Original Variables 
 from the 20241216_data_processed.csv file 
 
+**For the summary statistics please unroll the following section** ⬇️
 <details>
-  <summary>Original variables description</summary>
+  <summary>Original variables table description</summary>
 
 | Column Name                            | Data Type  | Example                              |
 |----------------------------------------|------------|-------------------------------------|
@@ -115,6 +116,8 @@ The soil variables were imported from the SoilGrids map
 - SoilGrids map: https://soilgrids.org/
 - GEE code for value extraction: [https://code.earthengine.google.com/](https://code.earthengine.google.com/c20d523a9033e4f73df9d779df823134)
 
+**For the summary statistics please unroll the following section** ⬇️
+
 <details>
   <summary>Soil variables description</summary>
   
@@ -171,6 +174,24 @@ The soil variables were imported from the SoilGrids map
 
 </details>
 
+### Soil Texture 
+
+Additionally, soil texture was derived via soiltexture::TT.points.in.classes() function in R using the values from the SoilGrids (silt_15.30cm_mean.1000+sand_15.30cm_mean.1000+clay_15.30cm_mean.1000)
+
+**For the summary statistics please unroll the following section** ⬇️
+
+<details>
+  <summary>Added variables description</summary>
+  
+| **Column Name**           | **Min.**  | **1st Qu.** | **Median** | **Mean**   | **3rd Qu.** | **Max.**   | **NA’s** |
+| ------------------------- | --------- | ----------- | ---------- | ---------- | ----------- | ---------- | -------- |
+| SAND                  | 3.436     | 21.713      | 27.538     | 29.715     | 35.805      | 92.122     | 30       |
+| SILT                  | 3.734     | 36.456      | 42.472     | 41.336     | 48.019      | 69.762     | 30       |
+| CLAY                  | 4.145     | 24.713      | 28.690     | 28.949     | 32.602      | 61.827     | 30       |
+| soiltexture              | factor (11 levels)          | Cl: 59, ClLo: 523, Lo: 374, LoSa: 1, Sa: 1, SaCl: 2, SaClLo: 64, SaLo: 25, SiCl: 16, SiClLo: 164, SiLo: 125, NAs: 30| —          |  —  | —           | —          | —        |
+
+</details>
+
 ### Fieldsize variables 
  
 The field size variables were imported from the field size map 
@@ -181,6 +202,7 @@ The field size variables were imported from the field size map
 <details>
   <summary>Fied size variables description</summary>
 
+**For the summary statistics please unroll the following section** ⬇️
 
 | **Column Name**           | **Min.**  | **1st Qu.** | **Median** | **Mean**   | **3rd Qu.** | **Max.**   | **NA’s** |
 | ------------------------- | --------- | ----------- | ---------- | ---------- | ----------- | ---------- | -------- |
@@ -207,19 +229,23 @@ The field size variables were imported from the field size map
 </details>
 
 
-### Added variabels 
+### Other variabels 
+- Species Richness was added from the IUCN dataset
+- Annual mean temperature was calculated in R: temp_avg_1970.2000
+- Annual mean precipitation was calculated in R: prec_avg_1970.2000
+- Pollinator dependance was assigned 0 for no-pollinator-dependant crop and 1 for pollinator dependance
+
+  **For the summary statistics please unroll the following section** ⬇️
 
 <details>
   <summary>Added variables description</summary>
+  
+| **Column Name**           | **Min.**  | **1st Qu.** | **Median** | **Mean**   | **3rd Qu.** | **Max.**   | **NA’s** |
+| ------------------------- | --------- | ----------- | ---------- | ---------- | ----------- | ---------- | -------- |
 | SR                    | 82.8      | 237.4       | 320.3      | 344.3      | 402.3       | 954.7      | 4        |
 | temp_avg_1970.2000    | -2.07     | 9.86        | 15.68      | 14.12      | 17.49       | 27.52      | —        |
 | prec_avg_1970.2000    | 3.08      | 50.33       | 85.42      | 83.57      | 113.67      | 262.17     | —        |
-| poll_dependent        | 0.00000   | 0.00000     | 0.00000    | 0.07442    | 0.00000     | 1.00000    | —        |
-| total                 | 999       | 1000        | 1000       | 1000       | 1000        | 1001       | 30       |
-| SAND                  | 3.436     | 21.713      | 27.538     | 29.715     | 35.805      | 92.122     | 30       |
-| SILT                  | 3.734     | 36.456      | 42.472     | 41.336     | 48.019      | 69.762     | 30       |
-| CLAY                  | 4.145     | 24.713      | 28.690     | 28.949     | 32.602      | 61.827     | 30       |
-| soiltype              | —         | —           | —          | Character  | —           | —          | —        |
+| poll_dependent        | 0.00000   | 0.00000     | 0.00000    | 0.00000    | 0.00000     | 1.00000    | —        |
 
 </details>
 
