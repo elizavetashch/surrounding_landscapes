@@ -31,6 +31,8 @@ These sequences were analysed using virtual taxa (VT) for AM fungi and 97% simil
   - _RWR_HighSampling_CoefVar 
   - _RWR_HighSampling_Extrapolation
   - _RWR_HighSampling_Predicted
+
 Richness for the AM or EcM richness map and RWR stands for rarity-weighted richness (RWR) estimates.
+
 On the SPUN online map the predicted values are shown, hence we use the
 → `_Richness_Predicted.tif` files 
