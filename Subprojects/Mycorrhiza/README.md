@@ -21,13 +21,16 @@ These sequences were analysed using virtual taxa (VT) for AM fungi and 97% simil
 **Download data**
 - If you request the data download here: https://www.spun.earth/underground-atlas/data-request
 - Then you would recieve two fodlers: AM and EcM fungi
-- The folders will contain `.tif` files, namely
-  - _Richness_CoefVar :
-  - _Richness_Extrapolation :
-  - _Richness_Predicted :
-  - _RWR_Empirical_CoefVar :
-  - _RWR_Empirical_Extrapolation :
-  - _RWR_Empirical_Predicted :
-  - _RWR_HighSampling_CoefVar :
-  - _RWR_HighSampling_Extrapolation :
-  - _RWR_HighSampling_Predicted :
+- The folders will contain `.tif` files, namely Distribution of sites and 
+  - _Richness_CoefVar
+  - _Richness_Extrapolation
+  - _Richness_Predicted 
+  - _RWR_Empirical_CoefVar
+  - _RWR_Empirical_Extrapolation 
+  - _RWR_Empirical_Predicted 
+  - _RWR_HighSampling_CoefVar 
+  - _RWR_HighSampling_Extrapolation
+  - _RWR_HighSampling_Predicted
+Richness for the AM or EcM richness map and RWR stands for rarity-weighted richness (RWR) estimates.
+On the SPUN online map the predicted values are shown, hence we use the
+- _Richness_Predicted.tif files 
