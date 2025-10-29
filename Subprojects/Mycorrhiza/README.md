@@ -4,7 +4,7 @@ The mycorrhiza dataset was downloaded from the [Society for Protection of Underg
 **Methods Explanation: How the map was built:**
 
 <details>
-  <summary>Following text is copied unchanged from the original publication</summary>
+  <summary>Open here to see relevant method sections from the original paper</summary>
 
 - Motivation of Use:
 "Plants can get up to 80% of their phosphorus from mycorrhizal fungi. Underground fungal networks help build productive soils by increasing water and nutrient retention, preventing erosion, and decreasing the amount of nutrients leached out of the soil by more than 50%." https://www.spun.earth/underground-atlas/explainer-article"
