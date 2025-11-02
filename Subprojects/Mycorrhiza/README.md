@@ -36,3 +36,15 @@ Richness for the AM or EcM richness map and RWR stands for rarity-weighted richn
 
 On the SPUN online map the predicted values are shown, hence we use the
 → `_Richness_Predicted.tif` files 
+
+**Write the GEE code**
+
+The GEE code calculates the 
+- point pixel (the value of the mycorrhiza richness map at the exact location)
+- the mean richness value in the buffer
+- the standard deviations
+- and the variance of the richness
+
+and produces an ouput of two files: one for Arbuscular Mycorrhiza (AM) and one for Ectomycorrhiza. 
+
+Link to the code: [GEE Mycorrhiza Code](https://code.earthengine.google.com/27fa943deba3c3ef2d470f40498abf65)
