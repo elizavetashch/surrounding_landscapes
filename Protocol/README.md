@@ -8,3 +8,5 @@
 - ◽Merge a new dataset
 - ◽Study Random Forest
 - ◽Update GitHub
+- ◽Run models with new values
+- ◽Run models with addition of temperate and tropical forests
