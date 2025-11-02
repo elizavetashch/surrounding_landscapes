@@ -28,3 +28,8 @@ Plots show target variables and the top three most important covariates as repor
 
 </details>
 
+### Write the GEE Code 
+- I rewrote the soilgrids code in the same format my other codes are written (first define the addPixelValue function, then apply it)
+- you will see that in the code the asset _mean was used. mean is the name of the asset, but it contains all the depths as bands
+
+Link to the code: [GEE SoilGrids 2.0](https://code.earthengine.google.com/1154d785c765ef082d22e69140981b9e)
