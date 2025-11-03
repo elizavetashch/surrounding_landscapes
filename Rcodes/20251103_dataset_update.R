@@ -127,7 +127,7 @@ soiltexture <- read.csv("data/20251006_df_soiltype_unscaled.csv")
 glimpse(soiltexture)
 soiltexture <- soiltexture %>% 
   select(ma_id, measurement_id,study_id, SAND, SILT, CLAY, soiltype) %>% 
-  rename(soiltexture = soiltype,
+  rename(soiltexture.1000 = soiltype,
          sand.percent.1000 = SAND, 
          silt.percent.1000 = SILT,
          clay.percent.1000 = CLAY)
