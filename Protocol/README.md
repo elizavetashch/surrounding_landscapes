@@ -4,8 +4,8 @@
 
 - ◽Papers Overview
 - ✅Mycorrhiza Code -> Output
-- ◽SoilGrids Code -> Output
-- ◽Merge a new dataset
+- ✅SoilGrids Code -> Output
+- ✅Merge a new dataset
 - ◽Study Random Forest
 - ◽Update GitHub
 - ◽Run models with new values
