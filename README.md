@@ -3,7 +3,8 @@ data organization and cleaning: Elizaveta Shcherbinina
 
 last update on 03.11.2025
 // update in process. 
-// current data set can be found in data/20251103_data.csv 
+// current data set can be found in [data/20251103_data.csv](surrounding_landscapes/tree/current_main/data/20251103_data.csv)
+
 ### Update Messages
 
 📨 After meeting with collaborators, mean soil variables were considered to be not useful and hence the GEE SoilGrids calculation was done once again. Hence, new variables representing variance, standard deviation and point measurement can mbe now found in the dataset. 
@@ -12,8 +13,13 @@ last update on 03.11.2025
 
 
 
-## Description
-description of the 20251006_df_soiltype_unscaled.csv file ([file link](surrounding_landscapes/tree/current_main/data/20251006_df_soiltype_unscaled.csv))
+
+### Description
+
+📢 Current version of the dataset: [20251103_data.csv](surrounding_landscapes/tree/current_main/data/20251103_data.csv)
+
+<details>
+  <summary> To see all the files that went into the dataset please click here </summary>
 
 20251006_df_soiltype_unscaled was merged from 
 - 20241216_data_processed.csv, 
@@ -24,6 +30,7 @@ description of the 20251006_df_soiltype_unscaled.csv file ([file link](surroundi
 - 20250908_2_fieldsize_2500m.csv
 - 20250908_2_fieldsize_5000m.csv
 
+</details>
 
 ## Statistics 
 It has 1384 observations and 272 variables. Out of 272 varibales, 54 are soil variables. 38 observations have NA in soil variables, because there are no values available for the buffer region (often within a city area). 
