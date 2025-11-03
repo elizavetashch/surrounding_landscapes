@@ -1,7 +1,13 @@
 ## Surrounding Landscapes Affect the Productivity of Crop Yields:
 data organization and cleaning: Elizaveta Shcherbinina 
 
-last update on 24.10.2025
+last update on 03.11.2025
+// update in process. 
+
+### Update Messages
+
+📨 After meeting with collaborators, mean soil variables were considered to be not useful and hence the GEE SoilGrids calculation was done once again. Hence, new variables representing variance, standard deviation and point measurement can mbe now found in the dataset. 
+📨 Mycorrhiza maps were added. 
 
 ## Description
 description of the 20251006_df_soiltype_unscaled.csv file ([file link](surrounding_landscapes/tree/current_main/data/20251006_df_soiltype_unscaled.csv))
