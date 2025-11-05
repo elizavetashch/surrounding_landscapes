@@ -1,12 +1,9 @@
+### To Do This Week 
 
-
-### To Do Until the 3.11.2025
-
-- ◽Papers Overview
-- ✅Mycorrhiza Code -> Output
-- ◽SoilGrids Code -> Output
-- ◽Merge a new dataset
-- ◽Study Random Forest
-- ◽Update GitHub
-- ◽Run models with new values
-- ◽Run models with addition of temperate and tropical forests
+- #1 Clean the Dataset
+- #2 Organize GitHub
+- #3 Send Maria and Sara an email
+- #4 Write a paper overview
+- #5 Send the paper overview
+- #6 Study Random Forest
+  
