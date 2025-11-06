@@ -11,10 +11,20 @@ current data: 20251106_data.csv
 > Variables which were not calculated but taken over from the corresponsing studies have a suffix `.orig`
 > If a variable was averaged over a buffer, the radius of the buffer will stand as suffix at the end of teh variable's name `.1000`, `.2500`, `.5000`
 
-**Dataset structure** 
+
 Current version of the dataset containts the following: 
 
-- **metadata on each observation**
+- [Metadata on each observaiton](#metadata-on-each-observation)
+- [Land cover metrics](#land-cover-metrics)
+- [Mycorrhiza data](#mycorrhiza-data)
+- [Field size data](#field-size-data)
+- [Soil data](#soil-data)
+- [Mixed (pollination, species richness, temperature and precipitation)](#mixed-calculated-variables)
+
+*(Press on the link to land to the corresponsing subsection)*
+
+
+### metadata on each observation 
 ```
 [1] "measurement.id"                         "ma.id"                                 
 [3] "study.id"                               "control.id"                            
@@ -37,19 +47,7 @@ Current version of the dataset containts the following:
 ```
 ![NA's within the metadata variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/meta_na.png)
 
-- **mixed calculated variables**
-```
-[1] "sr"                 "temp.avg.1970.2000" "prec.avg.1970.2000" "poll.dependent"
-```
-Where 
-1. "sr" stands for species richness added from the IUCN dataset,
-2. temp_avg_1970.2000 is annual mean temperature was calculated in R,
-3. prec_avg_1970.2000 is annual mean precipitation was calculated in R,
-4. poll.dependant is pollinator dependance and was assigned 0 for no-pollinator-dependant crop and 1 for pollinator dependance.
-![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/species_na.png)
-
-
-- **land cover metrics**
+### land cover metrics
 ```
  [1] "nat.hab.1000"                          "nat.hab.2500"                         
  [3] "nat.hab.5000"                          "nat.hab.edgelength.1000"              
@@ -74,7 +72,8 @@ Where
 [41] "simpsonsevenness.2500"                 "simpsonsevenness.5000"              
 ```
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/nathab_na.png)
-- **mycorrhiza data**
+
+### mycorrhiza data
 ```
  [1] "am.richness.centre.1000"    "am.richness.centre.2500"   
  [3] "am.richness.centre.5000"    "am.richness.stddev.1000"   
@@ -88,7 +87,7 @@ Where
 ```
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/mycorrhiza_na.png)
 
-- **field size data**
+### field size data
 ```
  [1] "fieldsize.centre"      "nofield.area.m.5000"   "nofield.area.m.2500"  
  [4] "nofield.area.m.1000"   "small.area.m.5000"     "small.area.m.2500"    
@@ -100,7 +99,8 @@ Where
 ```
 
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/fieldsize_na.png)
-- **soil data**
+
+### soil data
 ```
   [1] "bulk.0.5cm.centre.1000"           "bulk.0.5cm.centre.2500"           "bulk.0.5cm.centre.5000"          
   [4] "bulk.0.5cm.stddev.1000"           "bulk.0.5cm.stddev.2500"           "bulk.0.5cm.stddev.5000"          
@@ -272,3 +272,17 @@ Where
 ```
 
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/soil_na.png)
+
+
+### mixed calculated variables
+```
+[1] "sr"                 "temp.avg.1970.2000" "prec.avg.1970.2000" "poll.dependent"
+```
+Where 
+1. "sr" stands for species richness added from the IUCN dataset,
+2. temp_avg_1970.2000 is annual mean temperature was calculated in R,
+3. prec_avg_1970.2000 is annual mean precipitation was calculated in R,
+4. poll.dependant is pollinator dependance and was assigned 0 for no-pollinator-dependant crop and 1 for pollinator dependance.
+![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/species_na.png)
+
+
