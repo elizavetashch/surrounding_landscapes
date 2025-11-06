@@ -102,7 +102,7 @@ Where
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/fieldsize_na.png)
 - **soil data**
 ```
-[1] "bulk.0.5cm.centre.1000"           "bulk.0.5cm.centre.2500"           "bulk.0.5cm.centre.5000"          
+  [1] "bulk.0.5cm.centre.1000"           "bulk.0.5cm.centre.2500"           "bulk.0.5cm.centre.5000"          
   [4] "bulk.0.5cm.stddev.1000"           "bulk.0.5cm.stddev.2500"           "bulk.0.5cm.stddev.5000"          
   [7] "bulk.0.5cm.variance.1000"         "bulk.0.5cm.variance.2500"         "bulk.0.5cm.variance.5000"        
  [10] "bulk.100.200cm.centre.1000"       "bulk.100.200cm.centre.2500"       "bulk.100.200cm.centre.5000"      
