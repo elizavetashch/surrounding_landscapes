@@ -283,6 +283,29 @@ mycorrhiza <- df_20251106.2 %>% select(am.richness.centre.1000:ecm.richness.vari
 soil <- df_20251106.2 %>% select(bulk.0.5cm.centre.1000:soiltexture.centre)
 
 # NA plots
+png(".\\05_Results\\supporting_images\\meta_na.png", width = 800, height = 600)
+vis_miss(meta)
+dev.off()
+
+png(".\\05_Results\\supporting_images\\species_na.png", width = 800, height = 600)
+vis_miss(species)
+dev.off()
+
+png(".\\05_Results\\supporting_images\\nathab_na.png", width = 800, height = 600)
+vis_miss(nathab)
+dev.off()
+
+png(".\\05_Results\\supporting_images\\fieldsize_na.png", width = 800, height = 600)
+vis_miss(fieldsize)
+dev.off()
+
+png(".\\05_Results\\supporting_images\\mycorrhiza_na.png", width = 800, height = 600)
+vis_miss(mycorrhiza)
+dev.off()
+
+png(".\\05_Results\\supporting_images\\soil_na.png", width = 800, height = 600)
+vis_miss(soil)
+dev.off()
 
 # Soil Texture Triangle ---------------------------------------------------
 
