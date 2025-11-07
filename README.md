@@ -25,6 +25,7 @@ Current version of the dataset containts the following:
 
 
 ### metadata on each observation 
+
 ```
 [1] "measurement.id"                         "ma.id"                                 
 [3] "study.id"                               "control.id"                            
@@ -45,6 +46,21 @@ Current version of the dataset containts the following:
 [33] "precipitation.orig"                     "climate.zone.orig"                     
 [35] "lrr"                                    "lrr.vi"
 ```
+
+> [!IMPORTANT]
+> **NA values in the metadata**
+> 
+> 1.  big NA column is the harvest.year and publication.to.harvest.year.difference, indicating no information provided on year of harvest by the original study.
+> 
+> 2.  some NA in original country and region, indicating no information provided by the original study.
+> 
+> 3. NA in yield.sd.control and yield.sd.treatment, indicating no information provided on yield SD by the original study.
+>
+> 4. NA in temperature.orig and precipitation.orig, indicating no information provided by the original study.
+> 
+> 5. NA in lrr.vi
+
+
 ![NA's within the metadata variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/meta_na.png)
 
 ### land cover metrics
@@ -74,17 +90,36 @@ Current version of the dataset containts the following:
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/nathab_na.png)
 
 ### mycorrhiza data
+
+The mycorrhiza data was downloaded from the [Society for Protection of Underground Networks website](https://www.spun.earth/underground-atlas/mycorrhizal-biodiversity) and is based on the original publication by [Van Nuland et al. 2025](https://www.nature.com/articles/s41586-025-09277-4). 
+
+:card_file_box: The column names are structured the following way: `mycorrhiza type`.`richness`.`statistical variable`.`buffer size`
+
+- **mycorrhiza type**: am for arbuscular mycorrhiza, ecm for ectomycorrhiza
+- **richness** indicates the metric that we exported from the SPUN project, namely the species richness in (species / 100 m2)
+- **statistical variable**
+  - centre: indicates the value that is located directly in the centre of the buffer (a value of one pixel right in the center of the buffer)
+  - stddev: indicates the standard deviation of the species richness values within the buffer
+  - variance: indicates the variance of the species richness values within the buffer
 ```
- [1] "am.richness.centre.1000"    "am.richness.centre.2500"   
- [3] "am.richness.centre.5000"    "am.richness.stddev.1000"   
- [5] "am.richness.stddev.2500"    "am.richness.stddev.5000"   
- [7] "am.richness.variance.1000"  "am.richness.variance.2500" 
- [9] "am.richness.variance.5000"  "ecm.richness.centre.1000"  
-[11] "ecm.richness.centre.2500"   "ecm.richness.centre.5000"  
-[13] "ecm.richness.stddev.1000"   "ecm.richness.stddev.2500"  
-[15] "ecm.richness.stddev.5000"   "ecm.richness.variance.1000"
-[17] "ecm.richness.variance.2500" "ecm.richness.variance.5000"
+ [1] "am.richness.centre.1000"    "am.richness.centre.2500"    "am.richness.centre.5000"   
+ [4] "am.richness.mean.1000"      "am.richness.mean.2500"      "am.richness.mean.5000"     
+ [7] "am.richness.stddev.1000"    "am.richness.stddev.2500"    "am.richness.stddev.5000"   
+[10] "am.richness.variance.1000"  "am.richness.variance.2500"  "am.richness.variance.5000" 
+[13] "ecm.richness.centre.1000"   "ecm.richness.centre.2500"   "ecm.richness.centre.5000"  
+[16] "ecm.richness.mean.1000"     "ecm.richness.mean.2500"     "ecm.richness.mean.5000"    
+[19] "ecm.richness.stddev.1000"   "ecm.richness.stddev.2500"   "ecm.richness.stddev.5000"  
+[22] "ecm.richness.variance.1000" "ecm.richness.variance.2500" "ecm.richness.variance.5000"
+
 ```
+
+> [!IMPORTANT]
+> **NA values in the mycorrhiza data**
+> 
+> 1.  NA repeating in equal intervals indicate the `.centre` variables in the data. Variables extracted from the centre have overall higher inaccuracy. 
+> 
+> 2. 30 points have NA almost in every column and those measurements come from city areas (28 observations) or land on sea (2 measurements)
+
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/mycorrhiza_na.png)
 
 ### field size data
@@ -101,6 +136,43 @@ Current version of the dataset containts the following:
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/fieldsize_na.png)
 
 ### soil data
+
+The soil variables were imported from the SoilGrids map 
+- SoilGrids map: https://soilgrids.org/
+- GEE code for value extraction: [https://code.earthengine.google.com/](https://code.earthengine.google.com/c20d523a9033e4f73df9d779df823134)
+
+:card_file_box: The column names are structured the following way: `soil property`.`depth`.`statistical variable`.`buffer size`
+
+- **soil property**:
+  - bulk: Bulk density of the fine earth fraction (cg/cm³)
+  - cec: Cation Exchange Capacity buffered at pH 7 (mmol©/kg)
+  - clay:  Proportion of clay particles (< 0.002 mm) in the fine earth fraction (g/kg)
+  - nitrogen: Total nitrogen (N) (cg/kg)
+  - ocd: Organic carbon density (hg/dm³)
+  - ocs: Organic carbon stocks (t/ha)
+  - ph: Soil pH (pHx10)
+  - sand:  Proportion of sand particles (> 0.05 mm) in the fine earth fraction (g/kg)
+  - silt: Proportion of silt particles (≥ 0.002 mm and ≤ 0.05 mm) in the fine earth fraction (g/kg)
+  - soc: Soil organic carbon content in the fine earth fraction (dg/kg)
+- **depth** : is structured as A.B.cm , meaning from the depth A to the depth B in cm. (Example 0.5.cm indicates the soil layer from 0 to 5 cm depth) 
+- **statistical variable**
+  - centre: indicates the value that is located directly in the centre of the buffer (a value of one pixel right in the center of the buffer)
+  - stddev: indicates the standard deviation of the species richness values within the buffer
+  - variance: indicates the variance of the species richness values within the buffer
+
+**Soil Texture**
+Soil texture was calculated separately based either on the mean values of clay/silt/sand content in the 1000 m buffer (soiltexture.1000), and an additional soil texture variable was calcuated based on the centre value of the clay/silt/sand content.
+
+> [!WARNING]
+> Please note, that the soiltexture calculated based on the centre value has 264 NA value, while soil texture variable based on mean contents only 30 NAs. 
+
+Here you can see the difference in those two ways of soil texture calculation within the soil triangle. 
+
+
+soiltexture.centre            |  soiltexture.1000
+:-------------------------:|:-------------------------:
+![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/solitexture_centre.png) |  ![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/soiltexture_mean.png)
+
 ```
   [1] "bulk.0.5cm.centre.1000"           "bulk.0.5cm.centre.2500"           "bulk.0.5cm.centre.5000"          
   [4] "bulk.0.5cm.stddev.1000"           "bulk.0.5cm.stddev.2500"           "bulk.0.5cm.stddev.5000"          
@@ -267,9 +339,25 @@ Current version of the dataset containts the following:
 [487] "soc.60.100cm.centre.1000"         "soc.60.100cm.centre.2500"         "soc.60.100cm.centre.5000"        
 [490] "soc.60.100cm.stddev.1000"         "soc.60.100cm.stddev.2500"         "soc.60.100cm.stddev.5000"        
 [493] "soc.60.100cm.variance.1000"       "soc.60.100cm.variance.2500"       "soc.60.100cm.variance.5000"      
-[496] "sand.percent.1000"                "silt.percent.1000"                "clay.percent.1000"               
-[499] "soiltexture.1000"                 "soiltexture.centre"              
+             
 ```
+
+Additionally calculated varibales such as soil texture. 
+
+`sand/clay/silt`.percent.1000 indicates the percentage of sand/clay/silt in the 1000 buffer, calculated based on the mean values of those. 
+
+```
+[496] "sand.percent.1000"                "silt.percent.1000"                "clay.percent.1000"               
+[499] "soiltexture.1000"                 "soiltexture.centre"          
+```
+
+> [!IMPORTANT]
+> **NA values in the soil data**
+> 
+> 1.  NA repeating in equal intervals indicate the `.centre` variables in the data. Variables extracted from the centre have overall higher inaccuracy. 
+> 
+> 2. 30 points have NA almost in every column and those measurements come from city areas (28 observations) or land on sea (2 measurements)
+
 
 ![NA's within the mixed variabes](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/soil_na.png)
 
