@@ -2,8 +2,8 @@
 
 ```
 documentation: Elizaveta Shcherbinina 
-last update: 06.11.2025
-current data: 20251106_data.csv 
+last update: 07.11.2025
+current data: 20251107_data.csv 
 ```
 
 **Documentation**
