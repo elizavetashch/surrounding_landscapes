@@ -74,9 +74,10 @@ old <- bind_cols(p1,p2)
 # AM
 AM_full <- bind_rows(AM1000,AM2500,AM5000) # bind rows 
 AM_full <- AM_full%>% select(ma_id, measurement_id,study_id,radius_m, # order the columns
-                               pixel_first, stdDevfungi, varfungi,fungi) %>% 
+                               pixel_first,meanfungi, stdDevfungi, varfungi,fungi) %>% 
                         rename(
                               fungi_firstpixel = pixel_first,
+                              richness.mean = meanfungi, 
                               fungi_stdDev = stdDevfungi,
                               fungi_variance = varfungi,
                               fungi_type = fungi
@@ -90,9 +91,10 @@ AM_full_wide <- AM_full %>% # radius to wide format
 # EcM
 EcM_full <- bind_rows(EcM1000,EcM2500,EcM5000) # bind rows 
 EcM_full <- EcM_full%>% select(ma_id, measurement_id,study_id,radius_m, # order the columns
-                             pixel_first, stdDevfungi, varfungi,fungi) %>% 
+                             pixel_first, meanfungi, stdDevfungi, varfungi,fungi) %>% 
                       rename(
                         fungi_firstpixel = pixel_first,
+                        richness.mean = meanfungi, 
                         fungi_stdDev = stdDevfungi,
                         fungi_variance = varfungi,
                         fungi_type = fungi
@@ -307,6 +309,14 @@ png(".\\05_Results\\supporting_images\\soil_na.png", width = 800, height = 600)
 vis_miss(soil)
 dev.off()
 
+# Structure of the dataset 
+colnames(meta)
+colnames(species)
+colnames(nathab)
+colnames(fieldsize)
+colnames(mycorrhiza)
+colnames(soil)
+
 # Soil Texture Triangle ---------------------------------------------------
 
 plot.centre <- df.15.30.orig %>% 
@@ -355,7 +365,7 @@ dev.off()
 write.csv(df_20251106.2, "C:\\Users\\lisa7\\Documents\\UFZ_CLE\\surrounding_landscapes_full_project\\20250812_surrounding_landscapes\\data\\20251106_data.csv",
           row.names = FALSE)
 # Write to Git 
-write.csv(df_20251106.2, ".\\data\\20251106_data.csv",
+write.csv(df_20251106.2, ".\\03_Data\\20251107_data.csv",
           row.names = FALSE)
 
 # Save column names from the first dataset
