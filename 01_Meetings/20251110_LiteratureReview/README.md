@@ -115,6 +115,5 @@ Zhang, Y., Bian, Z., Guo, X., & Wang, C. (2025). Multiscale agrobiodiversity con
 * Additionally, the variance explained by the explanatory variables in the linear model was computed using the hierarchical partitioning method in the “rdacca.hp” package.
 * Structural equation modelling (SEM) to examine direct and indirect interactions between variables. This was
  used to analyze the influence pathways through which landscape composition and configuration affect epigaeic arthropod diversity at field, watershed, and county scales, as well as the role of ESs within these pathways
-* 
 
 
