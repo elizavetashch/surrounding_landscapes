@@ -28,7 +28,7 @@ The 1-km spatial  extent was chosen to reflect the typical flight and foraging d
 
 | --- | ---  |
 :-------------------------:|:-------------------------:
-![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/solitexture_centre.png) |  ![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/soiltexture_mean.png)
+![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/01_Meetings/images/litrev_dainese1.jpeg) |  ![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/01_Meetings/images/litrev_dainese2.jpeg)
 
 ___
 
@@ -59,6 +59,7 @@ Duff, H., Debinski, D., & Maxwell, B. D. (2024). Landscape context affects patch
 * PLS-analysis (Partial least-squares regression)
 * Models performed best when composition and configuration were considered together rather than alone, suggesting that both components of landscape complexity should be considered for identifying and managing conservation areas in crop fields. 
 
+![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/01_Meetings/images/litrev_duff.jpg)
 ___
 
 ### The increase in cultivated areas had a negative effect on the visitation rate of both managed and native pollinators. Conversely, more diverse landscapes had a negative and significant effect on A. mellifera (honey bee) abundance within the plots.  
