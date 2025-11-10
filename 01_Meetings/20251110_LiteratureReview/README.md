@@ -26,6 +26,10 @@ The 1-km spatial  extent was chosen to reflect the typical flight and foraging d
 * Partioned the relative importance of richness and total and relative abundance in driving biodiversity-ecosystem relationships.
 * The model included the ecosystem service index as response, landscape simplification as predictor, and richness as mediator.
 
+| --- | ---  |
+:-------------------------:|:-------------------------:
+![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/solitexture_centre.png) |  ![](https://github.com/elizavetashch/surrounding_landscapes/raw/current_main/05_Results/supporting_images/soiltexture_mean.png)
+
 ___
 
 ### Landscape configuration accounted for more variation in plant and arthropod species richness than landscape composition.
