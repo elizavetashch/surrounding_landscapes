@@ -1902,7 +1902,7 @@ shannon.df$inert<- reg.data$inert.1000
 
 # (iii) replace NAs with 0s
 for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
-  
+
 # (iv) calculate the shannon diversity
 library(vegan) # 'species' need to be the columns
 reg.data$shannon.1000<-diversity(shannon.df, index = "shannon")
