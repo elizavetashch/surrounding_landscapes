@@ -1,0 +1,2009 @@
+---
+title: "20241213_data_processing_full"
+author: "Elizaveta Shcherbinina"
+date: "2024-12-13"
+output: html_document
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 0.1 Packages
+
+```{r 01}
+
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(readxl)
+library(ggplot2)
+library(purrr)
+library(vegan)
+
+library(sp)
+library(rworldmap)
+library(rworldxtra)
+library(CoordinateCleaner)
+```
+
+# Section I
+
+### 0.2 Input Data
+
+```{r 02}
+data_original <- read.csv("C:\\Users\\lisa7\\Documents\\surrounding_landscapes\\data\\yielddata_control-treatment_20240828.csv") 
+```
+
+### 0.3. Cleaning before start
+
+```{r 03}
+# Two changes that we agreed on in the workshop/meetings: 
+data_original <- 
+  data_original %>% 
+  rename(measurement_id = row_id, 
+         control_id = comparison_id)
+
+data_original <- 
+  data_original %>% 
+  group_by(reference) %>%
+  mutate(
+    study_id = ifelse(ma_id == "D1120", cur_group_id(), study_id),
+    control_id = ifelse(ma_id == "D1120", row_number(), control_id)
+  ) %>%
+  ungroup()
+
+# reverse the whole D352 because its coordinates are switched
+data_original <- 
+  data_original %>% 
+  mutate(
+    temp = ifelse(ma_id == "D352", longitude, NA_real_),  # Temporarily store Long in temp
+    longitude = ifelse(ma_id == "D352", latitude, longitude),  # Replace Long with Lat
+    latitude = ifelse(ma_id == "D352", temp, latitude),
+  ) %>%
+  select(-temp)
+```
+
+### 1.1. Assign coordinate format
+
+Here we loose 138 observations because they have NAs in lat or long.
+1.10.24 added a comma to the dot so that we can define both delimeter formats
+
+```{r 11}
+df <- data_original %>%
+  filter(!(longitude %in% NA_character_)) %>% 
+  filter(!(latitude %in% NA_character_)) %>%
+  mutate(long_coordinate_format = case_when(
+    str_detect(longitude, "^[\\+-]?((1[0-7]\\d|[1-9]?\\d)([\\.,]\\d{1,})?|180)\\D*[EWew]?$") ~ "DD",
+    str_detect(longitude, "^[\\+-]?((1[0-7]\\d|[1-9]?\\d)\\D+[0-6]?\\d([\\.,]\\d{1,})?|180(\\D+0)?)\\D+[EWew]?$") ~ "DDM",
+    str_detect(longitude, "^[\\+-]?([1-7]?\\d{1,2}\\D+([0-5]?\\d|60)\\D+([0-5]?\\d|60)([\\.,]\\d+)?|180\\D+0\\D+0)\\D+[EWew]?$") ~ "DMS",
+    TRUE ~ NA_character_
+  )) %>% 
+  mutate(lat_coordinate_format = case_when(
+    str_detect(latitude, "^[\\+-]?(([1-8]?\\d)([\\.,]\\d{1,})?([\\.,]\\d{1,})?|90)\\D*[NSns]?$") ~ "DD",
+    str_detect(latitude, "^[\\+-]?(([1-8]?\\d)\\D+[0-6]?\\d([\\.,]\\d{1,})?|90(\\D+0)?)\\D+[NSns]?$") ~ "DDM",
+    str_detect(latitude, "^[\\+-]?(([1-8]?\\d)\\D+([0-5]?\\d|60)\\D+([0-5]?\\d|60)([\\.,]\\d+)?|90\\D+0\\D+0)\\D+[NSns]?$") ~ "DMS",
+    
+    TRUE ~ NA_character_
+  )) %>% 
+  mutate(long_coordinate_format = if_else(
+    long_coordinate_format %in% NA_character_, 
+    case_when(
+      str_detect(longitude, "^[\\+-]?((1[0-7]\\d|[1-9]?\\d)\\D+[0-6]?\\d([\\.,]\\d{1,})?|180(\\D+0)?)\\D+[EWew]?-[\\+-]?((1[0-7]\\d|[0-9]?\\d)\\D+[0-6]?\\d([\\.,]\\d{1,})?|180(\\D+0)?)\\D+[EWew]?$"
+      ) ~ "DDM interval"
+    ), long_coordinate_format
+  )) %>% 
+  mutate(lat_coordinate_format = if_else(
+    lat_coordinate_format %in% NA_character_, 
+    case_when(
+      str_detect(latitude, "^[\\+-]?(([1-8]?\\d)\\D+[0-6]?\\d([\\.,]\\d{1,})?|90(\\D+0)?)\\D+[NSns]?-[\\+-]?(([1-8]?\\d)\\D+[0-6]?\\d([\\.,]\\d{1,})?|90(\\D+0)?)\\D+[NSns]?$"
+      ) ~ "DDM interval"
+    ), lat_coordinate_format
+  )) %>% 
+  mutate(long_coordinate_format =  as.factor(long_coordinate_format),
+         lat_coordinate_format =  as.factor(lat_coordinate_format))
+```
+
+Total Observations: 10232
+
+### 1.2. Shorten the DDM intervals for decimal conversio
+
+```{r 12}
+df <- 
+  df %>% 
+  filter(!(long_coordinate_format %in% NA_character_),
+         !(lat_coordinate_format %in% NA_character_)) %>% 
+  mutate(longitude_temp = case_when(
+    long_coordinate_format == "DDM interval" ~ str_extract(longitude, "^[^-]+"), # extracts everything before the dash 
+    TRUE ~ longitude
+  )) %>% 
+  mutate(latitude_temp = case_when(
+    lat_coordinate_format == "DDM interval"~ str_extract(latitude, "^[^-]+"),
+    TRUE ~ latitude
+  )) 
+```
+
+### 2. Convert coordinate to decimals
+
+### 2.1. Replace all nondigits with semicolon
+
+```{r 21}
+replace_nondigits <- function(string) {
+  # Remove leading "-" if present
+  string <- str_replace(string, "^-", "")
+  
+  # Remove all letters
+  string <- str_remove_all(string, "[A-Za-z]")
+  
+  # Remove whitespaces
+  string <- str_replace(string, " ", "")
+  
+  
+  # Replace remaining non-digit characters except for "." with ";"
+  new_string <- gsub("[^0-9\\.]", ";", string)
+  
+  # Replace ";;" with ";"
+  result_string <- gsub(";;", ";", new_string)
+  
+  return(result_string)
+}
+
+
+replace_nondigits_vector <- function(strings) {
+  new_strings <- lapply(strings, replace_nondigits)
+  return(new_strings)
+}
+```
+
+### 2.2. Extract all digits and divide them into three groups
+
+```{r 22}
+# first = degreesm, second = minutes, third = seconds 
+
+extract_digits_from_string <- function(string) {
+  # Split the string into parts based on semicolons
+  parts <- strsplit(string, ";", fixed = TRUE)[[1]]
+  
+  # Extract digits and dots from each part
+  first <- gsub("[^0-9\\.]", "", parts[1])
+  second <- ifelse(length(parts) >= 2, gsub("[^0-9\\.]", "", parts[2]), 0)
+  third <- ifelse(length(parts) >= 3, gsub("[^0-9\\.]", "", parts[3]), 0)
+  
+  # Replace NA values with 0
+  first <- ifelse(is.na(first), 0, first)
+  second <- ifelse(is.na(second), 0, second)
+  third <- ifelse(is.na(third), 0, third)
+  
+  # Return the extracted digits as a list
+  return(list(first = first, second = second, third = third))
+}
+
+extract_digits_from_vector <- function(strings) {
+  results <- lapply(strings, extract_digits_from_string)
+  return(results)
+}
+```
+
+### 2.3. Apply the replace and extract functions
+
+```{r 23}
+df <- 
+  df %>% 
+  mutate(
+    longitudecomma = sapply(longitude_temp, replace_nondigits_vector),
+    latitudecomma = sapply(latitude_temp, replace_nondigits_vector)
+  ) %>% 
+  mutate(
+    longitudedigits = sapply(longitudecomma, extract_digits_from_vector),
+    latitudedigits = sapply(latitudecomma, extract_digits_from_vector)
+  ) 
+```
+
+Total Observations: 9972
+
+### 2.4. Calculate the decimal degrees
+
+```{r 24}
+df <- 
+  df %>%
+  mutate(
+    longitudedigits = purrr::map(longitudedigits, unlist), 
+    latitudedigits = purrr::map(latitudedigits, unlist)
+  ) %>%
+  unnest_wider(col = c(longitudedigits, latitudedigits), names_sep = "_") %>%
+  mutate(across(longitudedigits_first:latitudedigits_third, as.numeric)) %>% 
+  mutate(
+    longitude_DD = longitudedigits_first + longitudedigits_second / 60 + longitudedigits_third / 3600,
+    latitude_DD = latitudedigits_first + latitudedigits_second / 60 + latitudedigits_third / 3600
+  ) 
+```
+
+Total Observations: 9972
+
+### 2.5. Extract direction and dimension of the coordinates
+
+```{r 25}
+extract_direction_and_dimension <- function(df, longitude_col, latitude_col) {
+  df %>%
+    mutate(
+      longitude_direction = case_when(
+        str_detect(!!sym(longitude_col), "[SsWw]") | str_starts(!!sym(longitude_col), "^-") ~ "-",
+        TRUE ~ "+"
+      ),
+      latitude_direction = case_when(
+        str_detect(!!sym(latitude_col), "[SsWw]") | str_starts(!!sym(latitude_col), "^-") ~ "-",
+        TRUE ~ "+"
+      )
+    )
+}
+
+# extract it:
+df<- 
+  df %>%
+  extract_direction_and_dimension("longitude", "latitude")
+
+```
+
+### 2.6. Apply the extracted directions to the decomal degrees
+
+```{r 26}
+apply_direction_to_coordinates <- function(df, longitude_col, latitude_col) {
+  df %>%
+    mutate(
+      longitude_DD_direction = ifelse(longitude_direction == "-", -longitude_DD, longitude_DD),
+      latitude_DD_direction = ifelse(latitude_direction == "-", -latitude_DD, latitude_DD)
+    )
+}
+
+df <- apply_direction_to_coordinates(df, "longitude_DD", "latitude_DD")
+
+```
+
+### 2.7. Rename columns for better understanding and delete the columns
+
+```{r 27}
+df <- 
+  df %>%
+  rename(longitude_decimal = longitude_DD_direction)%>%
+  rename(latitude_decimal = latitude_DD_direction)
+
+
+df <- 
+  df %>% 
+  select(-(long_coordinate_format:latitude_direction))
+```
+
+Total Observations: 9972
+
+### 2.8. Correcting some points per hand
+
+1st.
+correction for rows 4555 to 4566
+
+```{r 28}
+df <- 
+  df %>% 
+  mutate(latitude_decimal = case_when(
+    measurement_id %in% c(4555:4566) ~ -25.16666667,
+    measurement_id %in% c(4780:4782) ~ -10.45,
+    measurement_id %in% c(8745:8816) ~ 55.18,
+    TRUE ~ latitude_decimal
+  ))%>% 
+  mutate(longitude_decimal = case_when(
+    measurement_id %in% c(4780:4782) ~ -51.15,
+    measurement_id %in% c(8377:8380) ~ 15.18,
+    measurement_id %in% c(8745:8816) ~ 10.27,
+    TRUE ~ longitude_decimal
+  )) 
+```
+
+### 3.1 Assign country_new based on DD coordinates
+
+```{r 31}
+
+maptomap <- getMap(resolution = "high")
+
+
+coords2country <- function(df, longitude_col, latitude_col) {
+  # Get country polygons
+  countriesSP <- getMap(resolution = "high")
+  
+  # Create SpatialPoints object from df frame
+  pointsSP <- SpatialPoints(df[, c(longitude_col, latitude_col)], proj4string = CRS(proj4string(countriesSP)))
+  
+  # Overlap points with countries to get country names
+  countries <- over(pointsSP, countriesSP)
+  
+  # Add country names to the df frame
+  df$country_new <- countries$ADMIN
+  
+  return(df)
+}
+
+df <- coords2country(df, "longitude_decimal", "latitude_decimal")
+```
+
+### 3.2. Fill some country_new NA per hand
+
+after checking per hand we can include some points that lied really close to water and got assigned to NA because of it
+
+```{r 32}
+df <- 
+  df %>% 
+  mutate(
+    country_new = case_when(
+      measurement_id %in% c(548:549) ~ "China",
+      measurement_id %in% c(3646:3653) ~ "China",
+      measurement_id %in% c(7043) ~ "China",
+      measurement_id %in% c(7192:7195) ~ "China",
+      measurement_id %in% c(7205) ~ "China",
+      measurement_id %in% c(7446:7448) ~ "China",
+      measurement_id %in% c(7452:7454) ~ "China",
+      measurement_id %in% c(8125:8132) ~ "Canada",
+      measurement_id %in% c(8203:8214) ~ "Canada",
+      TRUE ~ country_new
+      
+    )) 
+```
+
+### 3.3. Delete observations where no country was assigned to coordinates
+
+now we only have 161 (instead of 242) points that did not get a country asigned.
+After checking these points per hand we reassured ourselves that those points indeed have wrong coordinates and lie on water so lets exclude them.
+
+```{r 33}
+df <- df %>% filter(!(country_new %in% NA))
+```
+
+### 4.1. Group crop types
+
+```{r 41}
+df$crop_type <-  as.factor(df$crop_type)
+
+df <-  
+  df %>% 
+  mutate(crop_type = str_to_title(crop_type),
+         crop_type = as.factor(crop_type))
+
+df <- 
+  df %>% 
+  mutate(crop_type_grouped_small = case_when(
+    grepl("ice", as.character(crop_type)) ~ "Rice",
+    grepl("Wheat", as.character(crop_type)) ~ "Wheat",
+    grepl("Spelt", as.character(crop_type)) ~ "Other Grains",
+    grepl("Sorghum", as.character(crop_type)) ~ "Other Grains",
+    crop_type == "Oat" ~ "Other Grains",
+    crop_type == "Cereals" ~ "Other Grains",
+    
+    grepl("Corn", as.character(crop_type)) ~ "Maize",
+    grepl("Maize", as.character(crop_type)) ~ "Maize",
+    
+    crop_type == "Apple" ~ "Fruits",
+    crop_type == "Blueberry" ~ "Fruits",
+    crop_type == "Cherry" ~ "Fruits",
+    crop_type == "Grape" ~ "Fruits",
+    crop_type == "Guava" ~ "Fruits",
+    crop_type == "Fruit" ~ "Fruits",
+    
+    crop_type == "Chestnut" ~ "Nuts",
+    crop_type == "Walnut" ~ "Nuts",
+    
+    grepl("Pulses", as.character(crop_type)) ~ "Legumes",
+    grepl("Soybean", as.character(crop_type)) ~ "Legumes",
+    grepl("Bean", as.character(crop_type)) ~ "Legumes",
+    
+    crop_type == "Broccoli" ~ "Vegetables",
+    grepl("Brussels", as.character(crop_type)) ~ "Vegetables",
+    grepl("Cabbage", as.character(crop_type)) ~ "Vegetables",
+    crop_type == "Cauliflower" ~ "Vegetables",
+    crop_type == "Collards" ~ "Vegetables",
+    grepl("Vegetable", as.character(crop_type)) ~ "Vegetables",
+    grepl("Tomato", as.character(crop_type)) ~ "Vegetables",
+    crop_type == "Zucchini" ~ "Vegetables",
+    
+    grepl("Oil", as.character(crop_type)) ~ "Oilcrops",
+    
+    grepl("Cotton", as.character(crop_type)) ~ "Fibercrops",
+    crop_type == "Fiber" ~ "Fibercrops",
+    
+    crop_type == "Roots & Tubers" ~ "Tubercrops",
+    crop_type == "Tubercrop" ~ "Tubercrops",
+    
+    crop_type == "Upland Arable Land" ~ "Grassland",
+    crop_type == "Red Clover" ~ "Grassland",
+    grepl("Grass", as.character(crop_type)) ~ "Grassland",
+    
+    crop_type == "Beverage" ~ "Beveragecrops",
+    crop_type == "Coffee" ~ "Beveragecrops",
+    crop_type == "Sugar Crops" ~ "Beveragecrops",
+    
+    TRUE ~ as.character(crop_type)
+  )) %>%
+  mutate(crop_type_grouped_small = as.factor(crop_type_grouped_small)) %>% 
+  mutate(crop_type_grouped_big = case_when(
+    crop_type_grouped_small == "Beveragecrops" ~ "Others", 
+    crop_type_grouped_small == "Forage" ~ "Others",
+    crop_type_grouped_small == "Fibercrops" ~ "Others",
+    crop_type_grouped_small == "Mixed Or Nd" ~ "Others",
+    crop_type_grouped_small == "Tubercrops" ~ "Vegetables",
+    crop_type_grouped_small == "Legumes" ~ "Vegetables",
+    crop_type_grouped_small == "Nuts" ~ "Fruits",
+    crop_type_grouped_small == "Maize" ~ "Grains",
+    crop_type_grouped_small == "Wheat" ~ "Grains",
+    crop_type_grouped_small == "Rice" ~ "Grains",
+    TRUE ~ as.character(crop_type_grouped_small) 
+  ))%>% 
+  mutate(crop_type_grouped_big = as.factor(crop_type_grouped_big))
+
+df <- 
+  df %>% 
+  mutate(crop_type = case_when(
+    ma_id == "D1120" ~  "Maize",
+    TRUE ~ crop_type
+  ))%>% 
+  mutate(crop_type_grouped_small = case_when(
+    crop_type == "Maize" ~  "Maize",
+    TRUE ~ crop_type_grouped_small))%>% 
+  mutate(crop_type_grouped_big = case_when(
+    crop_type == "Maize" ~  "Grains",
+    TRUE ~ crop_type_grouped_big)) %>% 
+  mutate(crop_type_grouped_small = as.factor(crop_type_grouped_small),
+         crop_type_grouped_big = as.factor(crop_type_grouped_big))
+```
+
+### 5. Calculate the land cover map year
+
+### 5.1. Add missing publication years per hand
+
+```{r 51}
+df_pubyear_added <- read.csv("C:\\Users\\lisa7\\Documents\\surrounding_landscapes\\my_computer_files\\df_pubyear_added.csv")  
+df_pubyear_added <- 
+  df_pubyear_added %>% 
+  select(row_id, study_pubyear) 
+
+df <- 
+  left_join(df, df_pubyear_added, join_by("measurement_id"=="row_id") )
+
+df <- 
+  df %>% 
+  mutate(
+    study_pubyear.x = ifelse(study_pubyear.x %in% NA_character_, study_pubyear.y, study_pubyear.x)) 
+
+df <- 
+  df %>% 
+  select(-study_pubyear.y) %>% 
+  rename(study_pubyear = study_pubyear.x) %>% 
+  mutate(across(study_pubyear, as.numeric)) # here you set the "unpublished" studies to NA
+
+rm(df_pubyear_added)
+```
+
+#### Add D652
+
+D652 saved its publication year and titles in a separate word document.
+So, it has to be added to our dataset.
+
+```{r 52}
+df_d652 <- read.csv("C:\\Users\\lisa7\\Documents\\surrounding_landscapes\\my_computer_files\\d652_years.csv", header = FALSE)  
+df_d652 <-
+  df_d652 %>%
+  rename(`ma_id` = `V1`,
+         `study_id` = `V2`,
+         `reference` = `V3`) %>% 
+  select(-V4) 
+
+df_d652 <-
+  df_d652 %>% 
+  mutate(study_pubyear = str_extract(df_d652$reference, 
+                                     "\\b(19[6-9][0-9]|20[0-1][0-9]|2020|2021|2022)\\b") 
+         # in this case the Year extraction is kind of awkward because the source 
+         # utilized different citation styles, 
+         # and I cannot extract just the 4 digits or define the surroundings.
+  ) %>% 
+  mutate(ma_id_study_id = paste0("D652", sep = "_", as.character(study_id))) %>% 
+  select(ma_id_study_id, study_pubyear, reference) %>% 
+  unique()  %>% 
+  mutate(across(study_pubyear, as.numeric))
+
+df_d652 <- 
+  df_d652 %>% 
+  mutate(study_pubyear = case_when(
+    ma_id_study_id == "D652_238" ~ 2011, # reason added: code glitch. year present in the csv
+    TRUE ~ study_pubyear 
+  ))
+
+```
+
+### 5.3. Merge df with D652
+
+```{r 53}
+
+df <- 
+  df %>% 
+  mutate(ma_id_study_id = paste0(as.character(ma_id), sep = "_", as.character(study_id)))
+
+df <-   
+  left_join(df, df_d652, join_by("ma_id_study_id"=="ma_id_study_id"), 
+            relationship = "many-to-one") 
+
+df <- 
+  df %>% 
+  mutate(study_pubyear.x = ifelse(ma_id == "D652", study_pubyear.y, study_pubyear.x)) %>% 
+  mutate(reference.x = ifelse(ma_id == "D652", reference.y, reference.x)) %>% 
+  select(-study_pubyear.y, - reference.y, - ma_id_study_id) %>% 
+  rename(study_pubyear = study_pubyear.x,
+         reference = reference.x)
+
+rm(df_d652)
+```
+
+### 5.4. Calculate harvest year by median
+
+```{r 54}
+
+df <- 
+  df %>% 
+  mutate(harvest_year = str_sub(harvest_year, end = 4),
+         harvest_year = as.numeric(harvest_year)) %>% 
+  mutate(publication_to_harvest_year_difference = study_pubyear - harvest_year)  
+
+summary(df$publication_to_harvest_year_difference)
+# the difference median lies by 7 
+
+df <- 
+  df %>% 
+  mutate(harvest_year_by_median = study_pubyear-7)
+
+```
+
+### 5.5. Assign land cover map year
+
+```{r 55}
+
+df <- 
+  df %>%
+  mutate(landcover_map_year = case_when(
+    harvest_year_by_median >= 2000 & harvest_year_by_median <= 2022 ~ harvest_year_by_median,
+    harvest_year_by_median < 1975 ~ NA_integer_,
+    harvest_year_by_median >= 1975 & harvest_year_by_median <= 1987 ~ 1985,
+    harvest_year_by_median >= 1988 & harvest_year_by_median <= 1992 ~ 1990,
+    harvest_year_by_median >= 1993 & harvest_year_by_median <= 1997 ~ 1995,
+    harvest_year_by_median > 1997 & harvest_year_by_median <= 2000 ~ 2000,
+    TRUE ~ NA_integer_  # default case if none of the above conditions match
+  ))
+
+
+```
+
+### 6. Convert yield units to kg/ha
+
+### 6.1. Convert the yield to kg/ha
+
+```{r 61}
+df$yield_unit <-  as.factor(df$yield_unit)
+
+# We only handle "convertable" units. 
+# those that indicate a yield weight per area.
+
+df <- 
+  df %>% 
+  mutate(
+    yield_control_kgha = case_when(
+      yield_unit == "Mg/ha" ~ yield_control*1000, 
+      yield_unit == "Mg/ha dry matter" ~ yield_control*1000, 
+      yield_unit == "kg/ha" ~ yield_control, 
+      yield_unit == "kg/ha (cattle)" ~ yield_control, 
+      yield_unit == "kg/hm-2" ~ yield_control*10, 
+      yield_unit == "t/ha" ~ yield_control*1000, 
+      TRUE ~ NA_real_
+      
+    ),
+    yield_treatment_kgha = case_when(
+      yield_unit == "Mg/ha" ~ yield_treatment*1000, 
+      yield_unit == "Mg/ha dry matter" ~ yield_treatment*1000, 
+      yield_unit == "kg/ha" ~ yield_treatment, 
+      yield_unit == "kg/ha (cattle)" ~ yield_treatment, 
+      yield_unit == "kg/hm-2" ~ yield_treatment*10, 
+      yield_unit == "t/ha" ~ yield_treatment*1000, 
+      TRUE ~ NA_real_
+      
+    )
+  )
+```
+
+### 6.2. Convert also the yield SD values
+
+```{r 62}
+df <- 
+  df %>% 
+  mutate(
+    yield_SD_control_kgha = case_when(
+      yield_unit == "Mg/ha" ~ yield_SD_control*1000, 
+      yield_unit == "Mg/ha dry matter" ~ yield_SD_control*1000, 
+      yield_unit == "kg/ha" ~ yield_SD_control, 
+      yield_unit == "kg/ha (cattle)" ~ yield_SD_control, 
+      yield_unit == "kg/hm-2" ~ yield_SD_control*10, 
+      yield_unit == "t/ha" ~ yield_SD_control*1000, 
+      TRUE ~ NA_real_
+      
+    ),
+    yield_SD_treatment_kgha = case_when(
+      yield_unit == "Mg/ha" ~ yield_SD_treatment*1000, 
+      yield_unit == "Mg/ha dry matter" ~ yield_SD_treatment*1000, 
+      yield_unit == "kg/ha" ~ yield_SD_treatment, 
+      yield_unit == "kg/ha (cattle)" ~ yield_SD_treatment, 
+      yield_unit == "kg/hm-2" ~ yield_SD_treatment*10, 
+      yield_unit == "t/ha" ~ yield_SD_treatment*1000, 
+      TRUE ~ NA_real_
+      
+    )
+  )
+
+```
+
+Total Observations: 9817
+
+### 7. Exclude yield outliers
+
+```{r 7}
+df <- 
+  df %>% 
+  filter(yield_control_kgha<1000000 | yield_control_kgha %in% NA_real_)
+```
+
+### 8. Write the csv file
+
+```{r 8}
+write.csv(df, "20241007_data_yield.csv", row.names = FALSE)
+```
+
+### 9. Data check
+
+-   it is a yield data point dataset.
+
+-   so there should be yield for every point
+
+-   and the publication and the landcover map should always be present
+
+-   both control and treatment should be present
+
+-   the units should be present
+
+-   the treatment should be present
+
+```{r 91}
+data_20241007 <- df
+```
+
+```{r 92}
+
+x <-data_20241007[which(is.na(data_20241007$ma_id)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$measurement_id)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$study_id)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$control_id)), ] # 0 rows
+x <- data_20241007[which(is.na(data_20241007$control_replicates)), ] # 36 rows FEB23_440
+x <- data_20241007[which(is.na(data_20241007$treatment_replicates)), ] # same 36 rows FEB23_440
+x <-data_20241007[which(is.na(data_20241007$crop_type)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$crop_type_grouped_small)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$crop_type_grouped_big)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$treatment)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$yield_control)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$yield_treatment)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$yield_SD_control)), ] # 3052 rows
+x <-data_20241007[which(is.na(data_20241007$yield_SD_treatment)), ] # 3051 rows
+x <-data_20241007[which(is.na(data_20241007$yield_unit)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$longitude_decimal)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$latitude_decimal)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$country_new)), ] # 0 rows
+x <-data_20241007[which(is.na(data_20241007$landcover_map_year)), ] # 1210 rows
+# those are most likely 1) unpublished papers
+# or papers that were neither on scholar nor on cnki
+# since it is impossible to find these years and assign a map, we exclude them.
+data_20241007 <- data_20241007[which(!is.na(data_20241007$landcover_map_year)), ]
+```
+
+```{r 93}
+flags <- clean_coordinates(data_20241007, lon = "longitude_decimal", lat = "latitude_decimal", species = "measurement_id")
+summary(flags)
+
+flags %>% filter(.sea == "FALSE") # those are the coordinates we added manually, 
+# we can be sure that they just land very close to water 
+
+
+x <-data_20241007[which(!is.na(data_20241007$landcover_map_year)), ]
+#write.csv(x, "20241010_data_yield.csv", row.names = FALSE)
+
+```
+
+# Section II
+
+### 10. Run the GEE code to calculate area and edge length of classes
+
+### 11. Merge the GEE outputs
+
+```{r 110}
+
+
+#### 1000 m #####
+lm_metrics_1000m_1985 <- read.csv("my_computer_files/GEE metrics 1000 m df20102024/lm_metrics_1000m_1985.csv", colClasses = "character")
+lm_metrics_1000m_1990 <- read.csv("my_computer_files/GEE metrics 1000 m df20102024/lm_metrics_1000m_1990.csv", colClasses = "character")
+lm_metrics_1000m_1995 <- read.csv("my_computer_files/GEE metrics 1000 m df20102024/lm_metrics_1000m_1995.csv", colClasses = "character")
+
+# Initialize an empty list to store the data frames
+lm_metrics_1000m <- list()
+
+for (year in c(2000:2015)) {
+  file_path <- paste0("my_computer_files/GEE metrics 1000 m df20102024/lm_metrics_1000m_", year, ".csv")
+  
+  lm_metrics_1000m[[year]] <- read.csv(file_path, colClasses = "character")
+}
+
+# Combine all data frames into one
+lm_metrics_full_1000m <- bind_rows(lm_metrics_1000m)
+
+lm_metrics_full_1000m <- 
+  bind_rows(lm_metrics_full_1000m, lm_metrics_1000m_1985, 
+            lm_metrics_1000m_1990, lm_metrics_1000m_1995)
+
+
+
+# prepare for future merge with data_pr dataset:
+lm_metrics_full_1000m <- lm_metrics_full_1000m[,colSums(is.na(lm_metrics_full_1000m))<nrow(lm_metrics_full_1000m)]
+
+lm_metrics_full_1000m <- 
+  lm_metrics_full_1000m %>% 
+  mutate(buffer_radius_m = 1000)
+
+rm(lm_metrics_1000m, lm_metrics_1000m_1985, lm_metrics_1000m_1990, lm_metrics_1000m_1995)
+
+
+#### 2500 m #####
+lm_metrics_2500m_1985 <- read.csv("my_computer_files/GEE metrics 2500 m df20102024/lm_metrics_2500m_1985.csv", colClasses = "character")
+lm_metrics_2500m_1990 <- read.csv("my_computer_files/GEE metrics 2500 m df20102024/lm_metrics_2500m_1990.csv", colClasses = "character")
+lm_metrics_2500m_1995 <- read.csv("my_computer_files/GEE metrics 2500 m df20102024/lm_metrics_2500m_1995.csv", colClasses = "character")
+
+# Initialize an empty list to store the data frames
+lm_metrics_2500m <- list()
+
+for (year in c(2000:2015)) { # cuz there is no 2016 in the table and you get errors otherwise
+  file_path <- paste0("my_computer_files/GEE metrics 2500 m df20102024/lm_metrics_2500m_", year, ".csv")
+  
+  lm_metrics_2500m[[year]] <- read.csv(file_path, colClasses = "character")
+}
+
+# Combine all data frames into one
+lm_metrics_full_2500m <- bind_rows(lm_metrics_2500m)
+
+lm_metrics_full_2500m <- 
+  bind_rows(lm_metrics_full_2500m, lm_metrics_2500m_1985, 
+            lm_metrics_2500m_1990, lm_metrics_2500m_1995)
+
+
+
+# prepare for future merge with data_pr dataset:
+lm_metrics_full_2500m <- lm_metrics_full_2500m[,colSums(is.na(lm_metrics_full_2500m))<nrow(lm_metrics_full_2500m)]
+
+lm_metrics_full_2500m <- 
+  lm_metrics_full_2500m %>% 
+  mutate(buffer_radius_m = 2500)
+
+rm(lm_metrics_2500m, lm_metrics_2500m_1985, lm_metrics_2500m_1990, lm_metrics_2500m_1995)
+
+
+#### 5000 m #####
+lm_metrics_5000m_1985 <- read.csv("my_computer_files/GEE metrics 5000 m df20102024/lm_metrics_5000m_1985.csv", colClasses = "character")
+lm_metrics_5000m_1990 <- read.csv("my_computer_files/GEE metrics 5000 m df20102024/lm_metrics_5000m_1990.csv", colClasses = "character")
+lm_metrics_5000m_1995 <- read.csv("my_computer_files/GEE metrics 5000 m df20102024/lm_metrics_5000m_1995.csv", colClasses = "character")
+
+# Initialize an empty list to store the data frames
+lm_metrics_5000m <- list()
+
+for (year in c(2000:2015)) { # cuz there is no 2016 in the table and you get errors otherwise
+  file_path <- paste0("my_computer_files/GEE metrics 5000 m df20102024/lm_metrics_5000m_", year, ".csv")
+  
+  lm_metrics_5000m[[year]] <- read.csv(file_path, colClasses = "character")
+}
+
+# Combine all data frames into one
+lm_metrics_full_5000m <- bind_rows(lm_metrics_5000m)
+
+lm_metrics_full_5000m <- 
+  bind_rows(lm_metrics_full_5000m, lm_metrics_5000m_1985, 
+            lm_metrics_5000m_1990, lm_metrics_5000m_1995)
+
+
+
+# prepare for future merge with data_pr dataset:
+lm_metrics_full_5000m <- lm_metrics_full_5000m[,colSums(is.na(lm_metrics_full_5000m))<nrow(lm_metrics_full_5000m)]
+
+lm_metrics_full_5000m <- 
+  lm_metrics_full_5000m %>% 
+  mutate(buffer_radius_m = 5000)
+
+rm(lm_metrics_5000m, lm_metrics_5000m_1985, lm_metrics_5000m_1990, lm_metrics_5000m_1995)
+
+
+lm_metrics_full <- bind_rows(lm_metrics_full_1000m, 
+                             lm_metrics_full_2500m,
+                             lm_metrics_full_5000m)
+
+rm(lm_metrics_full_1000m, lm_metrics_full_2500m, lm_metrics_full_5000m)
+
+lm_metrics_full_selected <- 
+  lm_metrics_full %>% 
+  select(measurement_id, class, area_m2, length_m, buffer_radius_m) %>% 
+  rename(edgelength_m = length_m) %>% 
+  mutate(measurement_id = as.integer(measurement_id),
+         area_m2 = as.numeric(area_m2),
+         edgelength_m = as.numeric(edgelength_m),
+         buffer_radius_m = as.numeric(buffer_radius_m))
+```
+
+### 11.1. Calculate additional metrics
+
+```{r 111}
+lm_metrics_full_selected_calc <- 
+  lm_metrics_full_selected %>% 
+  group_by(measurement_id, buffer_radius_m, class) %>% 
+  mutate(buffer_area_m2 = (pi*buffer_radius_m^2),
+         proportion = area_m2/buffer_area_m2) %>% 
+  mutate(perimeter_to_area = edgelength_m/area_m2) %>% 
+  ungroup()
+```
+
+### 12. Merge with the bigger dataset
+
+```{r 120 }
+data_20241007 <- read.csv("C:\\Users\\lisa7\\Documents\\surrounding_landscapes\\data\\working data\\20241010_data_yield.csv")  
+
+df_20241020 <- 
+  left_join(data_20241007, lm_metrics_full_selected_calc, join_by("measurement_id"=="measurement_id"))
+
+rm(lm_metrics_full, lm_metrics_full_selected, lm_metrics_full_selected_calc)
+
+```
+
+# Section III
+
+```{r 003 }
+str(df_20241020)
+```
+
+### Pre check
+
+Pre check is done before proceeding to Alfred's check.
+It is made to the data that was collected after running the GEE code and merging it with the original properties of the dataset.
+
+### **Attention:**
+
+-   36 observations from `FEB23_440` have `NA` in **number of replicates**.
+
+-   3008 observations have `NA` in **yield_SD_control**.
+
+-   3007 observations have `NA` in **yield_SD_treatment**.
+
+-   Points from Hawaii are excluded because there was no map provided for Hawaii, and the calculation resulted in zeroes.
+
+```{r 0031}
+
+x <-df_20241020[which(is.na(df_20241020$ma_id)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$measurement_id)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$study_id)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$control_id)), ] # 0 obs
+x <- df_20241020[which(is.na(df_20241020$control_replicates)), ] # 36 obs FEB23_440
+x <- df_20241020[which(is.na(df_20241020$treatment_replicates)), ] # same 36 obs FEB23_440
+x <-df_20241020[which(is.na(df_20241020$crop_type)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$crop_type_grouped_small)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$crop_type_grouped_big)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$treatment)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$yield_control)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$yield_treatment)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$yield_SD_control)), ] # 3008 obs
+x <-df_20241020[which(is.na(df_20241020$yield_SD_treatment)), ] # 3007 obs
+x <-df_20241020[which(is.na(df_20241020$yield_unit)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$longitude_decimal)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$latitude_decimal)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$country_new)), ] # 0 obs
+x <-df_20241020[which(is.na(df_20241020$landcover_map_year)), ] # 0 obs
+
+#
+# #DataExplorer::create_report(df_20241020, output_file = "report.pdf", 
+#                              output_format = "pdf_document")
+#
+# # library(CoordinateCleaner)
+# # flags <- clean_coordinates(df_20241020, lon = "longitude_decimal", 
+#  lat = "latitude_decimal", species = "measurement_id")
+# # summary(flags)
+# #
+# # flags %>% filter(.sea == "FALSE") # those are the coordinates we added manually,
+# # # we can be sure that they just land very close to water
+#
+
+# Hawaiian points could not be calculated because there is no map for Hawaii:
+hawaii <- 
+df_20241020 %>% 
+  filter(longitude_decimal < -150) %>% 
+  select(measurement_id, latitude_decimal, longitude_decimal) %>% 
+  pull(measurement_id)
+
+df_20241020 <- 
+df_20241020 %>% 
+  filter(!(measurement_id %in% hawaii))
+
+
+```
+
+### 13 Read in Additional Data
+
+```{r 131}
+landcover.meta<-read.csv("C:\\Users\\lisa7\\Documents\\20250810_surrounding_landscapes\\02_DataAquisition\\LandcoverIndices\\legend_classcode_landcovertypes.csv",  sep = ',', dec = '.')
+
+data <- df_20241020
+data_unchanged  <- data
+
+```
+
+```{r 132}
+x <-unique(data$measurement_id)
+length(x)
+```
+
+Total Observations: 7869
+
+## Subsection I
+
+## (A) check frequency of class entries per unique treatment yield measurement (i.e. No.)
+
+Check whether we have each land-cover class only one time for each unique measurement
+
+```{r IA freq of class entries per unique measurement}
+
+check<-as.data.frame(table(data$class, data$buffer_radius_m, data$measurement_id))
+colnames(check)<- c('class', 'radius', 'number','Freq')
+
+# Good that seems right now!
+x <- unique(check$number[which(check$Freq>1)]) 
+
+length(x)
+
+# clean up
+rm(check)
+```
+
+Result: All observations are unique and there are no land-cover dublicates
+
+## (B) check for missing landscape data
+
+```{r IB check for missing landscape data}
+unique(data$buffer_radius_m)
+x<-data[which(is.na(data$buffer_radius_m)), ]
+print(x)
+```
+
+## (C) check the latitude data
+
+```{r IC latitude check}
+summary(data$latitude_decimal)
+```
+
+Result: Latitude fits the allowed interval of [-90:+90]
+
+## (D) Fix 0 edge issues
+
+There is an issue that some land-cover specifications have 0 edge length.
+The reason is unknown.
+
+```{r ID1 0 edge graphs}
+data_edgelength_zero <- 
+data %>% 
+  filter(edgelength_m == 0) %>% 
+  select(measurement_id, class,buffer_radius_m, area_m2, edgelength_m) %>% 
+  filter(area_m2 != 0) %>% 
+  mutate(class = as.factor(class))
+
+
+## ATTENTION! 
+## I exclude class 0 because those are NA areas, and no wonder they have no edge. 
+## Though those are the most cases of edge = 0 and area != 0 
+data_edgelength_zero %>% 
+  group_by(class) %>%
+  filter(class != 0) %>%
+  summarise(sum_area = sum(area_m2), count = n()) %>%
+  ggplot(aes(x = factor(class), y = sum_area)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = count), vjust = -0.5) +
+  labs(title = "Total Area (m²) Within Classes and Number of 
+       zero-edge-Occurrences \nas Bar Label ",
+       x = "Class",
+       y = "Area (m²)") +
+  theme_minimal()
+
+```
+
+There are in total 56 observations that have an area but dont have an edge.
+
+Since we don't know the reasoin we simply fix it.
+The fix is that we assume a circular area of that land-cover class and that it is to 100% in the radius.
+
+```{r ID2 fix the zero edge length}
+
+selection<-which(data$edgelength_m==0) 
+# calculates from the area the radius of a circle with that area and then 
+#computes from the radius the perimeter
+data$edgelength_m[selection]<-(sqrt(data$area_m2[selection])) * 2 
+
+rm(selection)
+
+# short check:
+x <- data %>% 
+  filter(edgelength_m == 0) %>% 
+  filter(area_m2 != 0)
+
+# It worked!
+```
+
+## (E) check whether yield data is realistic
+
+```{r IE1 check yield data}
+
+hist(data$yield_treatment_kgha)
+summary(data$yield_treatment_kgha)
+
+# Alfred uses the following lines to identify the crops that have an 
+# inappropriately high yield 
+unique(data$crop_type_grouped_small[which(data$yield_treatment_kgha>10^7)])
+unique(data$crop_type_grouped_big[which(data$yield_treatment_kgha>10^7)])
+
+# it is also important to check what kind of units are reported 
+unique(data$yield_unit[which(data$yield_treatment_kgha>10^7)])
+
+```
+
+@Alfred's comment: this seems to be a bit odd - a very good corn yield per ha is e.g. 13 tons.
+So, that fits with the median (6000 kg).
+However, we have here a lot of yields that are 10000 tons and higher.
+That cannot be right.
+We should look into this closer!
+One possibility could be that this is the whole biomass and not the corn yield, but that would still weird somehow to report this.
+
+@Elizaveta's comment: Since we do not want to dive into primary literature, lets remove the outliers.
+The highest possible maximum for maize yield in controlled conditions is 83.3 t/ha.
+<https://www-archiv.fdm.uni-hamburg.de/b-online/library/maize/www.ag.iastate.edu/departments/agronomy/yield.html#>:\~:text=When%20maximizing%20these%20factors%20to,(83.3%20t%2Fha).
+
+83.3 t/ha is 83000 kg/ha.
+So let's remove any observation that surpass 100.000 kg/ha
+
+```{r IE2 remove the yield outliers}
+data <- 
+data %>% 
+  mutate(yield_control_kgha = case_when(
+      yield_control_kgha > 100000 ~ NA_real_,
+    TRUE ~ yield_control_kgha
+  )) %>% 
+    mutate(yield_treatment_kgha = case_when(
+      yield_treatment_kgha > 100000 ~ NA_real_,
+    TRUE ~ yield_treatment_kgha
+  )) %>% 
+  filter(!is.na(yield_control_kgha)) %>% 
+  filter(!is.na(yield_treatment_kgha))
+
+
+x <- data %>% select(measurement_id) %>% unique()
+hist(data$yield_treatment_kgha)
+summary(data$yield_treatment_kgha)
+
+```
+
+In the number of observations we went down to 7429 unique measurements.
+
+@Alfreds comment: There are some data that show a quite high change in values - so either an increase by more than 150% or a shrinkage of the yield in the treatment to less than a quarter of what the original yield was.
+This seems extreme - can we trust this?
+We should probably also double check?
+
+```{r IE3 high change in yield contr/treatm                  }
+# @Elizaveta: I rewrote Alfred's code (the next 2 lines) below
+
+#x<-data$yield_treatment_kgha/ data$yield_control_kgha
+#x[which(x> 2.5 | x<0.25)]
+
+data %>% 
+  mutate(coef = yield_treatment_kgha/ data$yield_control_kgha) %>% 
+  filter(coef %in% (0.25:2.5)) %>% 
+  select(-(class:perimeter_to_area)) %>% 
+  unique() %>% 
+  select(1:5, yield_control_kgha, yield_treatment_kgha)
+```
+
+There are only 3 unique measurements with a relatively high change in yield values between control and treatment.
+
+## (F) Sort out proportion data so that land cover classes always add up to 1
+
+```{r IF sum of proportion to 1 }
+
+id<-paste0(data$ma_id, '_',data$measurement_id, '_',data$buffer_radius_m)
+unique_id<-unique(id)
+
+# takes a bit because it is a slow loop... but is okay :)
+for(i in 1:length(unique_id)){x<-which(id==unique_id[i])
+  data$proportion[x]<-data$proportion[x]/sum(data$proportion[x])}
+
+```
+
+```{r}
+write.csv(data, "C:\\Users\\lisa7\\Documents\\surrounding_landscapes\\data\\working data\\20241213_data_yield.csv", row.names = FALSE)
+```
+
+## Subsection II - transform the data
+
+## (A) Change the format
+
+Rewrite the data in the long format
+
+```{r IIA1 change the format}
+
+ data <- read.csv("C:\\Users\\lisa7\\Documents\\20250810_surrounding_landscapes\\02_DataAquisition\\LandcoverIndices\\20241213_data_yield.csv")
+
+# Alfred's code
+# data.mod<- pivot_wider(data[,c(1:49, 51)], names_from = class, 
+#                        values_from = c(42,43,46))
+
+data.mod <- 
+  data %>% 
+  pivot_wider(names_from = class,
+              values_from = c(area_m2, edgelength_m, proportion,perimeter_to_area))
+
+
+
+x<-as.data.frame(table(data.mod$measurement_id))
+table(x$Freq) 
+
+```
+
+That worked nicely - each unique measurement has now exactly three entries(for each of the three radii).
+
+```{r IIA2 make long longer }
+# second step here - we have still three 
+
+data.mod.2<- pivot_wider(data.mod[,-c(42)], names_from = buffer_radius_m, 
+                         values_from = c(42:(ncol(data.mod)-1)))  
+
+x<-as.data.frame(table(data.mod.2$measurement_id))
+table(x$Freq)  
+
+```
+
+that worked nicely again!
+
+## (B) check differences between control and treatment yield data
+
+```{r IIB check diff between contr and treatm}
+x<-data.mod.2[which(data.mod.2$yield_control_kgha == data.mod.2$yield_treatment_kgha),]
+#which(data$yield_control_kgha == data$yield_treatment_kgha)
+
+print(x)
+```
+
+The total number of such yield_control = yield_treatmnet observations is 55.
+Most of the observations however come from FEB23_440 Bender D.A., Morrison W.P., Frisbie R.E. And those indeed are a little bit weird, because the control and treatment are exact the same number across many measurements.
+
+## (C) erase double data entries
+
+In this section we remove double data entries and aggregate the dataset via means.
+
+I rewrote Alfred's code in my way, so the first code section (Alfred's) is silenced, and I do the same procedure in the second code section.
+
+```{r IIC rewmove the double data enrties Alfreds}
+# here I use an aggregate function to compute average for all data that has the same publication year, treatment, location and corp type.
+
+# @Elizaveta: ATTENTION! : STUDY ID IS NOT UNIQUE
+# if I do add study ID (different for each meta-analysis), then I get suddenly 9 additional data points. These should be 9 studies that 
+# are twice in our data set and we probably better remove them.
+
+
+## START ALFRED'S CODE:
+# 
+#data.mod.2$Lat_long<- paste0(data.mod.2$latitude_decimal, data.mod.2$longitude_decimal)
+# 
+# means.check<-aggregate(list(data.mod.2$yield_control_kgha, data.mod.2$yield_treatment_kgha, data.mod.2$measurement_id),
+#                        by = list(data.mod.2$study_pubyear, data.mod.2$treatment, data.mod.2$Lat_long,
+#                                  data.mod.2$crop_type),   function(x){mean(x, na.rm = T)})
+# 
+# colnames(means.check)<-c('study_pubyear', 'treatment', 'Lat_long', 'crop_type','yield_control_kgha',
+#                          'yield_treatment_kgha', 'measurement_id')
+# 
+# means.check.2<-aggregate(list(data.mod.2$yield_control_kgha, data.mod.2$yield_treatment_kgha, data.mod.2$measurement_id),
+#                        by = list(data.mod.2$ma_id, data.mod.2$study_id, data.mod.2$study_pubyear, data.mod.2$treatment, data.mod.2$Lat_long,
+#                                  data.mod.2$crop_type),   function(x){mean(x, na.rm = T)})
+# 
+# colnames(means.check.2)<-c('ma_id','study_id','study_pubyear', 'treatment', 'Lat_long', 'crop_type','yield_control_kgha',
+#                          'yield_treatment_kgha', 'measurement_id')
+# 
+# means.check.2$ID<-paste0(means.check.2$study_pubyear, means.check.2$treatment, means.check.2$Lat_long,means.check.2$crop_type)
+# means.check$ID<-  paste0(means.check$study_pubyear, means.check$treatment, means.check$Lat_long,means.check$crop_type)
+
+## STOP ALFRED'S CODE: 
+```
+
+```{r IIC rewmove the double data enrties Elizavetas}
+
+data.mod.2$Lat_long<- 
+  paste0(data.mod.2$latitude_decimal, data.mod.2$longitude_decimal)
+
+means.check <- 
+data.mod.2 %>%
+  group_by(ma_id, study_id, study_pubyear, treatment, Lat_long, crop_type) %>%
+  summarize(
+    mean_yield_control_kgha = mean(yield_control_kgha, na.rm = TRUE),
+    mean_yield_treatment_kgha = mean(yield_treatment_kgha, na.rm = TRUE),
+    mean_measurement_id = mean(measurement_id, na.rm = TRUE) 
+  ) %>% 
+  ungroup()
+
+means.check$ID<-paste0(means.check$study_pubyear, means.check$treatment, 
+                       means.check$Lat_long,means.check$crop_type)
+
+x<-as.data.frame(table(means.check$ID))
+which(x$Freq>1)
+
+# alfreds comment:
+# identify the double entries - where the everything is the same 
+#('study_pubyear', 'treatment', 'Lat_long', 'crop_type' and there are still two entries)
+
+
+dublicates <- 
+means.check %>%
+  group_by(ID) %>%
+  filter(n() > 1) %>%
+  ungroup() %>% 
+  arrange(ID) 
+  
+dublicates_ID <- 
+  dublicates %>% 
+  pull(ID)
+
+
+
+
+```
+
+As you can see, these entries are not duplicates (I think the easiest way is to identify it by the yield_control_kgha, yield_treatment_kgha combination).
+They indeed share the publication year, location, treatment and crop, but come from different studies.
+So they do not have to be excluded.
+
+## (D) Average replicates that use the same location and the same land-cover map
+
+**We need:**
+
+1.  The mean of the two yields.
+
+2.  The combination of the standard deviation.
+
+3.  The sum of the sample sizes.
+
+4.  The number of aggregated unique measurement IDs.
+
+Again, I silenced Alfred's code, and did the same operation in the next code section.
+
+```{r IID average replicates that share location and year Alfreds}
+
+# Alfred's code: 
+
+# means<-aggregate(list(data.mod.2$yield_control_kgha, data.mod.2$yield_treatment_kgha),
+#                        by = list(data.mod.2$landcover_map_year, data.mod.2$treatment, data.mod.2$Lat_long,
+#                                  data.mod.2$crop_type),   function(x){mean(x, na.rm = T)})
+# colnames(means)<-c('landcover_map_year','treatment', 'Lat_long', 'crop_type', 'yield_control_kgha', 'yield_treatment_kgha')
+
+# @Elizaveta: ATTENTION: I dont get why for Sd treatment yield_treatment is used 
+
+# add sds of yield
+# sds.yield<-aggregate(list(data.mod.2$yield_SD_control, data.mod.2$yield_treatment),
+#                        by = list(data.mod.2$landcover_map_year, data.mod.2$treatment, data.mod.2$Lat_long,
+#                                  data.mod.2$crop_type),   function(x){ sqrt(sum(x^2))})
+# colnames(sds.yield)<-c('landcover_map_year','treatment', 'Lat_long', 'crop_type', 'yield_SD_control', 'yield_treatment')
+
+# means$yield_SD_control<- sds.yield$yield_SD_control
+# means$yield_SD_treatment<- sds.yield$yield_treatment
+# 
+# # sum sample size of yield
+# n.yield<-aggregate(list(data.mod.2$control_replicates, data.mod.2$treatment_replicates),
+#                      by = list(data.mod.2$landcover_map_year, data.mod.2$treatment, data.mod.2$Lat_long,
+#                                data.mod.2$crop_type),   function(x){sum(x)})
+# colnames(n.yield)<-c('landcover_map_year','treatment', 'Lat_long', 'crop_type', 'replicates_control_summed', 'replicates_treatment_summed')
+# 
+# means$replicates_control_summed<- n.yield$replicates_control_summed
+# means$replicates_treatment_summed<- n.yield$replicates_treatment_summed
+# 
+# # sum sample size of yield
+# n.aggregated<-aggregate(list(data.mod.2$control_replicates),
+#                    by = list(data.mod.2$landcover_map_year, data.mod.2$treatment, data.mod.2$Lat_long,
+#                              data.mod.2$crop_type),   function(x){length(x)})
+# colnames(n.aggregated)<-c('landcover_map_year','treatment', 'Lat_long', 'crop_type', 'n_aggregated')
+# 
+# means$n_aggregated<- n.aggregated$n_aggregated
+
+
+
+```
+
+```{r IID average replicates that share location and year Elizavetas}
+means <- 
+  data.mod.2 %>%
+  group_by(landcover_map_year, treatment, Lat_long, crop_type) %>%
+  summarize(
+    mean_yield_control_kgha = mean(yield_control_kgha, na.rm = TRUE),
+    mean_yield_treatment_kgha = mean(yield_treatment_kgha, na.rm = TRUE),
+    yield_SD_control = sqrt(sum(yield_SD_control_kgha^2)),
+    yield_SD_treatment = sqrt(sum(yield_SD_treatment_kgha^2)),
+    replicates_control_summed = sum(control_replicates),
+    replicates_treatment_summed = sum(treatment_replicates),
+    n_aggregated = length(control_replicates)
+  ) %>% 
+  ungroup()
+```
+
+## (E) Add additional columns to aggregated data
+
+Alfred's comment: add remaining data to the average data.
+It should be okay to pull in things that have the same latidude-longitude combination and the same land-cover map-year.
+
+
+```{r IIE joins means with original properties}
+means<-cbind(means, data.mod.2[match(paste0(means$Lat_long, 
+                                            means$landcover_map_year, means$treatment,
+                                            means$crop_type),
+                                     paste0(data.mod.2$Lat_long, 
+                                            data.mod.2$landcover_map_year, 
+                                            data.mod.2$treatment,
+                                            data.mod.2$crop_type)),
+                               c(1:8,11:12,21:36,41:ncol(data.mod.2))])
+
+# Now landcover_map_year and Lat_long are duplicated 
+# lets remove the duplicates of these columns.
+means <- means[, -c(37)]
+means <- means[, -c(469)] 
+ 
+data.mod.2$reference[data.mod.2$reference=='']<-NA
+length(which(is.na(data.mod.2$reference)))/nrow(data.mod.2)
+
+
+# compute the log-response ratio
+means$logrr.yi <- log10(means$mean_yield_control_kgha/means$mean_yield_treatment_kgha)
+
+```
+
+Some references are given in the title or author year columns.
+Maybe it makes sense to unite them, because the proportion calculated before is not representative.
+
+# Subsection III - Prepare predictors
+
+```{r III prepare predictors}
+# all original properties -> without area, edge length  and proportion:
+reg.data<-means[,c(1:36)] 
+
+col.names<-colnames(means)
+
+```
+
+## (A.1) create the semi natural habitat proportion (including grassland)
+
+```{r IIIA natural habitat proportion including grassland }
+
+# (i) get the classes which need to be included
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+  landcover.meta$Bigger.CLass=='Cropland' )]
+
+# (ii) natural habitat for the three different radii: get the column names for the 1000 radius
+# create the column names that should be included
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_1000'))
+
+# create the nat. habitat variable
+reg.data$nat.hab.1000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+# (iii) now for the other two radii
+ nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_2500'))
+ reg.data$nat.hab.2500<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.5000<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+plot(reg.data$nat.hab.5000, reg.data$nat.hab.1000) # looks right
+
+
+```
+
+## (A.2) create the semi natural habitat edge length (including grassland)
+
+```{r IIIA natural habitat edge length including grassland}
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+  landcover.meta$Bigger.CLass=='Cropland' )]
+
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_1000'))
+reg.data$nat.hab.edgelength.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_2500'))
+reg.data$nat.hab.edgelength.2500 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.edgelength.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+
+plot(reg.data$nat.hab.5000, reg.data$nat.hab.edgelength.5000) # this looks interesting to me
+
+```
+
+## (A.3) create the semi natural habitat area vs perimeter data (including grassland)
+```{r IIIA semi natural habitat area area vs perimeter data (including grassland)}
+
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'|
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+  landcover.meta$Bigger.CLass=='Cropland' )]
+
+# (i) create the column names
+names<-c(paste0('area_m2_',nat.hab.class.code,'_1000'))
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_1000'))
+
+# (ii) create the variable
+reg.data$nat.hab.peri.area.ratio.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+# (iii) repeat that for the 2 and 5km radii
+ names<-c(paste0('area_m2_',nat.hab.class.code,'_2500'))
+ names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_2500'))
+ reg.data$nat.hab.peri.area.ratio.2500 <-
+   rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+ rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+names<-c(paste0('area_m2_',nat.hab.class.code,'_5000'))
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.peri.area.ratio.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+# x<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+# y<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+# 
+# which(x==0); which(y==0) 
+
+plot(reg.data$nat.hab.peri.area.ratio.5000, reg.data$nat.hab.edgelength.5000) # makes sense
+```
+
+## (B) create the semi natural habitat proportion (now without grassland)
+
+```{r IIIB create the semi natural habitat proportion}
+
+# (i) get the classes which need to be included
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+    landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+    landcover.meta$Bigger.CLass=='Grassland' |
+    landcover.meta$Bigger.CLass=='Cropland' )]
+
+# (ii) natural habitat for the three different radii: 
+# create the column names that should be included
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_1000'))
+reg.data$nat.hab.wo.grass.1000<-
+  rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+# now for the other two radii
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_2500'))
+reg.data$nat.hab.wo.grass.2500<-rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+nat.hab.col.names<-c(paste0('proportion_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.wo.grass.5000<-
+  rowSums(means[,which(is.element(col.names,nat.hab.col.names))], na.rm = T)
+
+plot(reg.data$nat.hab.wo.grass.2500, reg.data$nat.hab.2500) 
+
+plot(reg.data$nat.hab.wo.grass.5000, reg.data$nat.hab.5000) 
+
+
+```
+
+Looks nice and right on the first glance
+
+
+## (B.2) create the semi natural habitat edge length (now without grassland)
+
+```{r IIIB natural habitat edge length now without grassland}
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+    landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+    landcover.meta$Bigger.CLass=='Grassland' |
+    landcover.meta$Bigger.CLass=='Cropland' )]
+
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_1000'))
+reg.data$nat.hab.wo.grass.edgelength.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_2500'))
+reg.data$nat.hab.wo.grass.edgelength.2500 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.wo.grass.edgelength.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+
+plot(reg.data$nat.hab.wo.grass.5000, reg.data$nat.hab.wo.grass.edgelength.5000)
+
+```
+
+
+## (B.3) create the semi natural habitat area vs perimeter data  (now without grassland)
+```{r IIIB semi natural habitat area area vs perimeter data  (now without grassland)}
+
+nat.hab.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'|
+    landcover.meta$Class.Description.by.ESA=='Permanent ice and snow'|
+    landcover.meta$Bigger.CLass=='Grassland' |
+    landcover.meta$Bigger.CLass=='Cropland' )]
+
+
+# (i) create the column names
+names<-c(paste0('area_m2_',nat.hab.class.code,'_1000'))
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_1000'))
+
+# (ii) create the variable
+reg.data$nat.hab.wo.grass.peri.area.ratio.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+# (iii) repeat that for the 2 and 5km radii
+ names<-c(paste0('area_m2_',nat.hab.class.code,'_2500'))
+ names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_2500'))
+ reg.data$nat.hab.wo.grass.peri.area.ratio.2500 <-
+   rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+ rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+names<-c(paste0('area_m2_',nat.hab.class.code,'_5000'))
+names.per<-c(paste0('edgelength_m_',nat.hab.class.code,'_5000'))
+reg.data$nat.hab.wo.grass.peri.area.ratio.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+# x<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+# y<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+# 
+# which(x==0); which(y==0) 
+
+plot(reg.data$nat.hab.wo.grass.peri.area.ratio.5000, reg.data$nat.hab.wo.grass.edgelength.5000) # makes sense
+```
+
+
+## (C) create the cropland proportion data
+
+```{r IIIC cropland proportion data}
+
+# (i) get the classes which need to be included and create their col-names
+cropland.class.code<-landcover.meta$Class.Code[which(landcover.meta$Bigger.CLass=='Cropland')]
+names<-c(paste0('proportion_',cropland.class.code,'_1000'))
+
+# (ii) create the data for the 1km radius
+reg.data$cropland.1000<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+# (iii) repeat that for the 2 and 5km radii
+ names<-c(paste0('proportion_',cropland.class.code,'_2500'))
+ reg.data$cropland.2500<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+names<-c(paste0('proportion_',cropland.class.code,'_5000'))
+reg.data$cropland.5000<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+plot(reg.data$nat.hab.wo.grass.5000, reg.data$cropland.5000) 
+hist(reg.data$nat.hab.5000 + reg.data$cropland.5000)
+summary(reg.data$nat.hab.5000 + reg.data$cropland.5000)
+summary(reg.data$nat.hab.2500 + reg.data$cropland.2500)
+summary(reg.data$nat.hab.1000 + reg.data$cropland.1000)
+# all looks nice and right on the first glance
+
+```
+
+## (D) create the cropland area vs perimeter data
+
+```{r IIID 1 cropland area vs perimeter data}
+#colnames(means)
+
+# (i) create the column names
+names<-c(paste0('area_m2_',cropland.class.code,'_1000'))
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
+
+# (ii) create the variable
+reg.data$crop.peri.area.ratio.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+# we have some data points where both area and edgelength of agricultural land is 0 
+x<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+y<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+
+which(x==0); which(y==0) 
+
+# for now, we can exclude these points? But maybe we can look into this problem?
+# we do the exclusion at the end...
+```
+
+The rows that have area = 0 are the same rows as edge = 0.
+
+Lets export these coordinates and check them in gee.
+
+-   In gee those are normal points in Mongolia, China, Africa.
+
+-   Maybe it makes more sense to check the composition, the treatment and the crop of the observation.
+
+```{r IIID 2 cropland vs perimeter zero agri area check other classes}
+means %>% 
+  select(measurement_id, crop_type_grouped_small, treatment, 
+         contains("area")& contains("1000")) %>% 
+  filter(if_all(all_of(names), ~ . == 0)) %>% 
+  select(measurement_id)
+
+measurement_ids_zeroagriarea <- 
+  means %>% 
+  select(measurement_id, crop_type_grouped_small, treatment, 
+         contains("area")&contains("1000")) %>% 
+  filter(if_all(all_of(names), ~ . == 0)) %>% 
+  pull(measurement_id)
+
+long_data <- means %>%
+  select(measurement_id, crop_type_grouped_small, treatment, landcover_map_year, 
+         contains("area") & contains("1000")) %>%
+  filter(if_all(starts_with("area"), ~ . == 0)) %>%
+  pivot_longer(cols = starts_with("area"), 
+               names_to = "area_class", 
+               values_to = "area_m2") 
+
+
+
+```
+
+long_data has no entries, meaning that the points that have no agricultural area still have other land cover classes, and are not empty entries.
+
+Check whether the proportion data matches with the area data:
+
+```{r IIID proportion matches area }
+plot(means$area_m2_72_5000 , means$proportion_72_5000)
+```
+
+yes - it does, good nicely!
+
+```{r IIID cropland vs agriculture 2500}
+# (iii) repeat that for the 2 and 5km radii
+ names<-c(paste0('area_m2_',cropland.class.code,'_2500'))
+ names.per<-c(paste0('edgelength_m_',cropland.class.code,'_2500'))
+ reg.data$crop.peri.area.ratio.2500 <-
+   rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+ rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+ 
+# we have some data points where both area and edgelength of agricultural land is 0 
+# x<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+# y<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+# 
+# which(x==0); which(y==0) 
+
+means %>% 
+  select(measurement_id, crop_type_grouped_small, treatment, 
+         contains("area")&contains("2500")) %>% 
+  filter(if_all(all_of(names), ~ . == 0)) %>% 
+  select(measurement_id)
+```
+
+```{r IIID cropland vs agriculture 5000 }
+names<-c(paste0('area_m2_',cropland.class.code,'_5000'))
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_5000'))
+reg.data$crop.peri.area.ratio.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+ # we have some data points where both area and edgelength of agricultural land is 0 
+# x<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+# y<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+# 
+# which(x==0); which(y==0) 
+
+means %>% 
+  select(measurement_id, crop_type_grouped_small, treatment, contains("area")&contains("5000")) %>% 
+  filter(if_all(all_of(names), ~ . == 0)) %>% 
+  select(measurement_id)
+```
+
+Measurements 8963, 8225, 8244, 9004, 6730, 6435, 8281, 8283, 1743, 8971, 6605, 4861, 4791, 2111, 2878, 3070, 3367 **had problems with the buffer 1000.**
+
+Measurements 8281, 8283, 2878, 3070, 3367 **had problems with the buffer 2500.**
+
+Measurements 2878, 3070, 3367 had problems **with the buffer 5000.**
+
+**Meaning:**
+
+1.  The agricultural land doesn't exist for 17 measurements.
+
+2.  `measurement_id` 2878, 3070, and 3367 do not have agricultural land in any buffer.
+
+3.  8281 and 8283 no agri area for *1000m* and *2500m* buffers.
+
+4.  8225, 8244, 9004, 6730, 6435, 1743, 8971, 6605, 4861, 4791, and 2111 no agricultural land in *1000m* buffer.
+
+## (E) create the agricultural edge-length
+
+```{r IIIE create the agricultural edge length}
+
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_1000'))
+reg.data$crop.edgelength.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_2500'))
+reg.data$crop.edgelength.2500 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',cropland.class.code,'_5000'))
+reg.data$crop.edgelength.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+
+
+```
+
+## (F) create the inert land-cover
+
+There is an **important change** :
+
+-   Alfred defined inert.land.class.cod as natural habitats, so that inert = 1 - inert.land.class.cod.
+    However, all classes are already included in the land cover class table, so it doesnt make much sense in my opinion.
+    So here inert.land.class.cod is defined as **non-natural land classes** (bare surfaces and snow)
+
+-   and noninert.land.class.code are all non-inert.
+
+```{r IIIF 1 create the inert land cover}
+# (i) get the classes which need to be included and create their col-names
+# inert.land.class.code are land cover classes that are build or are snow
+inert.land.class.code<-landcover.meta$Class.Code[which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow')]
+
+noninert.land.class.code<-landcover.meta$Class.Code[-which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow')]
+```
+
+Comment to the following code section: The urban areas and other built environments ARE included in the land cover classes.
+They are called "Impervious surfaces" by teh ESA Classification, have the code 190 and "Bare Surfaces" in Bigger.CLass.
+
+```{r IIIF 2 create the inert land cover}
+# Here Elizaveta made changes. Because urban and built areas are included in the bare surfaces there is no need no substract the non inert from 1 as alfred did before. 
+names<-c(paste0('proportion_',inert.land.class.code,'_1000'))
+reg.data$inert.1000<- rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+# (iii) repeat that for the 2 and 5km radii
+names<-c(paste0('proportion_',inert.land.class.code,'_2500'))
+reg.data$inert.2500<- rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+names<-c(paste0('proportion_',inert.land.class.code,'_5000'))
+reg.data$inert.5000<- rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+
+# looks good, but we have some very high inert values...
+plot(reg.data$inert.1000, reg.data$inert.2500)
+plot(reg.data$inert.1000, reg.data$inert.5000)
+plot(reg.data$inert.2500, reg.data$inert.5000)
+
+
+which(reg.data$inert.1000>0.8) # maybe check these points once more? 
+
+
+```
+
+```{r IIIF 3 look up the points with big urban areas}
+names<-c(paste0('proportion_',inert.land.class.code,'_1000'))
+
+means %>% 
+  select(measurement_id, country_new, crop_type_grouped_small, treatment, contains("proportion_"), contains("_1000")) %>%
+  rowwise() %>%
+  filter((sum(c_across(names), na.rm = TRUE)) > 0.8) %>%
+  select(measurement_id) %>% 
+  unique()
+
+measurement_ids_biginertproportion <- 
+means %>% 
+  select(measurement_id, country_new, crop_type_grouped_small, treatment, contains("proportion_"), contains("_1000")) %>%
+  rowwise() %>%
+  filter((sum(c_across(names), na.rm = TRUE)) > 0.8) %>%
+  pull(measurement_id)
+```
+
+Some points from the previous analysis with 0 in agricultural area are there (9 measurements out of 78):
+
+```{r IIIF look up the intersect between area zero and urban big}
+# Find common measurement_ids between the two sets
+intersect(measurement_ids_biginertproportion, measurement_ids_zeroagriarea)
+```
+
+Some Examples:
+
+![Big Inert Area: Jakarta](images/pointswithbiginertarea/jakarta.png){width="523"}
+
+![Big Inert Area: Darmstadt](images/pointswithbiginertarea/darmstadt.png)
+
+## (F.2) create the inert edge-length
+
+```{r IIIF inert edge length }
+inert.land.class.code<-landcover.meta$Class.Code[which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow')]
+
+names.per<-c(paste0('edgelength_m_',inert.land.class.code,'_1000'))
+reg.data$inert.edgelength.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',inert.land.class.code,'_2500'))
+reg.data$inert.edgelength.2500 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) 
+
+names.per<-c(paste0('edgelength_m_',inert.land.class.code,'_5000'))
+reg.data$inert.edgelength.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+
+
+```
+
+## (F.3) create the  inert area vs perimeter data
+
+```{r IIIB inert area vs perimeter data }
+inert.land.class.code<-landcover.meta$Class.Code[which(
+  landcover.meta$Bigger.CLass=='Bare Surfaces'| 
+  landcover.meta$Class.Description.by.ESA=='Permanent ice and snow')]
+
+
+# (i) create the column names
+names<-c(paste0('area_m2_',inert.land.class.code,'_1000'))
+names.per<-c(paste0('edgelength_m_',inert.land.class.code,'_1000'))
+
+# (ii) create the variable
+reg.data$inert.peri.area.ratio.1000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+# (iii) repeat that for the 2 and 5km radii
+ names<-c(paste0('area_m2_',inert.land.class.code,'_2500'))
+ names.per<-c(paste0('edgelength_m_',inert.land.class.code,'_2500'))
+ reg.data$inert.peri.area.ratio.2500 <-
+   rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+ rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+names<-c(paste0('area_m2_',inert.land.class.code,'_5000'))
+names.per<-c(paste0('edgelength_m_',inert.land.class.code,'_5000'))
+reg.data$inert.peri.area.ratio.5000 <-
+  rowSums(means[,which(is.element(col.names,names.per))], na.rm = T) /
+  rowSums(means[,which(is.element(col.names,names))], na.rm = T) # unit: m/m2
+
+# x<-rowSums(means[,which(is.element(col.names,names))], na.rm = T)
+# y<-rowSums(means[,which(is.element(col.names,names.per))], na.rm = T)
+# 
+# which(x==0); which(y==0) 
+
+```
+
+
+## (H) create the shannon index
+
+```{r IIIH create shannon index}
+# (i) define the variables that need to be included
+names<-c(paste0('area_m2_',noninert.land.class.code,'_1000')) 
+# noninert.land.class.code - contains all non inert land-cover types - non built and non snow
+
+# (ii) create the data frame for the analysis
+shannon.df<-means[,which(is.element(col.names,names))]
+shannon.df$inert<- reg.data$inert.1000
+
+# (iii) replace NAs with 0s
+for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
+
+# (iv) calculate the shannon diversity
+library(vegan) # 'species' need to be the columns
+reg.data$shannon.1000<-diversity(shannon.df, index = "shannon")
+
+# (v) repeat for the other two radii
+names<-c(paste0('area_m2_',noninert.land.class.code,'_2500'))
+shannon.df<-means[,which(is.element(col.names,names))]
+shannon.df$inert<- reg.data$inert.2500
+for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
+reg.data$shannon.2500<-diversity(shannon.df, index = "shannon")
+
+names<-c(paste0('area_m2_',noninert.land.class.code,'_5000'))
+shannon.df<-means[,which(is.element(col.names,names))]
+shannon.df$inert<- reg.data$inert.5000
+for(i in 1:ncol(shannon.df)){shannon.df[which(is.na(shannon.df[,i])) , i]<-0}
+reg.data$shannon.5000<-diversity(shannon.df, index = "shannon")
+
+```
+
+## (G) create the simpsons evenness
+
+```{r IIIH create simpsons evennes index}
+# (i) Define the variables that need to be included
+names <- c(paste0('area_m2_', noninert.land.class.code, '_1000')) 
+# `noninert.land.class.code` contains all non-inert land-cover types (non-built and non-snow)
+
+# (ii) Create the data frame for the analysis
+simpson.df <- means[, which(is.element(col.names, names))]
+simpson.df$inert <- reg.data$inert.1000
+
+# (iii) Replace NAs with 0s
+for (i in 1:ncol(simpson.df)) {
+  simpson.df[which(is.na(simpson.df[, i])), i] <- 0
+}
+
+# (iv) Calculate Simpson's Evenness
+
+reg.data$simpsonsevenness.1000 <- diversity(simpson.df, index = "inv")
+
+# (v) Repeat for the other two radii
+names <- c(paste0('area_m2_', noninert.land.class.code, '_2500'))
+simpson.df <- means[, which(is.element(col.names, names))]
+simpson.df$inert <- reg.data$inert.2500
+for (i in 1:ncol(simpson.df)) {
+  simpson.df[which(is.na(simpson.df[, i])), i] <- 0
+}
+reg.data$simpsonsevenness.2500 <- diversity(simpson.df, index = "inv")
+
+names <- c(paste0('area_m2_', noninert.land.class.code, '_5000'))
+simpson.df <- means[, which(is.element(col.names, names))]
+simpson.df$inert <- reg.data$inert.5000
+for (i in 1:ncol(simpson.df)) {
+  simpson.df[which(is.na(simpson.df[, i])), i] <- 0
+}
+reg.data$simpsonsevenness.5000 <- diversity(simpson.df, index = "inv")
+
+```
+
+```{r IIIH final diagnostic check}
+# Diagnostic check whether we have NAs - we should not have them
+which(is.na(reg.data$inert.1000))
+which(is.na(reg.data$cropland.1000))
+which(is.na(reg.data$crop.edgelength.1000))
+which(is.na(reg.data$nat.hab.1000))
+which(is.na(reg.data$nat.hab.wo.grass.1000))
+# that all looks good
+
+```
+
+```{r IIIH final clean the environment}
+# clean up some objects that are not needed anymore
+rm(nat.hab.col.names, nat.hab.class.code, cropland.class.code,names, 
+   names.per, inert.land.class.code,noninert.land.class.code, shannon.df)
+```
+
+```{r IIIH final save the dataset}
+# save the file
+#write.csv(reg.data, file = 'data/20241026_data_processed.csv',row.names = TRUE)
+```
+
+```{r IIIH final plots of shannons and land cover class }
+
+plot(reg.data$shannon.1000~reg.data$cropland.1000)
+plot(reg.data$shannon.1000~reg.data$nat.hab.1000)
+plot(reg.data$shannon.1000~reg.data$nat.hab.wo.grass.1000)
+
+
+plot(reg.data$simpsonsevenness.1000~reg.data$cropland.1000)
+plot(reg.data$simpsonsevenness.1000~reg.data$nat.hab.1000)
+plot(reg.data$simpsonsevenness.1000~reg.data$nat.hab.wo.grass.1000)
+```
+
+```{r IIIH final check points per study}
+# check how many data points we have per study now...
+summary(as.vector(table(paste0(reg.data$study_id,reg.data$ma_id))))
+```
+
+Although I am not sure whether it makes sense to count points per study since study_id is not unique across the dataset.
+
+```{r write the final dataset }
+write.csv(reg.data, "20241216_data_processed.csv", row.names = FALSE)
+```
+
+
