@@ -102,11 +102,10 @@ ___
  
 <ins>Source:</ins> 
 
-(Zhang et al., 2025)
-
 ```
 Zhang, Y., Bian, Z., Guo, X., & Wang, C. (2025). Multiscale agrobiodiversity conservation: Modeling epigaeic arthropod diversity with landscape heterogeneity and ecosystem services. Journal of Environmental Management, 388, 126003. https://doi.org/10.1016/j.jenvman.2025.126003
 ```
+(Zhang et al., 2025)
 
 <ins>Result Notes:</ins>
 
@@ -139,18 +138,18 @@ ___
  
 <ins>Source:</ins> 
 
-(Metcalfe et al., 2025)
 
 ```
 Metcalfe, H., Cook, S. M., & Milne, A. E. (2025). Agricultural landscape features can mitigate field-edge yield declines: Insights from yield monitor and remote sensing data. Agriculture, Ecosystems & Environment, 394, 109891. https://doi.org/10.1016/j.agee.2025.109891
 ```
+(Metcalfe et al., 2025)
 
 <ins>Result Notes:</ins>
 
 - Significant effects of various measures of topography on field-edge yield decline
    - Field edges with open topography that increases wind exposure may lead to crop lodging
 - Specifically, increasing land-use diversity was associated with a reduction in the magnitude of yield decline at field edges, particularly when small woody features (SWF) were present nearby. 
- - Woody features exacerbate yield decline
+ - Woody features exacerbate yield decline associated with wetness
  - Yield breakdown until 25m from the field edge
  - In diverse landscapes woody feature may contribute to the provision of ecosystem services (ES), while in homogenous landscapes, where wild organisms population sizes are reduced, those may act as barriers simultaneously serving as a habitat for more generalist or mobile pests, weeds or pathogens
  - As all our data were from combinable crops, the amount of grassland in the landscape indicates a distinction between
@@ -180,17 +179,18 @@ intensive arable production systems and mixed farming systems, where crops and l
 
 ___
 
-### Message
+### (1) The crop yield in the landscape with forest cover (>27%) was increased by 169%. (2) Land shape complexity (6%) and area (7%) contributed more to the variation of crop yield than landscape diversity (∼2%).
 
 <details>
  
 <ins>Source:</ins> 
 
-XXX
 
 ```
-XXX
+Xin, J., Peng, Y., Peng, N., Yang, L., Huang, J., Yuan, J., Wei, B., & Ren, Y. (2024). Both class- and landscape-level patterns influence crop yield. European Journal of Agronomy, 153, 127057. https://doi.org/10.1016/j.eja.2023.127057
+
 ```
+(Xin et al., 2024)
 
 <ins>Result Notes:</ins>
 
