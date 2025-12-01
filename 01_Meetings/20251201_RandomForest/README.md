@@ -5,7 +5,7 @@ date: 01.12.2025
 author: Elizaveta Shcherbinina 
 
 
-Via a random forest decision tree we classify the data. In the following I tried predicting if the crop is pollinated or not pollinated based on the selected columns (prediction accuracy 65%) and on all columns (prediciton accuracy 80%). Also, I tried predicting the lrr (larger/smaller than zero) based on all columns. 
+Via a random forest decision tree we classify the data. In the following I tried predicting if the crop is pollinated or not pollinated based on the selected columns (prediction accuracy 50%) and on all columns (prediciton accuracy 80%). Also, I tried predicting the lrr (larger/smaller than zero) based on all columns (prediciton accuracy 65%). 
 
 The jupiter notebook files can be found in the 20251201_RandomForest folder. 
 
