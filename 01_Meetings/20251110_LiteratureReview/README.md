@@ -201,3 +201,37 @@ Xin, J., Peng, Y., Peng, N., Yang, L., Huang, J., Yuan, J., Wei, B., & Ren, Y. (
 <ins>Method used:</ins>
 
 </details>
+
+___
+
+###  The mechanisms stabilizing ecosystem functioning change with community age
+
+<details>
+ 
+<ins>Source:</ins> 
+
+
+```
+Wagg, C., Roscher, C., Weigelt, A., Vogel, A., Ebeling, A., de Luca, E., Roeder, A., Kleinspehn, C., Temperton, V. M., Meyer, S. T., Scherer-Lorenzen, M., Buchmann, N., Fischer, M., Weisser, W. W., Eisenhauer, N., & Schmid, B. (2022). Biodiversity–stability relationships strengthen over time in a long-term grassland experiment. Nature Communications, 13(1), 7752. https://doi.org/10.1038/s41467-022-35189-2
+
+```
+(Wagg et al., 2022)
+
+<ins>Result Notes:</ins>
+
+- Productivity declined more rapidly in less diverse communities resulting in temporally strengthening positive effects of richness on productivity, complementarity, and stability.
+
+  
+<ins>Landscape Indices:</ins>
+
+Not applicable 
+
+<ins>Buffer Size:</ins>
+
+Not applicable 
+
+<ins>Method used:</ins>
+
+17 years of a controlled grassland biodiversity experiment
+
+</details>
