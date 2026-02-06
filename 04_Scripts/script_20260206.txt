@@ -1,0 +1,1150 @@
+#################################
+# THE EFFECT
+# OF SURROUNDING LANDSCAPE
+# ON PRODUCTIVITY
+#################################
+# Author: Dr. Elina Takola
+# Date: 29.11.2025
+#################################
+set.seed(999)
+options(scipen = 999) # disable scientific notation
+library(lme4)
+library(lmerTest)
+library(Matrix)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(broom.mixed)
+library(plotly)
+library(ggeffects)
+library(DHARMa)
+library(forcats)
+library(mgcv)       
+library(patchwork)
+library(psych)
+library(corrplot)
+library(spdep) # Moran's I test
+
+#############
+# Import data
+#############
+df <- read.csv(file.choose(), header = TRUE, sep = ",")
+# Round everything to 2 decimals
+df <- as.data.frame(lapply(df, function(x) if(is.numeric(x)) round(x, 2) else x))
+str(df)
+
+############ 
+# Data exploration
+############ 
+# Let's check collinearity first
+num_vars <- df[, sapply(df, is.numeric)]  # select numeric columns
+
+num_vars <- df[, sapply(df, is.numeric)]  # select numeric columns
+cor_matrix <- cor(num_vars, use = "pairwise.complete.obs")
+corrplot(cor_matrix, method = "color", tl.cex = 0.4, tl.col = "black")
+
+# Distribution of the response variable
+ggplot(df, aes(x = lrr)) +
+  geom_histogram(aes(y = ..density..), bins = 30, fill = "lightblue", color = "black") +
+  geom_density(alpha = 0.2, fill = "blue") +
+  labs(title = "Distribution of LRR", x = "LRR", y = "Density")
+
+# LRR per harvest year
+ggplot(df, aes(x = harvest.year.by.median, y = lrr)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", color = "red", se = TRUE) +
+  labs(title = "LRR over Harvest Year", x = "Harvest Year", y = "LRR")
+
+# Facet by crop_type and treatment (trend line per facet, x = harvest_year)
+ggplot(df, aes(x = harvest.year.by.median, y = lrr)) +
+  geom_point(alpha = 0.5, aes(color = as.factor(treatment))) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_grid(crop.type.orig.grouped.big ~ treatment,
+             labeller = labeller(.rows = label_wrap_gen(width = 15),
+                                 .cols = label_wrap_gen(width = 15))) +
+  labs(title = "LRR by Crop Type and Treatment over Harvest Year",
+       x = "Harvest Year", y = "LRR") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+
+crop_table <- table(df$crop.type.orig, df$poll.dependent)
+colnames(crop_table) <- c("Pollinator_Independent", "Pollinator_Dependent")
+write.csv(crop_table, "crop_pollinator_table.csv", row.names = TRUE)
+
+
+
+
+
+############ 
+# Model selection
+############ 
+df1000 <- df %>% select(-contains("2500"), -contains("5000"), -contains("measurement.id"), -contains("ma.id"), -contains("control.id"))
+df2500 <- df %>% select(-contains("1000"), -contains("5000"), -contains("measurement.id"), -contains("ma.id"), -contains("control.id"))
+df5000 <- df %>% select(-contains("2500"), -contains("1000"), -contains("measurement.id"), -contains("ma.id"), -contains("control.id"))
+response <- "lrr"
+rand <- "(1|study.id)"
+fixed_drop <- c("lrr", "study.id")
+thr <- 0.30
+imp_num  <- function(x) { x[is.na(x)] <- median(x, na.rm = TRUE); x }
+imp_fact <- function(x) { tab <- table(x, useNA = "no"); if (length(tab)) x[is.na(x)] <- names(which.max(tab)); x }
+is_const <- function(x) {
+  if (is.numeric(x)) sd(x, na.rm = TRUE) == 0 else length(na.omit(unique(x))) <= 1
+}
+
+# 5 km
+na_counts <- sapply(df5000, function(x) sum(is.na(x)))
+keep1 <- names(df5000)[!(sapply(df5000, function(x) all(is.na(x))) | sapply(df5000, is_const))]
+df1 <- df5000[keep1]
+na_prop <- sapply(df1, function(x) mean(is.na(x)))
+Xcols <- setdiff(names(df1)[na_prop <= thr], fixed_drop)
+df2 <- df1
+for (nm in Xcols) {
+  if (is.numeric(df2[[nm]])) df2[[nm]] <- imp_num(df2[[nm]])
+  else if (is.factor(df2[[nm]]) || is.character(df2[[nm]])) df2[[nm]] <- factor(imp_fact(as.factor(df2[[nm]])))
+}
+form_full <- as.formula(paste0(response, " ~ ", paste(Xcols, collapse = " + "), " + ", rand))
+rows_ok <- complete.cases(df2[, c(response, "study.id")])
+df_fit <- droplevels(df2[rows_ok, ])
+mod_full <- lmer(form_full, data = df_fit, REML = FALSE, na.action = na.omit)
+step_res <- step(mod_full, reduce.fixed = TRUE, reduce.random = FALSE, ddf = "Satterthwaite")
+best_model5000 <- get_model(step_res)
+coef_tab <- as.data.frame(coef(summary(best_model5000)))
+coef_tab$term <- rownames(coef(summary(best_model5000)))
+rownames(coef_tab) <- NULL
+coef_tab <- coef_tab[, c("term", setdiff(names(coef_tab), "term"))]
+write.csv(coef_tab, "best_mod_coefficients5000.csv", row.names = FALSE)
+capture.output(summary(best_model5000), file = "best_mod_summary5000.txt")
+capture.output(step_res, file = "step_selection_log5000.txt")
+writeLines(c("Full model formula:", deparse(formula(mod_full)), "",
+             "Final selected model formula:", deparse(formula(best_model5000))),
+           con = "bestmodel5000.txt")
+
+# 2.5 km
+na_counts <- sapply(df2500, function(x) sum(is.na(x)))
+keep1 <- names(df2500)[!(sapply(df2500, function(x) all(is.na(x))) | sapply(df2500, is_const))]
+df1 <- df2500[keep1]
+na_prop <- sapply(df1, function(x) mean(is.na(x)))
+Xcols <- setdiff(names(df1)[na_prop <= thr], fixed_drop)
+df2 <- df1
+for (nm in Xcols) {
+  if (is.numeric(df2[[nm]])) df2[[nm]] <- imp_num(df2[[nm]])
+  else if (is.factor(df2[[nm]]) || is.character(df2[[nm]])) df2[[nm]] <- factor(imp_fact(as.factor(df2[[nm]])))
+}
+form_full <- as.formula(paste0(response, " ~ ", paste(Xcols, collapse = " + "), " + ", rand))
+rows_ok <- complete.cases(df2[, c(response, "study.id")])
+df_fit <- droplevels(df2[rows_ok, ])
+mod_full <- lmer(form_full, data = df_fit, REML = FALSE, na.action = na.omit)
+step_res <- step(mod_full, reduce.fixed = TRUE, reduce.random = FALSE, ddf = "Satterthwaite")
+best_model2500 <- get_model(step_res)
+coef_tab <- as.data.frame(coef(summary(best_model2500)))
+coef_tab$term <- rownames(coef(summary(best_model2500)))
+rownames(coef_tab) <- NULL
+coef_tab <- coef_tab[, c("term", setdiff(names(coef_tab), "term"))]
+write.csv(coef_tab, "best_mod_coefficients2500.csv", row.names = FALSE)
+capture.output(summary(best_model2500), file = "best_mod_summary2500.txt")
+capture.output(step_res, file = "step_selection_log2500.txt")
+writeLines(c("Full model formula:", deparse(formula(mod_full)), "",
+             "Final selected model formula:", deparse(formula(best_model2500))),
+           con = "bestmodel2500.txt")
+
+# 1 km
+na_counts <- sapply(df1000, function(x) sum(is.na(x)))
+keep1 <- names(df1000)[!(sapply(df1000, function(x) all(is.na(x))) | sapply(df1000, is_const))]
+df1 <- df1000[keep1]
+na_prop <- sapply(df1, function(x) mean(is.na(x)))
+Xcols <- setdiff(names(df1)[na_prop <= thr], fixed_drop)
+df2 <- df1
+for (nm in Xcols) {
+  if (is.numeric(df2[[nm]])) df2[[nm]] <- imp_num(df2[[nm]])
+  else if (is.factor(df2[[nm]]) || is.character(df2[[nm]])) df2[[nm]] <- factor(imp_fact(as.factor(df2[[nm]])))
+}
+form_full <- as.formula(paste0(response, " ~ ", paste(Xcols, collapse = " + "), " + ", rand))
+rows_ok <- complete.cases(df2[, c(response, "study.id")])
+df_fit <- droplevels(df2[rows_ok, ])
+mod_full <- lmer(form_full, data = df_fit, REML = FALSE, na.action = na.omit)
+step_res <- step(mod_full, reduce.fixed = TRUE, reduce.random = FALSE, ddf = "Satterthwaite")
+best_model1000 <- get_model(step_res)
+coef_tab <- as.data.frame(coef(summary(best_model1000)))
+coef_tab$term <- rownames(coef(summary(best_model1000)))
+rownames(coef_tab) <- NULL
+coef_tab <- coef_tab[, c("term", setdiff(names(coef_tab), "term"))]
+write.csv(coef_tab, "best_mod_coefficients1000.csv", row.names = FALSE)
+capture.output(summary(best_model1000), file = "best_mod_summary1000.txt")
+capture.output(step_res, file = "step_selection_log1000.txt")
+writeLines(c("Full model formula:", deparse(formula(mod_full)), "",
+             "Final selected model formula:", deparse(formula(best_model1000))),
+           con = "bestmodel1000.txt")
+############
+
+##############
+# Best models
+##############
+# Best models after removing correlated predictors
+bestmodel1000 <- lmer(lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big +
+                        poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.1000 + am.richness.mean.1000 + 
+                        ecm.richness.centre + bulk.15.30cm.variance.1000 + sr.amph + (1 | ma.id/study.id), data = df)
+
+bestmodel2500 <- lmer(lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+                        poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.2500 + nat.hab.wo.grass.edgelength.2500 + 
+                        crop.peri.area.ratio.2500 + crop.edgelength.2500 + inert.2500 + am.richness.centre + 
+                        bulk.15.30cm.variance.2500 + cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + 
+                        ocd.15.30cm.variance.2500 + ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds + (1 | ma.id/study.id), data = df)
+
+bestmodel5000 <- lmer(lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+                        temp.avg.1970.2000 + nat.hab.edgelength.5000 + nat.hab.wo.grass.5000 + 
+                        nat.hab.wo.grass.edgelength.5000 + crop.edgelength.5000 + am.richness.mean.5000 + 
+                        ecm.richness.mean.5000 + cec.15.30cm.variance.5000 + sr.birds + (1 | ma.id/study.id), data = df)
+############ 
+# H1:	Land cover diversity (measured with the Shannon index) correlates positively with yield treatment effectiveness.
+############ 
+shannon1000.h1 <- lmer(
+    lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+      poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.1000 + am.richness.mean.1000 + 
+      ecm.richness.centre + bulk.15.30cm.variance.1000 + sr.amph +
+      shannon.1000 + fieldsize.centre.numeric + shannon.1000:fieldsize.centre.numeric +
+      (1 | study.id), data = df)
+  
+shannon2500.h1 <- lmer(
+    lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+      poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.2500 + nat.hab.wo.grass.edgelength.2500 + 
+      crop.peri.area.ratio.2500 + crop.edgelength.2500 + inert.2500 + am.richness.centre + 
+      bulk.15.30cm.variance.2500 + cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + 
+      ocd.15.30cm.variance.2500 + ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds + 
+      shannon.2500 + fieldsize.centre.numeric + shannon.2500:fieldsize.centre.numeric +
+      (1 | study.id), data = df)
+  
+shannon5000.h1 <- lmer(
+    lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+      temp.avg.1970.2000 + nat.hab.edgelength.5000 + nat.hab.wo.grass.5000 + 
+      nat.hab.wo.grass.edgelength.5000 + crop.edgelength.5000 + am.richness.mean.5000 + 
+      ecm.richness.mean.5000 + cec.15.30cm.variance.5000 + sr.birds + 
+      shannon.5000 + fieldsize.centre.numeric + shannon.5000:fieldsize.centre.numeric +
+    (1 | study.id), data = df)
+  
+# Save results
+sh_1000 <- tidy(shannon1000.h1, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Shannon_1km")
+sh_2500 <- tidy(shannon2500.h1, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Shannon_2.5km")
+sh_5000 <- tidy(shannon5000.h1, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Shannon_5km")
+sh_models_table <- bind_rows(sh_1000, sh_2500, sh_5000) %>%
+    select(model, term, estimate, std.error, statistic, p.value, conf.low, conf.high)
+write.csv(sh_models_table, file = "shannon_models_results_H1.csv", row.names = FALSE)
+
+  
+  
+# Plot results
+make_surface_shannon_field <- function(model, shan_var, field_var,
+                                         buffer_label,
+                                         n_shan = 60, n_field = 60) {
+    mf <- model.frame(model)          # data actually used
+    response <- all.vars(formula(model))[1]
+    
+    # sequences over observed ranges
+    shan_seq  <- seq(min(mf[[shan_var]],  na.rm = TRUE),
+                     max(mf[[shan_var]],  na.rm = TRUE),
+                     length.out = n_shan)
+    field_seq <- seq(min(mf[[field_var]], na.rm = TRUE),
+                     max(mf[[field_var]], na.rm = TRUE),
+                     length.out = n_field)
+    
+    grid <- expand.grid(
+      shan  = shan_seq,
+      field = field_seq
+    )
+    
+    # map to variable names used in the model
+    grid[[shan_var]]  <- grid$shan
+    grid[[field_var]] <- grid$field
+    
+    # set all other predictors to typical values
+    other_vars <- setdiff(names(mf), c(response, shan_var, field_var))
+    for (v in other_vars) {
+      if (is.numeric(mf[[v]])) {
+        grid[[v]] <- mean(mf[[v]], na.rm = TRUE)
+      } else if (is.factor(mf[[v]])) {
+        grid[[v]] <- factor(levels(mf[[v]])[1], levels = levels(mf[[v]]))
+      } else {
+        grid[[v]] <- mf[[v]][1]
+      }
+    }
+    
+    # predict (fixed effects only)
+    grid$pred <- as.numeric(predict(model, newdata = grid, re.form = NA))
+    
+    # convenience columns
+    grid$x       <- grid[[shan_var]]
+    grid$y       <- grid[[field_var]]
+    grid$buffer  <- buffer_label
+    
+    grid
+  }
+  
+  surf_1000 <- make_surface_shannon_field(
+    model        = shannon1000.h1,
+    shan_var     = "shannon.1000",
+    field_var    = "fieldsize.centre.numeric",
+    buffer_label = "1 km"
+  )
+  
+  surf_2500 <- make_surface_shannon_field(
+    model        = shannon2500.h1,
+    shan_var     = "shannon.2500",
+    field_var    = "fieldsize.centre.numeric",
+    buffer_label = "2.5 km"
+  )
+  
+  surf_5000 <- make_surface_shannon_field(
+    model        = shannon5000.h1,
+    shan_var     = "shannon.5000",
+    field_var    = "fieldsize.centre.numeric",
+    buffer_label = "5 km"
+  )
+  
+  surf_all <- bind_rows(surf_1000, surf_2500, surf_5000) %>%
+    mutate(buffer = factor(buffer, levels = c("1 km", "2.5 km", "5 km")))
+  
+  ggplot(surf_all, aes(x = x, y = y)) +
+    geom_tile(aes(fill = pred)) +
+    stat_contour(aes(z = pred),
+                 colour = "white",
+                 bins = 10,
+                 size = 0.3,
+                 alpha = 0.8) +
+    facet_wrap(~ buffer, nrow = 1, scales = "free") +
+    scale_fill_gradient(
+      low  = "#4C9BD7",   # bluish (lower / more negative lrr)
+      high = "#4B0055",   # dark magenta/purple (higher / more positive lrr)
+      name = "Predicted lrr"
+    ) +
+    labs(
+      x = "Shannon landscape diversity",
+      y = "Field size (ha)",
+      fill = "Predicted lrr",
+      title = "Interaction surface: Shannon diversity × field size") +
+    theme_minimal(base_size = 13) +
+    theme(
+      panel.grid    = element_blank(),
+      strip.text    = element_text(face = "bold"),
+      plot.title    = element_text(face = "bold", hjust = 0),
+      plot.subtitle = element_text(hjust = 0),
+      panel.border  = element_rect(colour = "black", fill = NA, linewidth = 0.4),
+      panel.spacing = unit(0.8, "lines"))
+
+############
+# H1 again poll-no poll
+############
+nopoll <- subset(df, poll.dependent == 0)
+poll <- subset(df, poll.dependent == 1)
+
+shannon1000.h1.nopoll <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.1000 + am.richness.mean.1000 + 
+    ecm.richness.centre + bulk.15.30cm.variance.1000 + sr.amph +
+    shannon.1000 + fieldsize.centre.numeric + shannon.1000:fieldsize.centre.numeric +
+    (1 | study.id), data = nopoll)
+
+shannon2500.h1.nopoll <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.2500 + nat.hab.wo.grass.edgelength.2500 + 
+    crop.peri.area.ratio.2500 + crop.edgelength.2500 + inert.2500 + am.richness.centre + 
+    bulk.15.30cm.variance.2500 + cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + 
+    ocd.15.30cm.variance.2500 + ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds + fieldsize.centre.numeric + 
+    shannon.2500 + fieldsize.centre.numeric + shannon.2500:fieldsize.centre.numeric +
+    (1 | study.id), data = nopoll)
+
+shannon5000.h1.nopoll <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    temp.avg.1970.2000 + nat.hab.edgelength.5000 + nat.hab.wo.grass.5000 + 
+    nat.hab.wo.grass.edgelength.5000 + crop.edgelength.5000 + am.richness.mean.5000 + 
+    ecm.richness.mean.5000 + cec.15.30cm.variance.5000 + sr.birds + 
+    shannon.5000 + fieldsize.centre.numeric + shannon.5000:fieldsize.centre.numeric +
+    (1 | study.id), data = nopoll)
+
+shannon1000.h1.poll <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.1000 + am.richness.mean.1000 + 
+    ecm.richness.centre + bulk.15.30cm.variance.1000 + sr.amph +
+    shannon.1000 + fieldsize.centre.numeric + shannon.1000:fieldsize.centre.numeric +
+    (1 | study.id), data = poll)
+
+shannon2500.h1.poll <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.2500 + nat.hab.wo.grass.edgelength.2500 + 
+    crop.peri.area.ratio.2500 + crop.edgelength.2500 + inert.2500 + am.richness.centre + 
+    bulk.15.30cm.variance.2500 + cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + 
+    ocd.15.30cm.variance.2500 + ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds + fieldsize.centre.numeric + 
+    shannon.2500 + fieldsize.centre.numeric + shannon.2500:fieldsize.centre.numeric +
+    (1 | study.id), data = poll)
+
+shannon5000.h1.poll <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    temp.avg.1970.2000 + nat.hab.edgelength.5000 + nat.hab.wo.grass.5000 + 
+    nat.hab.wo.grass.edgelength.5000 + crop.edgelength.5000 + am.richness.mean.5000 + 
+    ecm.richness.mean.5000 + cec.15.30cm.variance.5000 + sr.birds + 
+    shannon.5000 + fieldsize.centre.numeric + shannon.5000:fieldsize.centre.numeric +
+    (1 | study.id), data = poll)
+
+make_surface <- function(model, dat, shannon_var, poll_label, buffer_label,
+                         n_field = 50, n_shannon = 50) {
+  # valid combo of factor levels etc.
+  mf   <- model.frame(model)
+  base <- mf[1, , drop = FALSE]
+  
+  # sequences over observed ranges in the respective subset
+  fs_seq <- seq(
+    min(dat$fieldsize.centre.numeric, na.rm = TRUE),
+    max(dat$fieldsize.centre.numeric, na.rm = TRUE),
+    length.out = n_field
+  )
+  sh_seq <- seq(
+    min(dat[[shannon_var]], na.rm = TRUE),
+    max(dat[[shannon_var]], na.rm = TRUE),
+    length.out = n_shannon
+  )
+  
+  grid <- expand.grid(
+    fieldsize.centre.numeric = fs_seq,
+    sh = sh_seq
+  )
+  
+  # build newdata from base row, overwrite focal vars
+  newdata <- base[rep(1, nrow(grid)), , drop = FALSE]
+  newdata$fieldsize.centre.numeric <- grid$fieldsize.centre.numeric
+  newdata[[shannon_var]] <- grid$sh
+  
+  # fixed-effects predictions
+  grid$pred <- predict(model, newdata = newdata, re.form = NA)
+  grid$poll <- poll_label
+  grid$buffer <- buffer_label
+  names(grid)[names(grid) == "sh"] <- "shannon"
+  
+  grid
+}
+
+surf_nopoll_1000 <- make_surface(
+  model        = shannon1000.h1.nopoll,
+  dat          = nopoll,
+  shannon_var  = "shannon.1000",
+  poll_label   = "nopoll",
+  buffer_label = "1000"
+)
+
+surf_nopoll_2500 <- make_surface(
+  model        = shannon2500.h1.nopoll,
+  dat          = nopoll,
+  shannon_var  = "shannon.2500",
+  poll_label   = "nopoll",
+  buffer_label = "2500"
+)
+
+surf_nopoll_5000 <- make_surface(
+  model        = shannon5000.h1.nopoll,
+  dat          = nopoll,
+  shannon_var  = "shannon.5000",
+  poll_label   = "nopoll",
+  buffer_label = "5000"
+)
+
+surf_poll_1000 <- make_surface(
+  model        = shannon1000.h1.poll,
+  dat          = poll,
+  shannon_var  = "shannon.1000",
+  poll_label   = "poll",
+  buffer_label = "1000"
+)
+
+surf_poll_2500 <- make_surface(
+  model        = shannon2500.h1.poll,
+  dat          = poll,
+  shannon_var  = "shannon.2500",
+  poll_label   = "poll",
+  buffer_label = "2500"
+)
+
+surf_poll_5000 <- make_surface(
+  model        = shannon5000.h1.poll,
+  dat          = poll,
+  shannon_var  = "shannon.5000",
+  poll_label   = "poll",
+  buffer_label = "5000"
+)
+
+surfaces <- bind_rows(
+  surf_nopoll_1000,
+  surf_nopoll_2500,
+  surf_nopoll_5000,
+  surf_poll_1000,
+  surf_poll_2500,
+  surf_poll_5000
+)
+
+surfaces$poll <- factor(
+  surfaces$poll,
+  levels = c("nopoll", "poll"),
+  labels = c("Pollinator independent", "Pollinator dependent")
+)
+
+surfaces$buffer <- factor(
+  surfaces$buffer,
+  levels = c("1000", "2500", "5000")
+)
+
+
+ggplot( surfaces, aes(x = fieldsize.centre.numeric, y = shannon)) +
+  geom_raster(aes(fill = pred), interpolate = TRUE) +
+  geom_contour(aes(z = pred), colour = "white", alpha = 0.4) +
+  facet_wrap(~ poll + buffer, nrow   = 2, scales = "free_x") +
+  scale_fill_gradient(low  = "#4C9BD7", high = "#4B0055", name = "Predicted lrr") +
+  labs(x = "Field size (centered)", y = "Shannon diversity",
+    title = "Interaction surfaces: Shannon × field size") +
+  theme_minimal()
+############
+############ 
+# H2:	The correlation between percentage of natural habitat and yield varies between crop types and treatments.
+############ 
+croptreat1000.h2 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.1000 + I(nat.hab.wo.grass.1000^2) + am.richness.mean.1000 + 
+    ecm.richness.centre + bulk.15.30cm.variance.1000 + sr.amph + 
+    nat.hab.wo.grass.1000:treatment:crop.type.orig.grouped.big + fieldsize.centre.numeric + 
+    (1 | study.id), data = df)
+
+croptreat2500.h2 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.2500 + I(nat.hab.wo.grass.2500^2) + nat.hab.wo.grass.edgelength.2500 + 
+    crop.peri.area.ratio.2500 + crop.edgelength.2500 + inert.2500 + am.richness.centre + 
+    bulk.15.30cm.variance.2500 + cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + 
+    ocd.15.30cm.variance.2500 + ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds + 
+   fieldsize.centre.numeric +  nat.hab.wo.grass.2500:treatment:crop.type.orig.grouped.big + 
+    (1 | study.id), data = df)
+
+croptreat5000.h2 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + temp.avg.1970.2000 + 
+    nat.hab.edgelength.5000 + nat.hab.wo.grass.5000 + I(nat.hab.wo.grass.5000^2) + nat.hab.wo.grass.edgelength.5000 + 
+    crop.edgelength.5000 + am.richness.mean.5000 + ecm.richness.mean.5000 + cec.15.30cm.variance.5000 + 
+    sr.birds + nat.hab.wo.grass.5000:treatment:crop.type.orig.grouped.big + fieldsize.centre.numeric + 
+    (1 | study.id), data = df)
+
+# Save results
+ct_1000 <- tidy(croptreat1000.h2, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Croptreat_1km")
+ct_2500 <- tidy(croptreat2500.h2, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Croptreat_2.5km")
+ct_5000 <- tidy(croptreat5000.h2, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Croptreat_5km")
+croptreat_models_table <- bind_rows(ct_1000, ct_2500, ct_5000) %>%
+  select(model, term, estimate, std.error, statistic, p.value, conf.low, conf.high)
+write.csv(croptreat_models_table, file = "croptreat_models_results_H2.csv", row.names = FALSE)
+
+# Plot results - Implications for management
+make_curves_nat_treat_crop <- function(model, nat_var, buffer_label,
+                                       treat_var = "treatment",
+                                       crop_var  = "crop.type.orig.grouped.big",
+                                       n_nat = 60) {
+  mf <- model.frame(model)   # data used in model
+  response <- all.vars(formula(model))[1]
+  
+  # range of nat.hab in this model
+  nat_seq <- seq(
+    min(mf[[nat_var]], na.rm = TRUE),
+    max(mf[[nat_var]], na.rm = TRUE),
+    length.out = n_nat
+  )
+  
+  treat_levs <- levels(mf[[treat_var]])
+  crop_levs  <- levels(mf[[crop_var]])
+  
+  # all treatment × crop combinations
+  combos <- expand.grid(
+    trt  = treat_levs,
+    crop = crop_levs,
+    KEEP.OUT.ATTRS = FALSE,
+    stringsAsFactors = FALSE
+  )
+  
+  base <- mf[1, , drop = FALSE]            # valid levels for factors etc.
+  other_vars <- setdiff(names(mf), c(response, nat_var, treat_var, crop_var))
+  
+  res_list <- lapply(seq_len(nrow(combos)), function(i) {
+    # prediction grid over nat for this treatment × crop combo
+    nd <- base[rep(1, length(nat_seq)), , drop = FALSE]
+    
+    nd[[nat_var]]   <- nat_seq
+    nd[[treat_var]] <- factor(combos$trt[i],  levels = treat_levs)
+    nd[[crop_var]]  <- factor(combos$crop[i], levels = crop_levs)
+    
+    # typical values for other predictors
+    for (v in other_vars) {
+      if (is.numeric(mf[[v]])) {
+        nd[[v]] <- mean(mf[[v]], na.rm = TRUE)
+      } else if (is.factor(mf[[v]])) {
+        nd[[v]] <- factor(levels(mf[[v]])[1], levels = levels(mf[[v]]))
+      } else {
+        nd[[v]] <- mf[[v]][1]
+      }
+    }
+    
+    # predicted lrr (fixed effects only; quadratic is inside model)
+    pred <- as.numeric(predict(model, newdata = nd, re.form = NA))
+    
+    data.frame(
+      nat       = nat_seq,
+      pred      = pred,
+      treatment = combos$trt[i],
+      crop      = combos$crop[i],
+      buffer    = buffer_label,
+      stringsAsFactors = FALSE
+    )
+  })
+  
+  do.call(rbind, res_list)
+}
+
+curves_1000 <- make_curves_nat_treat_crop(
+  model        = croptreat1000.h2,
+  nat_var      = "nat.hab.wo.grass.1000",
+  buffer_label = "1km"
+)
+
+curves_2500 <- make_curves_nat_treat_crop(
+  model        = croptreat2500.h2,
+  nat_var      = "nat.hab.wo.grass.2500",
+  buffer_label = "2.5km"
+)
+
+curves_5000 <- make_curves_nat_treat_crop(
+  model        = croptreat5000.h2,
+  nat_var      = "nat.hab.wo.grass.5000",
+  buffer_label = "5km"
+)
+
+curves_all <- bind_rows(curves_1000, curves_2500, curves_5000) %>%
+  mutate(
+    crop_buffer = paste0(crop, "-", buffer),
+    crop_buffer = factor(crop_buffer, levels = sort(unique(crop_buffer))),
+    treatment   = factor(treatment)
+  )
+ggplot(curves_all,
+       aes(x = nat, y = pred)) +
+  geom_line(linewidth = 0.7) +
+  facet_grid(
+    rows   = vars(treatment),
+    cols   = vars(crop_buffer),
+    scales = "free"
+  ) +
+  labs(
+    x = "Natural habitat without grass (buffer-specific)",
+    y = "Predicted lrr",
+    title = "Quadratic nat.hab–lrr relationships"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    panel.grid   = element_blank(),
+    # black outline around each facet:
+    panel.border = element_rect(
+      colour = "black",
+      fill   = NA,
+      linewidth = 0.4
+    ),
+    strip.text.x = element_text(
+      face  = "bold",
+      size  = 9,
+      angle = 90,
+      vjust = 0.5,
+      hjust = 0
+    ),
+    strip.text.y = element_text(
+      face  = "bold",
+      size  = 9,
+      angle = 0,
+      vjust = 0.5,
+      hjust = 0.5
+    ),
+    plot.title   = element_text(face = "bold", hjust = 0),
+    axis.title.x = element_text(margin = margin(t = 6)),
+    axis.title.y = element_text(margin = margin(r = 6))
+  )
+
+
+
+############ 
+# H3:	The correlation between percentage of natural habitat land cover and yield varies with total species richness, 
+# climate and location.
+############ 
+srclim1000.h3 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.1000 + am.richness.mean.1000 + 
+    ecm.richness.centre + bulk.15.30cm.variance.1000 + sr.amph + fieldsize.centre.numeric +
+    nat.hab.wo.grass.1000:temp.avg.1970.2000 + nat.hab.wo.grass.1000:sr.amph +
+    (1 | study.id), data = df)
+
+srclim2500.h3 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.2500 + nat.hab.wo.grass.edgelength.2500 + 
+    crop.peri.area.ratio.2500 + crop.edgelength.2500 + inert.2500 + am.richness.centre + 
+    bulk.15.30cm.variance.2500 + cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + 
+    ocd.15.30cm.variance.2500 + ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds + fieldsize.centre.numeric +
+    nat.hab.wo.grass.2500:temp.avg.1970.2000 + nat.hab.wo.grass.2500:sr.birds + 
+    (1 | study.id), data = df)
+
+srclim5000.h3 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    temp.avg.1970.2000 + nat.hab.edgelength.5000 + nat.hab.wo.grass.5000 + 
+    nat.hab.wo.grass.edgelength.5000 + crop.edgelength.5000 + am.richness.mean.5000 + 
+    ecm.richness.mean.5000 + cec.15.30cm.variance.5000 + sr.birds + fieldsize.centre.numeric + 
+    nat.hab.wo.grass.5000:temp.avg.1970.2000 + nat.hab.wo.grass.5000:sr.birds + 
+    (1 | study.id), data = df)
+
+# Save results
+srclim_1000 <- tidy(srclim1000.h3, effects = "fixed", conf.int = TRUE) %>%
+  mutate(model = "SrClim_1km")
+srclim_2500 <- tidy(srclim2500.h3, effects = "fixed", conf.int = TRUE) %>%
+  mutate(model = "SrClim_2.5km")
+srclim_5000 <- tidy(srclim5000.h3, effects = "fixed", conf.int = TRUE) %>%
+  mutate(model = "SrClim_5km")
+srclim_models_table <- bind_rows(srclim_1000, srclim_2500, srclim_5000) %>%
+  select(model, term, estimate, std.error, statistic, p.value, conf.low, conf.high)
+write.csv(srclim_models_table, file = "srclim_models_results_H3.csv", row.names = FALSE)
+
+# Plot results
+make_surface <- function(model, nat_var, mod_var, n = 50) {
+  # model: an lmer model
+  # nat_var: character name of natural habitat variable in model/data
+  # mod_var: character name of interacting variable (climate or richness)
+  # n: number of grid steps per axis
+  mf <- model.frame(model)  # data actually used in the model
+  # response name (first variable in formula)
+  response <- all.vars(formula(model))[1]
+  # sequences over observed ranges
+  nat_seq <- seq(min(mf[[nat_var]], na.rm = TRUE),
+                 max(mf[[nat_var]], na.rm = TRUE),
+                 length.out = n)
+  mod_seq <- seq(min(mf[[mod_var]], na.rm = TRUE),
+                 max(mf[[mod_var]], na.rm = TRUE),
+                 length.out = n)
+  # base grid for the 2D surface
+  grid <- expand.grid(
+    nat = nat_seq,
+    mod = mod_seq)
+  names(grid) <- c(nat_var, mod_var)
+  # fill in all other predictors with "typical" values
+  other_vars <- setdiff(names(mf), c(response, nat_var, mod_var))
+  for (v in other_vars) {
+    if (is.numeric(mf[[v]])) {
+      grid[[v]] <- mean(mf[[v]], na.rm = TRUE)
+    } else if (is.factor(mf[[v]])) {
+      grid[[v]] <- factor(levels(mf[[v]])[1], levels = levels(mf[[v]]))
+    } else {
+      grid[[v]] <- mf[[v]][1]}}
+  # predict lrr on the grid (fixed effects only: re.form = NA)
+  grid$pred <- as.numeric(predict(model, newdata = grid, re.form = NA))
+  grid$x <- grid[[nat_var]]
+  grid$y <- grid[[mod_var]]
+  grid}
+
+# NATURAL HABITAT × CLIMATE
+surf_clim_1000 <- make_surface(srclim1000.h3, nat_var = "nat.hab.wo.grass.1000", mod_var = "temp.avg.1970.2000") %>%
+  mutate(buffer = "1 km", interaction = "Nat. habitat × climate")
+surf_clim_2500 <- make_surface(srclim2500.h3, nat_var = "nat.hab.wo.grass.2500", mod_var = "temp.avg.1970.2000") %>%
+  mutate(buffer = "2.5 km", interaction = "Nat. habitat × climate")
+surf_clim_5000 <- make_surface(srclim5000.h3, nat_var = "nat.hab.wo.grass.5000", mod_var = "temp.avg.1970.2000") %>%
+  mutate(buffer = "5 km", interaction = "Nat. habitat × climate")
+surf_clim_all <- bind_rows(surf_clim_1000, surf_clim_2500, surf_clim_5000) %>%
+  mutate(buffer = factor(buffer, levels = c("1 km", "2.5 km", "5 km")))
+
+# NATURAL HABITAT × SPECIES RICHNESS
+surf_sr_1000 <- make_surface(srclim1000.h3, nat_var = "nat.hab.wo.grass.1000",mod_var = "sr.amph") %>%
+  mutate(buffer = "1 km", interaction = "Nat. habitat × richness")
+surf_sr_2500 <- make_surface(srclim2500.h3, nat_var = "nat.hab.wo.grass.2500", mod_var = "sr.birds") %>%
+  mutate(buffer = "2.5 km", interaction = "Nat. habitat × richness")
+surf_sr_5000 <- make_surface(srclim5000.h3, nat_var = "nat.hab.wo.grass.5000", mod_var = "sr.birds") %>%
+  mutate(buffer = "5 km", interaction = "Nat. habitat × richness")
+surf_sr_all <- bind_rows(surf_sr_1000, surf_sr_2500, surf_sr_5000) %>%
+  mutate(buffer = factor(buffer, levels = c("1 km", "2.5 km", "5 km")))
+
+# NATURAL HABITAT × CLIMATE
+p_clim <- ggplot(surf_clim_all, aes(x = x, y = y)) +
+  geom_tile(aes(fill = pred)) +
+  stat_contour(aes(z = pred), colour = "white", alpha = 0.6,
+               bins = 10, size = 0.3, inherit.aes = TRUE) +
+  facet_wrap(~ buffer, nrow = 1, scales = "free") +
+  scale_fill_viridis_c(option = "plasma") +
+  labs(x = "Natural habitat without grass",
+    y = "Mean annual temperature (1970–2000)",
+    fill = "Predicted lrr",
+    title = "Interaction surface: natural habitat × climate") +
+  theme_minimal(base_size = 13) +
+  theme(panel.grid = element_blank(),
+    strip.text = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", hjust = 0),
+    plot.subtitle = element_text(hjust = 0))
+
+# NATURAL HABITAT × SPECIES RICHNESS
+p_sr <- ggplot(surf_sr_all, aes(x = x, y = y)) +
+  geom_tile(aes(fill = pred)) +
+  stat_contour(aes(z = pred), colour = "white", alpha = 0.6,
+               bins = 10, size = 0.3, inherit.aes = TRUE) +
+  facet_wrap(~ buffer, nrow = 1, scales = "free") +
+  scale_fill_viridis_c(option = "plasma") +
+  labs(x = "Natural habitat without grass",
+    y = "Species richness 
+    (1 km: amphibians, 2.5 & 5 km: birds)",
+    fill = "Predicted lrr",
+    title = "Interaction surface: natural habitat × species richness") +
+  theme_minimal(base_size = 13) +
+  theme(panel.grid = element_blank(),
+    strip.text = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", hjust = 0),
+    plot.subtitle = element_text(hjust = 0))
+
+# Show the plots
+p_clim/p_sr
+
+
+############ 
+# H4:	The percentage of arable area is negatively associated with yield, but not in a linear way, 
+# because a steep increase of arable land in an area can lead to land degradation and decrease of species richness.  
+############
+
+crop1000.h4 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.1000 + am.richness.mean.1000 + 
+    ecm.richness.centre + bulk.15.30cm.variance.1000 + sr.amph + 
+    cropland.1000 + I(cropland.1000^2) + fieldsize.centre.numeric + 
+    (1 | study.id), data = df)
+
+crop2500.h4 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + nat.hab.wo.grass.2500 + 
+    nat.hab.wo.grass.edgelength.2500 + crop.peri.area.ratio.2500 + 
+    crop.edgelength.2500 + inert.2500 + am.richness.centre + bulk.15.30cm.variance.2500 + 
+    cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + ocd.15.30cm.variance.2500 + 
+    ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds +  
+    cropland.2500 + I(cropland.2500^2) + fieldsize.centre.numeric +
+    (1 | study.id), data = df)
+
+crop5000.h4 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    temp.avg.1970.2000 + nat.hab.edgelength.5000 + nat.hab.wo.grass.5000 + 
+    nat.hab.wo.grass.edgelength.5000 + crop.edgelength.5000 + am.richness.mean.5000 + 
+    ecm.richness.mean.5000 + cec.15.30cm.variance.5000 + sr.birds + 
+    cropland.5000 + I(cropland.5000^2) + fieldsize.centre.numeric + 
+    (1 | study.id), data = df)
+
+# Save results
+crop_1000 <- tidy(crop1000.h4, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Crop_1km")
+crop_2500 <- tidy(crop2500.h4, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Crop_2.5km")
+crop_5000 <- tidy(crop5000.h4, effects = "fixed", conf.int = TRUE) %>% mutate(model = "Crop_5km")
+crop_models_table <- bind_rows(crop_1000, crop_2500, crop_5000) %>%
+  select(model, term, estimate, std.error, statistic, p.value, conf.low, conf.high)
+write.csv(crop_models_table, file = "crop_models_results_H4.csv", row.names = FALSE)
+
+# Plot results
+p1000 <- ggpredict(crop1000.h4, terms = "cropland.1000") %>% mutate(buffer = "1 km")
+p2500 <- ggpredict(crop2500.h4, terms = "cropland.2500") %>% mutate(buffer = "2.5 km")
+p5000 <- ggpredict(crop5000.h4, terms = "cropland.5000") %>% mutate(buffer = "5 km")
+pred_all <- bind_rows(p1000, p2500, p5000)
+
+ggplot(pred_all, aes(x = x, y = predicted)) +
+  # soft confidence band
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high, fill = buffer),
+              alpha = 0.18, colour = NA) +
+  # smooth line
+  geom_line(aes(colour = buffer), size = 1.2) +
+  # horizontal reference at no effect
+  geom_hline(yintercept = 0, linetype = "dashed", colour = "grey40") +
+  # facet by buffer to emphasise “scale”
+  facet_wrap(~ buffer, nrow = 1, scales = "free_x") +
+  # labels
+  labs(
+    x = "Cropland in buffer (%)",
+    y = "Predicted yield treatment effectiveness (lrr)",
+    colour = "Buffer radius",
+    fill   = "Buffer radius",
+    title  = "Non-linear effect of arable area on yield treatment effectiveness") +
+  # pretty colours
+  scale_colour_brewer(palette = "Dark2") +
+  scale_fill_brewer(palette = "Pastel2") +
+  # nice theme
+  theme_minimal(base_size = 14) +
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank(),
+    strip.text = element_text(face = "bold"),
+    plot.title = element_text(face = "bold", hjust = 0),
+    plot.subtitle = element_text(hjust = 0),
+    legend.position = "bottom"
+  )
+############ 
+# H5:	Landscape composition and configuration within 1 km radius from the field affect the effectiveness 
+# of yield treatments stronger than within 5 km radius.
+############
+
+# First do a PCA to gather all configuration and composition variables in PCs
+comp_1000 <- c("nat.hab.1000", "nat.hab.wo.grass.1000", "cropland.1000", "inert.1000", "shannon.1000", "simpsonsevenness.1000")
+comp_2500 <- c("nat.hab.2500", "nat.hab.wo.grass.2500", "cropland.2500", "inert.2500", "shannon.2500", "simpsonsevenness.2500")
+comp_5000 <- c("nat.hab.5000", "nat.hab.wo.grass.5000", "cropland.5000", "inert.5000", "shannon.5000", "simpsonsevenness.5000")
+conf_1000 <- c("nat.hab.edgelength.1000", "nat.hab.peri.area.ratio.1000", "nat.hab.wo.grass.edgelength.1000",
+               "nat.hab.wo.grass.peri.area.ratio.1000", "crop.peri.area.ratio.1000", "crop.edgelength.1000",
+               "inert.edgelength.1000", "inert.peri.area.ratio.1000")
+conf_2500 <- c("nat.hab.edgelength.2500", "nat.hab.peri.area.ratio.2500", "nat.hab.wo.grass.edgelength.2500",
+               "nat.hab.wo.grass.peri.area.ratio.2500", "crop.peri.area.ratio.2500", "crop.edgelength.2500",
+               "inert.edgelength.2500", "inert.peri.area.ratio.2500")
+conf_5000 <- c("nat.hab.edgelength.5000", "nat.hab.peri.area.ratio.5000", "nat.hab.wo.grass.edgelength.5000",
+               "nat.hab.wo.grass.peri.area.ratio.5000", "crop.peri.area.ratio.5000", "crop.edgelength.5000",
+               "inert.edgelength.5000", "inert.peri.area.ratio.5000")
+
+# Run PCA 
+library(psych)
+
+# Run PCA 
+pc_comp1000 <- principal(df[, comp_1000], nfactors = 2, rotate = "none", scores = TRUE, missing = TRUE)
+pcs_comp1000 <- pc_comp1000$scores
+colnames(pcs_comp1000) <- c("comp1000_PC1", "comp1000_PC2")
+
+pc_comp2500 <- principal(df[, comp_2500], nfactors = 2, rotate = "none", scores = TRUE, missing = TRUE)
+pcs_comp2500 <- pc_comp2500$scores
+colnames(pcs_comp2500) <- c("comp2500_PC1", "comp2500_PC2")
+
+pc_comp5000 <- principal(df[, comp_5000], nfactors = 2, rotate = "none", scores = TRUE, missing = TRUE)
+pcs_comp5000 <- pc_comp5000$scores
+colnames(pcs_comp5000) <- c("comp5000_PC1", "comp5000_PC2")
+
+pc_conf1000 <- principal(df[, conf_1000], nfactors = 2, rotate = "none", scores = TRUE, missing = TRUE)
+pcs_conf1000 <- pc_conf1000$scores
+colnames(pcs_conf1000) <- c("conf1000_PC1", "conf1000_PC2")
+
+pc_conf2500 <- principal(df[, conf_2500], nfactors = 2, rotate = "none", scores = TRUE, missing = TRUE)
+pcs_conf2500 <- pc_conf2500$scores
+colnames(pcs_conf2500) <- c("conf2500_PC1", "conf2500_PC2")
+
+pc_conf5000 <- principal(df[, conf_5000], nfactors = 2, rotate = "none", scores = TRUE, missing = TRUE)
+pcs_conf5000 <- pc_conf5000$scores
+colnames(pcs_conf5000) <- c("conf5000_PC1", "conf5000_PC2")
+
+# Now bind everything
+df <- cbind(df, pcs_comp1000, pcs_conf1000, pcs_comp2500, pcs_conf2500, pcs_comp5000, pcs_conf5000)
+
+
+# So now let's test H5 with the adjusted best models and the first PCs. Configuration and composition will be in the same model. 
+landsc1000.h5 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + 
+    poll.dependent + temp.avg.1970.2000 + am.richness.mean.1000 + ecm.richness.centre + 
+    bulk.15.30cm.variance.1000 + sr.amph + conf1000_PC1 + comp1000_PC1 + fieldsize.centre.numeric +
+    (1 | study.id), data = df)
+
+landsc2500.h5 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig.grouped.big + poll.dependent + 
+    temp.avg.1970.2000 + am.richness.centre + 
+    bulk.15.30cm.variance.2500 + cec.15.30cm.variance.2500 + nitrogen.15.30cm.centre + 
+    ocd.15.30cm.variance.2500 + ph.15.30cm.centre + ph.15.30cm.variance.2500 + sr.birds + 
+    conf2500_PC1 + comp2500_PC1 + fieldsize.centre.numeric +
+    (1 | study.id), data = df)
+
+landsc5000.h5 <- lmer(
+  lrr ~ latitude.decimal + country.new + treatment + crop.type.orig + temp.avg.1970.2000 + 
+    am.richness.mean.5000 + ecm.richness.mean.5000 + 
+    cec.15.30cm.variance.5000 + sr.birds + conf5000_PC1 + comp5000_PC1 + fieldsize.centre.numeric +
+    (1 | study.id), data = df)
+
+# Save results
+landsc_1000 <- tidy(landsc1000.h5, effects = "fixed", conf.int = TRUE) %>%
+  mutate(model = "Landsc_1km")
+landsc_2500 <- tidy(landsc2500.h5, effects = "fixed", conf.int = TRUE) %>%
+  mutate(model = "Landsc_2.5km")
+landsc_5000 <- tidy(landsc5000.h5, effects = "fixed", conf.int = TRUE) %>%
+  mutate(model = "Landsc_5km")
+landsc_models_table <- bind_rows(landsc_1000, landsc_2500, landsc_5000) %>%
+  select(model, term, estimate, std.error, statistic, p.value, conf.low, conf.high)
+write.csv(landsc_models_table, file = "landsc_models_results_h5.csv", row.names = FALSE)
+
+# Plot the results to compare composition and configuration
+fix1000 <- tidy(landsc1000.h5, effects = "fixed", conf.int = TRUE) %>%
+  filter(term %in% c("conf1000_PC1", "comp1000_PC1")) %>%
+  mutate(model = "1 km")
+fix2500 <- tidy(landsc2500.h5, effects = "fixed", conf.int = TRUE) %>%
+  filter(term %in% c("conf2500_PC1", "comp2500_PC1")) %>%
+  mutate(model = "2.5 km")
+fix5000 <- tidy(landsc5000.h5, effects = "fixed", conf.int = TRUE) %>%
+  filter(term %in% c("conf5000_PC1", "comp5000_PC1")) %>%
+  mutate(model = "5 km")
+fix_h5 <- bind_rows(fix1000, fix2500, fix5000) %>%
+  mutate(term = dplyr::recode(term,
+                       conf1000_PC1 = "Config (1 km)",
+                       comp1000_PC1 = "Comp (1 km)",
+                       conf2500_PC1 = "Config (2.5 km)",
+                       comp2500_PC1 = "Comp (2.5 km)",
+                       conf5000_PC1 = "Config (5 km)",
+                       comp5000_PC1 = "Comp (5 km)")) %>%
+  mutate(term = factor(term,
+                       levels = c("Config (5 km)", "Comp (5 km)",
+                                  "Config (2.5 km)", "Comp (2.5 km)",
+                                  "Config (1 km)", "Comp (1 km)")))
+
+
+ggplot(fix_h5, aes(x = term, y = estimate, colour = model)) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  geom_pointrange(aes(ymin = conf.low, ymax = conf.high),
+                  position = position_dodge(width = 0.6)) +
+  coord_flip() +
+  labs(y = "Effect on lrr", x = NULL, colour = "Scale",
+       title = "Effect of composition and configuration on yield treatment effectiveness") +
+  scale_colour_manual(values = c("#1b9e77", "#d95f02", "#7570b3")) +
+  theme_minimal()
+
+# Compared R squared 
+library(performance)
+r2_nakagawa(landsc1000.h5)
+r2_nakagawa(landsc2500.h5)
+r2_nakagawa(landsc5000.h5)
+
+###############################
+# Moran's I test for all models
+###############################
+# install.packages("spdep")   # if not installed
+library(spdep)
+library(dplyr)
+run_moran_for_model <- function(model, df, k = 4, model_name = deparse(substitute(model))) {
+  # data actually used in model
+  mf  <- model.frame(model)
+  res <- resid(model)
+  # use rownames to link back to df (since data = df in lmer())
+  idx <- as.integer(rownames(mf))
+  lon <- df$longitude.decimal[idx]
+  lat <- df$latitude.decimal[idx]
+  # keep only complete cases (coords + residual)
+  ok <- complete.cases(lon, lat, res)
+  lon <- lon[ok]
+  lat <- lat[ok]
+  res <- res[ok]
+  coords <- cbind(lon, lat)
+  # spatial weights: k-nearest neighbours (k = 4 by default)
+  knn <- knearneigh(coords, k = k)
+  nb  <- knn2nb(knn)
+  lw  <- nb2listw(nb, style = "W")
+  mt <- moran.test(res, lw)
+  data.frame(
+    model       = model_name,
+    moran_I     = unname(mt$estimate[["Moran I statistic"]]),
+    expectation = unname(mt$estimate[["Expectation"]]),
+    variance    = unname(mt$estimate[["Variance"]]),
+    p_value     = mt$p.value,
+    stringsAsFactors = FALSE)}
+
+model_names <- c("shannon1000.h1", "shannon2500.h1", "shannon5000.h1",
+  "shannon1000.h1.nopoll", "shannon2500.h1.nopoll", "shannon5000.h1.nopoll",
+  "shannon1000.h1.poll",   "shannon2500.h1.poll",   "shannon5000.h1.poll",
+  "croptreat1000.h2", "croptreat2500.h2", "croptreat5000.h2",
+  "srclim1000.h3", "srclim2500.h3", "srclim5000.h3",
+  "crop1000.h4", "crop2500.h4", "crop5000.h4",
+  "landsc1000.h5", "landsc2500.h5", "landsc5000.h5")
+
+# grab the objects from the environment
+models <- mget(model_names)
+moran_results <- bind_rows(lapply(names(models), function(nm) {
+    run_moran_for_model(models[[nm]], df = df, k = 4, model_name = nm)}))
+moran_results
+
+write.csv(moran_results, file = "moran_test_results.csv")
+
+
+
+
+
+
+
+
+
+######################
+# Model performance
+######################
+library(performance)
+
+check_model(bestmodel1000)
+res_norm <- check_normality(bestmodel1000)
+res_norm
+plot(res_norm)
+res_hetero <- check_heteroscedasticity(bestmodel1000)
+res_hetero
+plot(res_hetero)
+res_out <- check_outliers(bestmodel1000)
+res_out
+plot(res_out)
+res_ac <- check_autocorrelation(bestmodel1000)
+res_ac
+
+check_model(bestmodel2500)
+res_norm <- check_normality(bestmodel2500)
+res_norm
+plot(res_norm)
+res_hetero <- check_heteroscedasticity(bestmodel2500)
+res_hetero
+plot(res_hetero)
+res_out <- check_outliers(bestmodel2500)
+res_out
+plot(res_out)
+res_ac <- check_autocorrelation(bestmodel2500)
+res_ac
+
+check_model(bestmodel5000)
+res_norm <- check_normality(bestmodel5000)
+res_norm
+plot(res_norm)
+res_hetero <- check_heteroscedasticity(bestmodel5000)
+res_hetero
+plot(res_hetero)
+res_out <- check_outliers(bestmodel5000)
+res_out
+plot(res_out)
+res_ac <- check_autocorrelation(bestmodel5000)
+res_ac
+######################
+#####################
+# Biome plots
+####################
+remotes::install_github("valentinitnelav/plotbiomes")
+library(plotbiomes)
+library(terra)
+library(geodata)
+library(ggplot2)
+# Download WorldClim bioclim data (0.5 arc-minutes ≈ 1 km
+wc  <- worldclim_global(var = "bio", res = 0.5, path = "wc_data")
+# Keep only BIO1 (annual mean temperature) and BIO12 (annual precipitation)
+bio <- wc[[c(1, 12)]]
+names(bio) <- c("bio1", "bio12")
+# Isolate unique points
+df_clim <- df[!duplicated(df[c("latitude_decimal", "longitude_decimal")]), c("latitude_decimal", "longitude_decimal")]
+# Turn df_clim into spatial points (WGS84) 
+pts <- vect(df_clim, geom = c("longitude_decimal", "latitude_decimal"), crs  = "EPSG:4326")
+# Extract climate values at those points 
+vals <- terra::extract(bio, pts)
+df_clim <- cbind(df_clim, vals[, -1]) # remove ID column
+# Convert BIO1 to °C and keep precipitation as mm/year
+df_clim$MAT_C  <- df_clim$bio1 / 10   # mean annual temperature (°C)
+df_clim$MAP_mm <- df_clim$bio12      # mean annual precipitation (mm/year)
+# color palette 
+my_palette_2 <- colorRampPalette(colors = c("#F5F5F5", "#01665E", "#8C510A"))(9)
+# Whittaker plot + points
+p <- whittaker_base_plot(color_palette = my_palette_2) +
+  geom_point(data = df_clim, aes(x = MAT_C, y = MAP_mm / 10),
+    inherit.aes = FALSE, size = 2, alpha = 0.7, color = "black") +
+  labs(x = "Mean annual temperature (°C)", y = "Mean annual precipitation (cm)")
+p
+##### 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
