@@ -194,10 +194,64 @@ Xin, J., Peng, Y., Peng, N., Yang, L., Huang, J., Yuan, J., Wei, B., & Ren, Y. (
 
 <ins>Result Notes:</ins>
 
+- Key climate, landscape, and fertilizer drivers were identified. Among these drivers, the following landscape metrics showed the highest frequency in the GLMMs: patch shape complexity (SHAPE, 42; PARA, 34 TE, 33, LSI, 30), area metric (PLAND, 34; LPI 14), fragmentation metrics (PD, 27), and aggregation metrics (CONTAG, 7). Landscape diversity and landscape heterogeneity indices only appeared eight in the GLMMs.
+- The factors that infiuenced yield of a crop (rice, maize or wheat) were different not only between crops but also between climatic zones. Meaning that the factor influencing the yield of a crop will depend on the crop and on the location of the measurement.
+  
 <ins>Landscape Indices:</ins>
 
+- To assess the degree of **landscape fragmentation**, we used landscape connection (CONNECT), landscape contagion (CONTAG), landscape contiguity index (CONTIG), number of patches (NP), Euclidean nearest neighbor distance (ENN, m), and patch density (PD), which together reflect the connectivity and fragmentation of a landscape (Kupfer, 2012).
+-  For **landscape heterogeneity** which indicating the land use diversity within a landscape, we used land use Shannon-Wiener diversity index (SHDI), Simpson Diversity index (SIDI), and interspersion &juxtaposition index (IJI).
+-  For **landscape aggregation**, we used aggregation index (AI), patch cohesion index (COHISION), and proximity index (PROX). 
+  
 <ins>Buffer Size:</ins>
 
 <ins>Method used:</ins>
 
+- This study focused on the main cultivation areas of maize, wheat, and rice in China.
+- The data of crop yield are from the global dataset of historical yields for major crops (Iizumi and Sakai, 2020) (Elizaveta's side note: we have requested this dataset and we haev it)
+- Fertilizer data are extracted from the National Bureau of Statistics of China and the statistical bureaus of the Chinese provinces at county scale. 
+- Generalized linear mixed model
+  -  The following variables were used in the GLMM: climate, fertilizer and landscape pattern, and climate and landscape interactions (climate × landscape).
+  -  Response variables were yield of wheat, rice, maize, and their total.
+  -  Climate, landscape metrics, and fertilizer were included in the model as fixed factors, and location and time were random factors.
+- Gradient analysis
+  -  To investigate the potential mediating effect of landscape factors on climate factors, we used a gradient analysis approach.
+  -  The difference in crop average yield across three landscape gradients were compared with Duncan's new multiple range test (DNMRT). 
 </details>
+
+___
+
+###  The mechanisms stabilizing ecosystem functioning change with community age
+
+<details>
+ 
+<ins>Source:</ins> 
+
+
+```
+Wagg, C., Roscher, C., Weigelt, A., Vogel, A., Ebeling, A., de Luca, E., Roeder, A., Kleinspehn, C., Temperton, V. M., Meyer, S. T., Scherer-Lorenzen, M., Buchmann, N., Fischer, M., Weisser, W. W., Eisenhauer, N., & Schmid, B. (2022). Biodiversity–stability relationships strengthen over time in a long-term grassland experiment. Nature Communications, 13(1), 7752. https://doi.org/10.1038/s41467-022-35189-2
+
+```
+(Wagg et al., 2022)
+
+<ins>Result Notes:</ins>
+
+- Productivity declined more rapidly in less diverse communities resulting in temporally strengthening positive effects of richness on productivity, complementarity, and stability.
+
+  
+<ins>Landscape Indices:</ins>
+
+Not applicable 
+
+<ins>Buffer Size:</ins>
+
+Not applicable 
+
+<ins>Method used:</ins>
+
+17 years of a controlled grassland biodiversity experiment
+
+</details>
+
+
+___
